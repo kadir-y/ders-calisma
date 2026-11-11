@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ders Çalışma Sayfaları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: tek sütun dizin, her satır bir ders */
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --ink:#18202a; --muted:#5b6574; --line:#d9dee5; --accent:#2f5fb3;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1318; --surface:#161c24; --ink:#e3e8ee; --muted:#97a2b1; --line:#29323e; --accent:#7aa8f5; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:max(32px,env(safe-area-inset-top,0px)) 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,5vw,38px);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:62ch}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+li{border-top:1px solid var(--line)} li:first-child{border-top:none}
+a.row{display:grid;grid-template-columns:auto 1fr auto;gap:4px 16px;align-items:center;padding:16px;color:inherit;text-decoration:none}
+a.row:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+a.row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.code{font:600 12.5px/1 var(--f-mono);color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);padding:6px 8px;border-radius:6px;white-space:nowrap}
+.ti{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ti b{font-weight:600;font-size:16px}
+.ti span{font:12.5px/1.4 var(--f-mono);color:var(--muted)}
+.go{color:var(--accent);font:500 13px/1 var(--f-mono);white-space:nowrap}
+@media (max-width:480px){a.row{grid-template-columns:1fr}.go{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="eyebrow">Sakarya Üniversitesi</span>
+    <h1>Ders Çalışma Sayfaları</h1>
+    <p class="lead">Sınavlar için hazırlanan testler ve alıştırmalar. Cevaplar sadece bu cihazın tarayıcısında saklanır.</p>
+  </header>
+  <ul>
+    <li><a class="row" href="ag-programlama/"><span class="code" style="--c:#3f7fd6">BSM 451</span><span class="ti"><b>Ağ Programlama</b><span>6 test (354 soru) · 6 kod boşluk atölyesi</span></span><span class="go">Aç →</span></a></li>
+    <li><a class="row" href="finansal-okuryazarlik/"><span class="code" style="--c:#1d9a74">SAU 751</span><span class="ti"><b>Finansal Okuryazarlık</b><span>Oran analizi deneme sınavı (59 soru)</span></span><span class="go">Aç →</span></a></li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Finansal Okuryazarlık Çalışma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: ders dizini, her satır bir çalışma sayfası */
+:root{
+  --bg:#f5f7f5; --surface:#ffffff; --ink:#16201b; --muted:#56655d; --line:#d3ddd7; --green:#178a6a; --pink:#bd2e66;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#111814; --surface:#18211c; --ink:#e4ece7; --muted:#9aaba2; --line:#2b3832; --green:#4fcfa4; --pink:#f17aa7; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:max(32px,env(safe-area-inset-top,0px)) 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5vw,38px);line-height:1.15;margin:0;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+.back{font:500 13px/1 var(--f-mono);color:var(--green);text-decoration:none}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--pink)}
+.lead{color:var(--muted);max-width:62ch}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+li{border-top:1px solid var(--line)} li:first-child{border-top:none}
+a.row{display:grid;grid-template-columns:2.6em 1fr auto;gap:4px 14px;align-items:center;padding:16px;color:inherit;text-decoration:none}
+a.row:hover{background:color-mix(in srgb,var(--green) 7%,transparent)}
+a.row:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.no{font:600 13px/1 var(--f-mono);color:var(--green)}
+.ti{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ti b{font-weight:600;font-size:16px}
+.ti span{font:12.5px/1.4 var(--f-mono);color:var(--muted)}
+.cnt{font:500 13px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+@media (max-width:480px){a.row{grid-template-columns:2.2em 1fr}.cnt{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <a class="back" href="../">← Tüm dersler</a>
+    <span class="eyebrow">SAU 751 · Finansal Okuryazarlık</span>
+    <h1>Finansal Okuryazarlık Çalışma</h1>
+    <p class="lead">2. Ünite: Finansal tablolar analizi ve oran analizi. Hoca finansal tabloları verip oranların hesaplanmasını, anlamını ve yorumunu soracak.</p>
+  </header>
+  <ul>
+    <li><a class="row" href="oran-analizi-deneme.html"><span class="no">1</span><span class="ti"><b>Oran Analizi Deneme Sınavı</b><span>Hesaplama · yorum · kavram · kısaltmalar</span></span><span class="cnt">59 soru</span></a></li>
+  </ul>
+</div>
+</body>
+</html>

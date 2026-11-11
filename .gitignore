@@ -1,0 +1,6 @@
+# Hocaların ders materyalleri yayınlanmıyor; sadece HTML çalışma sayfaları
+*.pdf
+*.pptx
+*.docx
+*.jpeg
+*.jpg

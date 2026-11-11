@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>TCP Sunucu Boşluk Atölyesi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: tek sütun çalışma masası — üstte adımlar + topoloji, ortada satır numaralı C kodu (eksik satırlar), altta bayt haritası, açıklamalar, klasik sorular */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --code-bg:#fbfcfd; --input-bg:#eef3fb;
+  --ink:#17202b; --muted:#5a6676; --line:#d8dee6; --gutter:#9aa5b3;
+  --accent:#1d5fc4; --accent-ink:#ffffff;
+  --c1:#2b74c7; --c1-bg:#e2edfa;
+  --c2:#7447bd; --c2-bg:#eee6f9;
+  --c3:#a8650f; --c3-bg:#faefdc;
+  --c4:#0d7d6f; --c4-bg:#dcf2ee;
+  --ok:#1b7f48; --ok-bg:#dff3e7; --bad:#bf3434; --bad-bg:#fbe3e3;
+  --kw:#7447bd; --num:#a8650f; --str:#1b7f48; --cm:#7a8696; --pp:#0d7d6f;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131a; --surface:#151c26; --code-bg:#111821; --input-bg:#1b2738;
+  --ink:#e3e8ef; --muted:#95a1b2; --line:#283240; --gutter:#5d6a7b;
+  --accent:#6aa5ff; --accent-ink:#0b1220;
+  --c1:#6aa9ef; --c1-bg:#17283d;
+  --c2:#b293ee; --c2-bg:#251e3a;
+  --c3:#e2a656; --c3-bg:#33261a;
+  --c4:#4fd1bf; --c4-bg:#11302c;
+  --ok:#52c98a; --ok-bg:#13301f; --bad:#ff7d7d; --bad-bg:#3a1a1c;
+  --kw:#b293ee; --num:#e2a656; --str:#52c98a; --cm:#7d8a9b; --pp:#4fd1bf;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e131a; --surface:#151c26; --code-bg:#111821; --input-bg:#1b2738;
+  --ink:#e3e8ef; --muted:#95a1b2; --line:#283240; --gutter:#5d6a7b;
+  --accent:#6aa5ff; --accent-ink:#0b1220;
+  --c1:#6aa9ef; --c1-bg:#17283d;
+  --c2:#b293ee; --c2-bg:#251e3a;
+  --c3:#e2a656; --c3-bg:#33261a;
+  --c4:#4fd1bf; --c4-bg:#11302c;
+  --ok:#52c98a; --ok-bg:#13301f; --bad:#ff7d7d; --bad-bg:#3a1a1c;
+  --kw:#b293ee; --num:#e2a656; --str:#52c98a; --cm:#7d8a9b; --pp:#4fd1bf;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:960px;margin:0 auto;padding-block:28px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1,h2{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(26px,4.4vw,34px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:600}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+p{margin:0}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+
+header{display:flex;flex-direction:column;gap:12px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.steps li>*{display:inline-block;font:500 12.5px/1 var(--f-mono);padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--surface)}
+.steps li span.soon{opacity:.6}
+.steps li span.cur{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps .n{opacity:.7;margin-right:4px}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+button,select{font:500 14px/1 var(--f-body);border-radius:8px;cursor:pointer}
+button{padding:10px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{padding:9px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+label.sel{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}
+.stats{font:12.5px/1.3 var(--f-mono);color:var(--muted);margin-left:auto}
+
+/* topoloji */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.topo{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.host{flex:1 1 170px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.host.run{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
+.host.dim{border-style:dashed}
+.host .nm{font:600 16px/1.2 var(--f-display);display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.host .tag{font:600 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.host dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font:13px/1.35 var(--f-mono)}
+.host dt{color:var(--muted)}
+.host dd{margin:0;overflow-wrap:anywhere}
+.host dd.unk{color:var(--muted);font-style:italic}
+.mid{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.switch{font:600 12px/1 var(--f-mono);padding:9px 12px;border:1.5px dashed var(--muted);border-radius:6px;color:var(--muted)}
+.flow{font:600 12.5px/1.3 var(--f-mono);color:var(--c3)}
+.flow .ar{display:block;font-size:20px;line-height:1}
+.dump{width:100%;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.dump .maprows{margin-top:10px}
+.scen{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);max-width:72ch}
+@media (max-width:600px){
+  .topo{flex-direction:column;align-items:stretch}
+  .host{flex:0 0 auto}
+  .flow .ar{transform:rotate(90deg)}
+}
+
+/* kod: satır numaralı */
+.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;overflow-x:auto;font:13.5px/1.85 var(--f-mono);padding:12px 0}
+.ln{display:flex;min-width:max-content;padding-right:18px}
+.ln .no{flex:0 0 4.2ch;text-align:right;padding-right:1.4ch;color:var(--gutter);user-select:none;-webkit-user-select:none}
+.ln .tx{white-space:pre;flex:1 1 auto;display:block;tab-size:4}
+.ln.blank{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.ln.blank .no{color:var(--accent);font-weight:600}
+.ln.blank.ok{background:var(--ok-bg)}
+.ln.blank.ok .no{color:var(--ok)}
+.ln.blank.bad{background:var(--bad-bg)}
+.ln.blank.bad .no{color:var(--bad)}
+.ln.fixln .tx{color:var(--ok);font-weight:500}
+.ln.fixln .no{color:var(--ok)}
+.cm{color:var(--cm)}
+.kw{color:var(--kw)}
+.nu{color:var(--num)}
+.s{color:var(--str)}
+.pp{color:var(--pp)}
+input.li{font:inherit;font-weight:500;min-width:34ch;width:52ch;max-width:none;padding:1px 6px;border:none;border-bottom:2px solid var(--accent);border-radius:4px 4px 0 0;background:var(--input-bg);color:var(--ink);line-height:1.5}
+.ln.ok input.li{border-color:var(--ok);color:var(--ok);background:transparent}
+.ln.bad input.li{border-color:var(--bad);color:var(--bad);background:transparent}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.score{font:600 15px/1 var(--f-mono);margin-left:auto}
+.score.full{color:var(--ok)}
+.tip{font-size:13.5px;color:var(--muted);max-width:76ch}
+
+/* bayt haritası */
+details.mapbox>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.mapbox>summary::-webkit-details-marker{display:none}
+details.mapbox>summary .hint{font-size:13px;color:var(--muted)}
+details.mapbox>summary .tg{font:500 13px/1 var(--f-mono);color:var(--accent)}
+details.mapbox[open]>summary .tg::after{content:" (gizle)"}
+.maprows{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.maprow{display:flex;flex-direction:column;gap:4px}
+.maprow .rl{font:500 11px/1 var(--f-mono);color:var(--muted)}
+.map{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px}
+.cell{border-radius:5px;padding:4px 0 5px;text-align:center;font-family:var(--f-mono);border:1.5px solid transparent}
+.cell .i{display:block;font-size:9.5px;line-height:1.2;opacity:.75}
+.cell .v{display:block;font-size:13px;font-weight:600;line-height:1.3}
+.cell.c1{background:var(--c1-bg);color:var(--c1)}
+.cell.c2{background:var(--c2-bg);color:var(--c2)}
+.cell.c3{background:var(--c3-bg);color:var(--c3)}
+.cell.c4{background:var(--c4-bg);color:var(--c4)}
+.cell.blank{border-style:dashed;border-color:currentColor;cursor:pointer}
+.cell.ok{border-style:solid;border-color:var(--ok)}
+.cell.bad{border-style:solid;border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+@media (max-width:520px){.cell .i{font-size:8px}.cell .v{font-size:11px}.map{gap:2px}}
+
+/* açıklamalar */
+.expl{display:flex;flex-direction:column;margin-top:6px}
+.ex{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.ex:first-child{border-top:none}
+.chip{font:600 11px/1 var(--f-mono);padding:5px 7px;border-radius:5px;align-self:start;text-transform:uppercase;letter-spacing:.05em}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.ex .t{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.ex pre{grid-column:2;margin:2px 0;font:13px/1.6 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+.ex .why{grid-column:2;color:var(--muted);max-width:72ch}
+.ex .why b{color:var(--ink);font-weight:600}
+
+/* klasik sorular */
+.qs{display:flex;flex-direction:column;gap:16px;margin-top:4px}
+.q{display:flex;flex-direction:column;gap:8px}
+.q .qt{font-weight:500;max-width:72ch}
+.q .qt b{font-family:var(--f-mono);color:var(--accent);margin-right:4px}
+.q textarea{font:14px/1.5 var(--f-body);width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--code-bg);color:var(--ink);resize:vertical}
+.q .ans{background:var(--ok-bg);border-radius:8px;padding:12px 14px}
+.q .ans p+p,.q .ans p+pre,.q .ans pre+p{margin-top:6px}
+.q .ans pre{margin:6px 0 0;font:13px/1.7 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.q button{align-self:flex-start;padding:8px 12px;font-size:13px}
+
+details.hex>summary{cursor:pointer;font-weight:600}
+.hexgrid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:12px;font:13px/1 var(--f-mono);max-width:460px}
+.hexgrid div{border:1px solid var(--line);border-radius:5px;padding:7px 0;text-align:center}
+.hexgrid b{color:var(--accent)}
+.hexnote{margin-top:12px;font-size:14px;max-width:70ch}
+@media (prefers-reduced-motion:no-preference){.ln,.cell{transition:background-color .15s,border-color .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">BSM 451 · Vize klasik hazırlık</span>
+    <h1>TCP Sunucu Boşluk Atölyesi</h1>
+    <ol class="steps" id="steps" aria-label="Çalışma sırası"></ol>
+    <div class="toolbar">
+      <button class="primary" id="btnNew" type="button">Yeni senaryo</button>
+      <label class="sel" for="mode" id="modeLbl">Senaryo <select id="mode"></select></label>
+      <label class="sel" for="cmt">Yorumlardaki değerler
+        <select id="cmt">
+          <option value="0" selected>Gizli</option>
+          <option value="1">Açık (orijinal dosyadaki gibi)</option>
+        </select>
+      </label>
+      <label class="sel" for="diff">Eksik satır
+        <select id="diff">
+          <option value="8">Az (8)</option>
+          <option value="14" selected>Orta (14)</option>
+          <option value="22">Çok (22)</option>
+        </select>
+      </label>
+      <span class="stats" id="stats"></span>
+    </div>
+  </header>
+
+  <section class="panel" aria-labelledby="hTopo">
+    <h2 id="hTopo" class="eyebrow" style="font-family:var(--f-mono);font-size:11.5px;margin-bottom:12px">Topoloji</h2>
+    <div class="topo" id="topo"></div>
+    <p class="scen" id="scen"></p>
+  </section>
+
+  <section aria-labelledby="hCode" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <h2 id="hCode"></h2>
+      <span class="muted" style="font-size:13.5px" id="blankCount"></span>
+    </div>
+    <p class="tip">Numarası mavi olan satırlar eksik. Satırın tamamını C kodu olarak yaz, örneğin <code>packet[28]=0xac;</code>. Boşluklar, büyük/küçük harf ve yorumlar önemsiz. <code>0x0a</code> ile <code>10</code> aynı kabul edilir. Enter ile sonraki satıra geçersin.</p>
+    <div class="code" id="code"></div>
+    <div class="actions">
+      <button class="primary" id="btnCheck" type="button">Kontrol et</button>
+      <button id="btnReveal" type="button">Cevapları göster</button>
+      <button id="btnClear" type="button">Temizle</button>
+      <span class="score" id="score"></span>
+    </div>
+  </section>
+
+  <details class="panel mapbox" id="mapbox">
+    <summary>
+      <span style="display:flex;flex-direction:column;gap:4px"><h2>Bayt haritası</h2><span class="hint" id="mapHint"></span></span>
+      <span class="tg">Haritayı aç</span>
+    </summary>
+    <div class="maprows" id="map"></div>
+    <div class="legend" id="legend"></div>
+  </details>
+
+  <section class="panel" id="explBox" hidden aria-labelledby="hExpl">
+    <h2 id="hExpl">Açıklamalar</h2>
+    <div class="expl" id="expl"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="hQ">
+    <h2 id="hQ">Klasik sorular</h2>
+    <p class="muted" style="margin-top:6px;font-size:14px">Önce kendin yaz, sonra cevabı aç. Cevaplar bu senaryonun adresleriyle hesaplanıyor.</p>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <details class="panel hex">
+    <summary>Onluk → hex çevirme tablosu</summary>
+    <div class="hexgrid" id="hexgrid"></div>
+    <p class="hexnote">Her okteti ayrı çevir: sayıyı 16'ya böl. Bölüm ilk hane, kalan ikinci hane olur. Örnek: <code>172 = 10×16 + 12</code> → <code>a</code>,<code>c</code> → <code>0xac</code>. 16'dan küçük sayılar başa 0 alır: <code>5 → 0x05</code>.</p>
+  </details>
+</div>
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const rnd = n => Math.floor(Math.random()*n);
+const hx = n => n.toString(16).padStart(2,'0');
+const ipStr = a => a.join('.');
+const macStr = m => m.map(b=>hx(b).toUpperCase()).join(':');
+const hexList = a => a.map(hx).join(' ');
+const range = (s,l) => Array.from({length:l},(_,i)=>s+i);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+const steps = n => `${n} = ${Math.floor(n/16)}×16 + ${n%16} → ${hx(n)}`;
+const ipSteps = ip => ip.map(n=>`<code>${steps(n)}</code>`).join(', ');
+const BCAST=[255,255,255,255,255,255], ZERO6=[0,0,0,0,0,0];
+
+function randMac(){const m=range(0,6).map(()=>rnd(256));m[0]&=0xfc;if(m.every(b=>b===0))m[5]=1;return m;}
+function randIPs(){
+  const t=rnd(3);
+  const net = t===0?[10,rnd(256),rnd(256)] : t===1?[172,16+rnd(16),rnd(256)] : [192,168,rnd(256)];
+  const b = Math.random()<0.4 ? (Math.random()<0.5?1:254) : 2+rnd(250);
+  let a; do{a=2+rnd(250);}while(a===b);
+  return [[...net,a],[...net,b]];
+}
+function randPublic(){const f=[8,31,45,52,77,88,104,142,151,185,193,212,216];return [f[rnd(f.length)],rnd(256),rnd(256),1+rnd(254)];}
+const hostBox=(name,o)=>`<div class="host${o.run?' run':''}${o.dim?' dim':''}"><div class="nm">${name}${o.run?' <span class="tag">kod burada çalışıyor</span>':''}</div><dl>${
+  o.ip?`<dt>IP</dt><dd>${ipStr(o.ip)}</dd>`:''}${o.mac?`<dt>MAC</dt><dd>${macStr(o.mac)}</dd>`:(o.unk?'<dt>MAC</dt><dd class="unk">bilinmiyor</dd>':'')}</dl></div>`;
+const midBox=(flow,sw)=>`<div class="mid"><div class="flow">${flow}</div>${sw?`<div class="switch">${sw}</div>`:''}</div>`;
+
+/* Kaynak metni satırlara çevirir. Satır sonundaki ⟦b2 anahtar | alt=...⟧ işareti: b = boş bırakılma ağırlığı, anahtar = açıklama */
+function parseSrc(txt){
+  return txt.replace(/^\n/,'').replace(/\n$/,'').split('\n').map(line=>{
+    const m=line.match(/⟦b(\d)\s+([\w:]+)((?:\s*\|\s*alt=[^|⟧]+)*)⟧\s*$/);
+    if(!m) return {t:line,b:0};
+    const alts=m[3]?m[3].split('|').map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^alt=/,'')):[];
+    return {t:line.slice(0,m.index).replace(/\s+$/,''),b:+m[1],w:m[2],alts};
+  });
+}
+/* Orijinal .c dosyaları build sırasında diskten aynen gömülür. Burada sadece
+   packet[N]=0x.. değerleri senaryoya göre değişir; değer içeren yorumlar ⟪…⟫ ile işaretlenir. */
+const PKT_RE=/(packet\[(\d+)\]\s*=\s*0x)([0-9a-fA-F]+)/;
+const macC=m=>m.map(hx).join(':');
+const ipHexDots=ip=>ip.map(hx).join('.');
+function srcLines(file,S,M,opt){
+  const L=parseSrc(file);
+  L.forEach((l,i)=>{
+    const no=i+1;
+    if(opt.cmt&&opt.cmt[no]) l.t=opt.cmt[no](S);
+    if(no<(opt.from||1)) return;
+    const m=l.t.match(PKT_RE); if(!m) return;
+    const b=+m[2], f=M.fields.find(x=>b>=x.start&&b<x.start+x.len);
+    l.t=l.t.replace(PKT_RE,(x,p)=>p+hx(S.bytes[b]));
+    l.byte=b;
+    if(!l.w){ l.b=(opt.skip||[]).includes(f.id)?0:3; l.w='f:'+f.id; }
+  });
+  return L;
+}
+const COMMON_W = size => ({
+  size:{t:`u_char packet[${size}];`,why:''},
+  lookup:{t:'pcap_lookupdev',why:`<code>pcap_lookupdev(errbuffer)</code> paketin gönderileceği ağ arayüzünü (ör. eth0) bulur ve adını döndürür. Bulamazsa NULL döner ve hata <code>errbuffer</code>'a yazılır.`},
+  open:{t:'pcap_open_live',why:`<code>pcap_open_live(dev, 100, 1, 1000, errbuffer)</code> arayüzü açar. 100 = yakalanacak en fazla bayt, 1 = promiscuous mod, 1000 = ms cinsinden zaman aşımı. Dönen <code>fp</code> ile paket gönderilir.`},
+  send:{t:'pcap_sendpacket',why:`<code>pcap_sendpacket(fp, packet, ${size})</code> hazırlanan ham baytları arayüzden olduğu gibi gönderir. Başarılıysa 0 döner, bu yüzden <code>!= 0</code> hata kontrolüdür. Boyut, dizi boyutuyla aynı: ${size}.`},
+});
+
+/* ====================== Modül: ARP ====================== */
+const ARP_FILE = "\n#include <stdlib.h>\n#include <stdio.h>\n#include <pcap.h>\n\nint main(int argc, char **argv)\n{\n\n    char *dev = NULL;\n    pcap_t *fp;\n    char errbuffer[PCAP_ERRBUF_SIZE];\n    u_char packet[42];⟦b2 size⟧\n    int i;\n\n    dev = pcap_lookupdev(errbuffer);⟦b1 lookup⟧\n    if (dev == NULL) {\n        printf(\"Error finding device: %s\\n\", errbuffer);\n        exit(EXIT_FAILURE);\n    }\n\t\n\n    printf(\"Active ethernet device: %s\\n\", dev);\n    fp = pcap_open_live(dev, 100, 1, 1000, errbuffer);⟦b1 open⟧\n\n\n\n    // Ethernet Header\n\n    // Destination MAC - 6 octets: ff:ff:ff:ff:ff:ff\n    packet[0]=0xff;\n    packet[1]=0xff;\n    packet[2]=0xff;\n    packet[3]=0xff;\n    packet[4]=0xff;\n    packet[5]=0xff;\n   \n\t//00-1E-65-8B-4F-FE\n\n    // Source MAC - 6 octets: 54:42:49:02:31:8c\n    packet[6]=0x54;\n    packet[7]=0x42;\n    packet[8]=0x49;\n    packet[9]=0x02;\n    packet[10]=0x31;\n    packet[11]=0x8c;\n\n    // Ethernet Type - 2 octets: 0x0806 (ARP)\n    packet[12]=0x08;\n    packet[13]=0x06;\n\n\n    // ARP Packet\n\n    // Hardware type - 2 octets: Ethernet : 0x0001=Request\n    packet[14]=0x00;\n    packet[15]=0x01;\n\n    // Protocol type - 2 octets: IP: 0x0800\n    packet[16]=0x08;\n    packet[17]=0x00;\n    \n    // Hardware size: 1 octet: 6\n    packet[18]=0x06;\n\n    // Protocol size: 1 octet: 4\n    packet[19]=0x04;\n\n    // Opcode: 2 octets: request - 0x0001\n    packet[20]=0x00;\n    packet[21]=0x01;\n\n    // Sender MAC address: 6 octets\n    packet[22]=0x54;\n    packet[23]=0x42;\n    packet[24]=0x49;\n    packet[25]=0x02;\n    packet[26]=0x31;\n    packet[27]=0x8c;\n\n    // Sender IP address: 4 octets: 10.9.27.225 - 0a.09.1b.e1\n    packet[28]=0x0a;\n    packet[29]=0x09;\n    packet[30]=0x1b;\n    packet[31]=0xe1;\n\n    // Target MAC address: 6 octets: 00:00:00:00:00:00\n    packet[32]=0x00;\n    packet[33]=0x00;\n    packet[34]=0x00;\n    packet[35]=0x00;\n    packet[36]=0x00;\n    packet[37]=0x00;\n\n    // Target IP address: 4 octets: 10.9.27.100 - 0a.09.1b.64\n    packet[38]=0x0a;\n    packet[39]=0x09;\n    packet[40]=0x1b;\n    packet[41]=0x64;\n\n\n    /* Send down the packet */\n    if (pcap_sendpacket(fp, packet, 42 /* size */) != 0)⟦b2 send⟧\n    {\n        fprintf(stderr,\"\\nError sending the packet: \\n\", pcap_geterr(fp));\n        return;\n    }\n\n    return;\n}\n";
+const ARP_CMT={
+  28:S=>`    // Destination MAC - 6 octets⟪: ${macC(S.val.edst)}⟫`,
+  38:S=>`    // Source MAC - 6 octets⟪: ${macC(S.val.esrc)}⟫`,
+  46:()=>`    // Ethernet Type - 2 octets⟪: 0x0806 (ARP)⟫`,
+  53:()=>`    // Hardware type - 2 octets: Ethernet⟪ : 0x0001=Request⟫`,
+  57:()=>`    // Protocol type - 2 octets: IP⟪: 0x0800⟫`,
+  61:()=>`    // Hardware size: 1 octet⟪: 6⟫`,
+  64:()=>`    // Protocol size: 1 octet⟪: 4⟫`,
+  67:S=>`    // Opcode: 2 octets: ${S.req?'request':'reply'}⟪ - 0x000${S.req?1:2}⟫`,
+  79:S=>`    // Sender IP address: 4 octets⟪: ${ipStr(S.val.sip)} - ${ipHexDots(S.val.sip)}⟫`,
+  85:S=>`    // Target MAC address: 6 octets⟪: ${macC(S.val.tmac)}⟫`,
+  93:S=>`    // Target IP address: 4 octets⟪: ${ipStr(S.val.tip)} - ${ipHexDots(S.val.tip)}⟫`,
+};
+const ARP = {
+  key:'arp', step:1, file:'1-arpgonder.c', size:42,
+  modes:[['mix','Karışık'],['req','Sadece ARP isteği'],['rep','Sadece ARP cevabı']],
+  legend:[['c1','Ethernet başlığı (14 bayt)'],['c2','ARP sabit alanları (8 bayt)'],['c3','ARP adresleri (20 bayt)']],
+  fields:[
+    {id:'edst', g:'c1', cm:'Destination MAC - 6 octets', start:0, len:6, head:'Ethernet Header'},
+    {id:'esrc', g:'c1', cm:'Source MAC - 6 octets', start:6, len:6},
+    {id:'etype',g:'c1', cm:'Ethernet Type - 2 octets', start:12,len:2},
+    {id:'htype',g:'c2', cm:'Hardware type - 2 octets: Ethernet', start:14,len:2, head:'ARP Packet'},
+    {id:'ptype',g:'c2', cm:'Protocol type - 2 octets: IP', start:16,len:2},
+    {id:'hlen', g:'c2', cm:'Hardware size: 1 octet', start:18,len:1},
+    {id:'plen', g:'c2', cm:'Protocol size: 1 octet', start:19,len:1},
+    {id:'op',   g:'c2', cm:'Opcode: 2 octets', start:20,len:2},
+    {id:'smac', g:'c3', cm:'Sender MAC address: 6 octets', start:22,len:6},
+    {id:'sip',  g:'c3', cm:'Sender IP address: 4 octets', start:28,len:4},
+    {id:'tmac', g:'c3', cm:'Target MAC address: 6 octets', start:32,len:6},
+    {id:'tip',  g:'c3', cm:'Target IP address: 4 octets', start:38,len:4},
+  ],
+  make(pick){
+    const mode = pick==='mix' ? (Math.random()<0.6?'req':'rep') : pick;
+    const req = mode==='req';
+    const [ipA,ipB]=randIPs();
+    const A={ip:ipA,mac:randMac()}, B={ip:ipB,mac:randMac()};
+    const val={
+      edst:req?BCAST:A.mac, esrc:req?A.mac:B.mac,
+      etype:[0x08,0x06], htype:[0x00,0x01], ptype:[0x08,0x00], hlen:[0x06], plen:[0x04],
+      op:[0x00, req?0x01:0x02],
+      smac:req?A.mac:B.mac, sip:req?A.ip:B.ip,
+      tmac:req?ZERO6:A.mac, tip:req?B.ip:A.ip,
+    };
+    return {req,A,B,val};
+  },
+  cmExtra(S,f){ return f.id==='op' ? ': '+(S.req?'request':'reply') : ''; },
+  lines(S){ return srcLines(ARP_FILE,S,this,{cmt:ARP_CMT}); },
+  lw(S,k){
+    const W=COMMON_W(42);
+    W.size.why=`<b>14</b> bayt Ethernet (6 hedef MAC + 6 kaynak MAC + 2 tip) + <b>28</b> bayt ARP (2+2+1+1+2+6+4+6+4) = <b>42</b>.`;
+    return W[k];
+  },
+  topo(S){
+    const {req,A,B}=S;
+    const role=(B.ip[3]===1||B.ip[3]===254)?' · Gateway':'';
+    return hostBox('PC-A',{ip:A.ip,mac:A.mac,run:req})
+      + midBox(req?'ARP Request<span class="ar">──▶</span>broadcast':'ARP Reply<span class="ar">◀──</span>unicast','SWITCH')
+      + hostBox('PC-B'+role,{ip:B.ip,mac:req?null:B.mac,unk:req,run:!req});
+  },
+  scen(S){
+    const {req,B}=S;
+    return req
+      ? `PC-A, <b>${ipStr(B.ip)}</b> adresine veri göndermek istiyor ama bu cihazın MAC adresini bilmiyor. Aşağıdaki kod <b>PC-A</b>'da çalışıyor ve bir <b>ARP isteği</b> oluşturup ağa gönderiyor.`
+      : `PC-A, <b>${ipStr(B.ip)}</b> için bir ARP isteği yayınladı ve PC-B bu isteği aldı. Aşağıdaki kod <b>PC-B</b>'de çalışıyor ve PC-A'ya gönderilecek <b>ARP cevabını</b> oluşturuyor.`;
+  },
+  why(S,id){
+    const {req,A,B}=S; const mine=req?'PC-A':'PC-B';
+    switch(id){
+      case 'edst': return req
+        ? `PC-A hedefin MAC'ini bilmiyor. Bu yüzden çerçeve <b>broadcast</b> adresine (<code>ff:ff:ff:ff:ff:ff</code>) gönderilir. Switch çerçeveyi herkese iletir, sadece IP'si ${ipStr(B.ip)} olan cihaz cevap verir.`
+        : `Cevap herkese değil, soran cihaza gider (<b>unicast</b>). PC-B, A'nın MAC'ini gelen isteğin Sender MAC alanından öğrendi. Hedef = <code>${macStr(A.mac)}</code>.`;
+      case 'esrc': return `Çerçeveyi gönderen kartın MAC adresi, yani kodun çalıştığı ${mine}: <code>${macStr(req?A.mac:B.mac)}</code>.`;
+      case 'etype': return `Ethernet tip alanı, içerideki protokolü söyler. <b>0x0806 = ARP</b>. IP paketi taşısaydı 0x0800 olurdu (icmpgonder.c'de olduğu gibi).`;
+      case 'htype': return `Donanım tipi Ethernet = <b>0x0001</b>. Dikkat: orijinal koddaki <code>0x0001=Request</code> yorumu yanıltıcı. Request bilgisi Opcode alanında tutulur.`;
+      case 'ptype': return `MAC'i sorulan adresin protokolü IP olduğu için <b>0x0800</b>. Bu, Ethernet tip alanındaki IP değeriyle aynıdır.`;
+      case 'hlen': return `Donanım (MAC) adresi <b>6 bayttır</b>, bu yüzden 0x06.`;
+      case 'plen': return `Protokol (IPv4) adresi <b>4 bayttır</b>, bu yüzden 0x04.`;
+      case 'op': return `Opcode 2 bayttır: <b>1 = request</b>, <b>2 = reply</b>. Bu paket bir ${req?'istek':'cevap'} olduğu için <code>0x00 0x0${req?1:2}</code>.`;
+      case 'smac': return `Sender, ARP paketini oluşturan cihazdır, yani ${mine}: <code>${macStr(req?A.mac:B.mac)}</code>.${req?'':' Cevapta sender ve target yer değiştirir.'}`;
+      case 'sip': { const ip=req?A.ip:B.ip; return `Sender IP = ${mine}'nin IP'si ${ipStr(ip)}. Her oktet ayrı çevrilir: ${ipSteps(ip)}.`; }
+      case 'tmac': return req
+        ? `Sorulan şey tam olarak bu adres ve henüz bilinmiyor. Bu yüzden istekte <b>00:00:00:00:00:00</b> yazılır.`
+        : `Cevapta target, isteği soran PC-A'dır. A'nın MAC'i artık biliniyor: <code>${macStr(A.mac)}</code>.`;
+      case 'tip': { const ip=req?B.ip:A.ip; return `${req?"MAC'i sorulan cihazın IP'si (PC-B)":"Cevabın gideceği, isteği soran cihazın IP'si (PC-A)"}: ${ipStr(ip)} → ${ipSteps(ip)}.`; }
+    }
+  },
+  qs(S){
+    const {req,A,B}=S;
+    const bl=(a,b,v)=>`packet[${a}..${b}] = ${hexList(v)}`;
+    return req ? [
+      {q:`Ethernet hedef MAC alanına ve ARP Target MAC alanına neden bu değerler yazıldı? Kısaca açıkla.`,
+       a:`<p><b>Hedef MAC = ff:ff:ff:ff:ff:ff (broadcast).</b> PC-A, ${ipStr(B.ip)} cihazının MAC adresini bilmiyor. Bu yüzden çerçeve ağdaki herkese gönderilir. Switch çerçeveyi tüm portlara iletir, sadece bu IP'ye sahip cihaz cevap verir.</p><p><b>Target MAC = 00:00:00:00:00:00.</b> İstekte öğrenilmek istenen adres tam olarak bu ve henüz bilinmiyor. Alan sıfırla doldurulur.</p>`},
+      {q:`Paket boyutu neden 42 bayt? Ethernet ve ARP başlıklarının uzunluklarını ayrı ayrı yazarak göster.`,
+       a:`<p>Ethernet: 6 (hedef MAC) + 6 (kaynak MAC) + 2 (tip) = <b>14</b></p><p>ARP: 2 (HW type) + 2 (protocol type) + 1 (HW size) + 1 (protocol size) + 2 (opcode) + 6 (sender MAC) + 4 (sender IP) + 6 (target MAC) + 4 (target IP) = <b>28</b></p><p>Toplam 14 + 28 = <b>42</b>. Bu değer hem <code>u_char packet[42]</code> hem de <code>pcap_sendpacket(fp, packet, 42)</code> içinde kullanılır.</p>`},
+      {q:`PC-B bu isteğe ARP cevabı (reply) gönderirse aynı kodda hangi baytlar ne olur? Değişen alanları yaz.`,
+       a:`<p>Cevap kodu PC-B'de çalışır. Sender ve target yer değiştirir, opcode 2 olur, çerçeve doğrudan A'ya gider.</p><pre>${[
+         bl(0,5,A.mac)+'   // hedef: A (unicast)', bl(6,11,B.mac)+'   // kaynak: B',
+         'packet[20..21] = 00 02   // opcode: reply',
+         bl(22,27,B.mac)+'   // sender MAC: B', bl(28,31,B.ip)+'   // sender IP: '+ipStr(B.ip),
+         bl(32,37,A.mac)+'   // target MAC: A', bl(38,41,A.ip)+'   // target IP: '+ipStr(A.ip)].join('\n')}</pre><p>Değişmeyenler: Ethernet tipi 08 06, HW type 00 01, protocol type 08 00, boyutlar 06 / 04 ve paket boyutu 42.</p>`},
+    ] : [
+      {q:`Bu cevapta Ethernet hedef MAC'i neden broadcast (ff:ff:…) değil? PC-B bu adresi nereden öğrendi?`,
+       a:`<p>ARP cevabı herkese değil, sadece soran cihaza gider (<b>unicast</b>). PC-B, PC-A'nın MAC adresini (<code>${macStr(A.mac)}</code>) gelen ARP isteğinin <b>Sender MAC</b> alanından öğrendi. Aynı şekilde A'nın IP'sini de Sender IP alanından aldı.</p>`},
+      {q:`Paket boyutu neden 42 bayt? Ethernet ve ARP başlıklarının uzunluklarını ayrı ayrı yazarak göster.`,
+       a:`<p>Ethernet: 6 + 6 + 2 = <b>14</b></p><p>ARP: 2 + 2 + 1 + 1 + 2 + 6 + 4 + 6 + 4 = <b>28</b></p><p>Toplam <b>42</b>. Cevap paketi de istekle aynı boyuttadır, sadece içerik değişir.</p>`},
+      {q:`Bu cevaba yol açan ARP isteğini PC-A nasıl doldurmuştu? Farklı olan baytları yaz.`,
+       a:`<pre>${[
+         bl(0,5,BCAST)+'   // broadcast', bl(6,11,A.mac)+'   // kaynak: A',
+         'packet[20..21] = 00 01   // opcode: request',
+         bl(22,27,A.mac)+'   // sender MAC: A', bl(28,31,A.ip)+'   // sender IP: '+ipStr(A.ip),
+         bl(32,37,ZERO6)+'   // target MAC: bilinmiyor', bl(38,41,B.ip)+'   // target IP: '+ipStr(B.ip)].join('\n')}</pre>`},
+    ];
+  },
+};
+
+/* ====================== Modül: ICMP ====================== */
+const TS=[0xa6,0x5d,0x4d,0x5e,0,0,0,0];
+const ICMP_FILE = "\n#include <stdlib.h>\n#include <stdio.h>\n#include <pcap.h>\n\nint main(int argc, char **argv)\n{\n    char *dev = NULL;\n    pcap_t *fp;\n    char errbuffer[PCAP_ERRBUF_SIZE];\n    u_char packet[50];⟦b2 size⟧\n    int i;\n\n    dev = pcap_lookupdev(errbuffer);⟦b1 lookup⟧\n    if (dev == NULL) {\n        printf(\"Error finding device: %s\\n\", errbuffer);\n        exit(EXIT_FAILURE);\n    }\n\n    printf(\"Active ethernet device: %s\\n\", dev);\n    fp = pcap_open_live(dev, 100, 1, 1000, errbuffer);⟦b1 open⟧\n\n    // Ethernet Header\n    //Destination Mac-00:50:56:FC:18:27\n    packet[0]=0x00;\n    packet[1]=0x50;\n    packet[2]=0x56;\n    packet[3]=0xfc;\n    packet[4]=0x18;\n    packet[5]=0x27;\n \n    //Source Mac-00:0C:29:cd:27:50\n    packet[6]=0x00;\n    packet[7]=0x0c;\n    packet[8]=0x29;\n    packet[9]=0xcd;\n    packet[10]=0x27;\n    packet[11]=0x50;\n\n    //Tip\n    packet[12]=0x08;\n    packet[13]=0x00;\n\n    //IP BAŞLIK YAPISI\n    //versiyon+header lenght\n    packet[14]=0x45;\n\n    //servis alanı\n    packet[15]=0x00;\n\n    // total length\n    packet[16]=0x00;\n    packet[17]=0x24;\n\n    //identification\n    packet[18]=0x10;\n    packet[19]=0xfd;\n\n    //Flags+Fragmantaston offset\n    packet[20]=0x00;\n    packet[21]=0x00;\n\n    //ttl değeri\n    packet[22]=0x40;\n    \n    //protocol bilgisi\n    packet[23]=0x01;\n\n    //header cheksum\n    packet[24]=0x00;\n    packet[25]=0x00;\n\n    //kaynak IP-192.168.11.128\n    packet[26]=0xc0;\n    packet[27]=0xa8;\n    packet[28]=0x0b;\n    packet[29]=0x80;\n\n    //hedef IP-216.58.206.196\n    packet[30]=0xd8;\n    packet[31]=0x3a;\n    packet[32]=0xce;\n    packet[33]=0xc4;\n\n    //ICMP REQUEST\n    //tip alanı\n    packet[34]=0x08;\n    \n    //kod\n    packet[35]=0x00;\n\n    //checksum\n    packet[36]=0x00;\n    packet[37]=0x00;\n\n    //rest of header\n    packet[38]=0x11;\n    packet[39]=0x8d;\n    packet[40]=0x00;\n    packet[41]=0x1b;\n\n    //zaman damgası\n    packet[42]=0xa6;\n    packet[43]=0x5d;\n    packet[44]=0x4d;\n    packet[45]=0x5e;\n    packet[46]=0x00;\n    packet[47]=0x00;\n    packet[48]=0x00;\n    packet[49]=0x00;\n\n    /* Send down the packet */\n    if (pcap_sendpacket(fp, packet, 50 /* size */) != 0)⟦b2 send⟧\n    {\n        fprintf(stderr,\"\\nError sending the packet: \\n\", pcap_geterr(fp));\n        return;\n    }\n    return;\n}\n";
+const ICMP_CMT={
+  23:S=>`    //Destination Mac⟪-${macStr(S.val.edst)}⟫`,
+  31:S=>`    //Source Mac⟪-${macStr(S.val.esrc)}⟫`,
+  72:S=>`    //kaynak IP⟪-${ipStr(S.val.sip)}⟫`,
+  78:S=>`    //hedef IP⟪-${ipStr(S.val.dip)}⟫`,
+};
+const ICMP_FIELDS=[
+  {id:'edst', g:'c1', cm:'Destination Mac', start:0, len:6, head:'Ethernet Header'},
+  {id:'esrc', g:'c1', cm:'Source Mac', start:6, len:6},
+  {id:'etype',g:'c1', cm:'Tip', start:12,len:2},
+  {id:'verihl',g:'c2',cm:'versiyon+header lenght', start:14,len:1, head:'IP BAŞLIK YAPISI'},
+  {id:'tos',  g:'c2', cm:'servis alanı', start:15,len:1},
+  {id:'tlen', g:'c2', cm:'total length', start:16,len:2},
+  {id:'ident',g:'c2', cm:'identification', start:18,len:2},
+  {id:'frag', g:'c2', cm:'Flags+Fragmantasyon offset', start:20,len:2},
+  {id:'ttl',  g:'c2', cm:'ttl değeri', start:22,len:1},
+  {id:'proto',g:'c2', cm:'protocol bilgisi', start:23,len:1},
+  {id:'csum', g:'c2', cm:'header cheksum', start:24,len:2},
+  {id:'sip',  g:'c3', cm:'kaynak IP', start:26,len:4},
+  {id:'dip',  g:'c3', cm:'hedef IP', start:30,len:4},
+  {id:'itype',g:'c4', cm:'tip alanı', start:34,len:1, head:'ICMP REQUEST'},
+  {id:'icode',g:'c4', cm:'kod', start:35,len:1},
+  {id:'icsum',g:'c4', cm:'checksum', start:36,len:2},
+  {id:'rest', g:'c4', cm:'rest of header', start:38,len:4},
+  {id:'ts',   g:'c4', cm:'zaman damgası', start:42,len:8},
+];
+const ICMP_LEGEND=[['c1','Ethernet başlığı (14 bayt)'],['c2','IP başlığı sabit alanları'],['c3','IP adresleri (8 bayt)'],['c4','ICMP (16 bayt)']];
+const ICMP = {
+  key:'icmp', step:2, file:'2-icmpgonder.c', size:50,
+  modes:[['mix','Karışık'],['lan','Aynı ağdaki PC'],['wan','Uzak sunucu (router üzerinden)']],
+  legend:ICMP_LEGEND, fields:ICMP_FIELDS,
+  make(pick){
+    const mode = pick==='mix' ? (Math.random()<0.5?'lan':'wan') : pick;
+    const wan = mode==='wan';
+    const [ipA,ipB]=randIPs();
+    const A={ip:ipA,mac:randMac()};
+    let B=null,R=null,Srv=null;
+    if(wan){
+      let g=Math.random()<0.5?1:254; if(g===ipA[3]) g=g===1?254:1;
+      R={ip:[...ipA.slice(0,3),g],mac:randMac()}; Srv={ip:randPublic()};
+    } else B={ip:ipB,mac:randMac()};
+    const ttl=[64,128,255][rnd(3)];
+    const val={
+      edst: wan?R.mac:B.mac, esrc:A.mac, etype:[0x08,0x00],
+      verihl:[0x45], tos:[0x00], tlen:[0x00,0x24], ident:[0x10,0xfd], frag:[0x00,0x00],
+      ttl:[ttl], proto:[0x01], csum:[0x00,0x00],
+      sip:A.ip, dip: wan?Srv.ip:B.ip,
+      itype:[0x08], icode:[0x00], icsum:[0x00,0x00], rest:[0x11,0x8d,0x00,0x1b], ts:TS,
+    };
+    return {wan,A,B,R,Srv,ttl,val};
+  },
+  lines(S){ return srcLines(ICMP_FILE,S,this,{cmt:ICMP_CMT,skip:['ident','rest','ts']}); },
+  lw(S,k){
+    const W=COMMON_W(50);
+    W.size.why=`<b>14</b> (Ethernet) + <b>20</b> (IP başlığı) + <b>8</b> (ICMP başlığı: tip 1 + kod 1 + checksum 2 + rest 4) + <b>8</b> (zaman damgası) = <b>50</b>. IP total length alanı ise Ethernet'i saymaz: 50 − 14 = 36.`;
+    return W[k];
+  },
+  topo(S){
+    const {wan,A,B,R,Srv}=S;
+    if(!wan) return hostBox('PC-A',{ip:A.ip,mac:A.mac,run:true})
+      + midBox('Echo Request<span class="ar">──▶</span>ping','SWITCH')
+      + hostBox('PC-B',{ip:B.ip,mac:B.mac});
+    return hostBox('PC-A',{ip:A.ip,mac:A.mac,run:true})
+      + midBox('<span class="ar">──▶</span>','SWITCH')
+      + hostBox('Router · Gateway',{ip:R.ip,mac:R.mac})
+      + midBox('<span class="ar">──▶</span>','İNTERNET')
+      + hostBox('Web sunucusu',{ip:Srv.ip,dim:true});
+  },
+  scen(S){
+    const {wan,B,Srv,ttl}=S;
+    return (wan
+      ? `PC-A, internetteki <b>${ipStr(Srv.ip)}</b> sunucusuna ping (ICMP echo request) atmak istiyor. Sunucu başka bir ağda olduğu için paket önce <b>router'a (default gateway)</b> gider. PC-A, router'ın MAC adresini daha önce ARP ile öğrendi.`
+      : `PC-A, aynı ağdaki <b>${ipStr(B.ip)}</b> (PC-B) cihazına ping (ICMP echo request) atmak istiyor. PC-A, B'nin MAC adresini daha önce ARP ile öğrendi.`)
+      + ` Aşağıdaki kod <b>PC-A</b>'da çalışıyor. Paketin <b>TTL değeri ${ttl}</b> olsun. Checksum alanları hesaplanmadan 0 bırakılıyor. Identification <code>0x10fd</code>, rest of header ve zaman damgası orijinal koddaki gibi.`;
+  },
+  why(S,id){
+    const {wan,A,B,R,Srv,ttl}=S;
+    switch(id){
+      case 'edst': return wan
+        ? `Hedef başka bir ağda. Ethernet çerçevesi sadece bir sonraki durağa, yani <b>router'a</b> kadar gider. Bu yüzden hedef MAC = router'ın MAC'i <code>${macStr(R.mac)}</code>. Hedef IP ise sunucunun IP'si olarak kalır. Orijinal koddaki <code>00:50:56:FC:18:27</code> da gateway'in MAC'idir.`
+        : `PC-B aynı ağda olduğu için çerçeve doğrudan ona gider: hedef MAC = PC-B'nin MAC'i <code>${macStr(B.mac)}</code>.`;
+      case 'esrc': return `Çerçeveyi gönderen, kodun çalıştığı PC-A: <code>${macStr(A.mac)}</code>.`;
+      case 'etype': return `Ethernet tip <b>0x0800 = IP</b>. ICMP, IP'nin içinde taşınır. ARP olsaydı 0x0806 olurdu.`;
+      case 'verihl': return `Tek bayt, iki yarım: üst 4 bit <b>4 = IPv4</b>, alt 4 bit <b>5 = HLEN</b>. HLEN 4 baytlık kelime sayısıdır, yani 5 × 4 = <b>20 bayt</b> başlık (opsiyon yok).`;
+      case 'tos': return `Servis tipi (TOS) alanı. Özel bir öncelik istenmediği için <b>0x00</b>.`;
+      case 'tlen': return `Total length = IP başlığı + veri. Ethernet başlığı dahil değil: 20 (IP) + 8 (ICMP başlığı) + 8 (zaman damgası) = <b>36 = 0x0024</b>. 2 bayt olduğu için <code>00 24</code>.`;
+      case 'frag': return `Flags + fragment offset = <b>0</b>. Paket parçalanmamış ve ilk (tek) parça.`;
+      case 'ttl': return `TTL = ${ttl} → <code>${steps(ttl)}</code>. TTL her router'da 1 azalır ve 0 olunca paket atılır.`;
+      case 'proto': return `IP'nin taşıdığı protokol: <b>1 = ICMP</b>. Karşılaştırma için 6 = TCP, 17 = UDP.`;
+      case 'csum': return `IP başlık checksum'ı kodda hesaplanmamış, <b>0x0000</b> bırakılmış.`;
+      case 'sip': return `Kaynak IP = PC-A: ${ipStr(A.ip)} → ${ipSteps(A.ip)}.`;
+      case 'dip': { const ip=wan?Srv.ip:B.ip; return `Hedef IP = ${wan?"pingin asıl hedefi olan sunucu. Router'ın IP'si yazılmaz":'PC-B'}: ${ipStr(ip)} → ${ipSteps(ip)}.`; }
+      case 'itype': return `ICMP tip <b>8 = echo request</b> (ping isteği). Cevap (echo reply) tipi 0'dır. ping_server.c bu alanı 0 yaparak cevap üretir.`;
+      case 'icode': return `Echo request/reply için kod alanı <b>0</b>. (Ping uygulamasında burası 0x08 yazılmış, o fark adım 3–4'te.)`;
+      case 'icsum': return `ICMP checksum da hesaplanmamış, <b>0x0000</b>.`;
+    }
+  },
+  qs(S){
+    const {wan,A,B,R,Srv,ttl}=S;
+    const bl=(a,b,v)=>`packet[${a}..${b}] = ${hexList(v)}`;
+    const q1 = wan
+      ? {q:`Ethernet hedef MAC'i (packet[0..5]) ile hedef IP (packet[30..33]) hangi cihazlara ait? Neden aynı cihaza ait değiller?`,
+         a:`<p><b>Hedef MAC = router'ın MAC'i</b> (<code>${macStr(R.mac)}</code>). <b>Hedef IP = sunucunun IP'si</b> (${ipStr(Srv.ip)}).</p><p>MAC adresi Katman 2 adresidir ve sadece aynı yerel ağ içinde, bir sonraki durağa kadar geçerlidir. Sunucu başka ağda olduğu için çerçeve önce router'a teslim edilir. IP adresi Katman 3 adresidir ve uçtan uca hedefi gösterir, yol boyunca değişmez.</p>`}
+      : {q:`Ethernet hedef MAC'i (packet[0..5]) ile hedef IP (packet[30..33]) hangi cihaza ait? Hedef başka bir ağda olsaydı ne değişirdi?`,
+         a:`<p>İkisi de <b>PC-B</b>'ye ait: MAC <code>${macStr(B.mac)}</code>, IP ${ipStr(B.ip)}. B aynı ağda olduğu için çerçeve doğrudan ona gider.</p><p>Hedef başka ağda olsaydı hedef IP yine uzaktaki cihaz olurdu, ama <b>hedef MAC router'ın (gateway) MAC'i</b> olurdu. MAC sadece yerel ağda bir sonraki durağa kadar geçerlidir.</p>`};
+    const q2 = {q:`packet[14] = 0x45 ve packet[16..17] = 0x00 0x24 değerlerini açıkla. Dizi neden 50 bayt?`,
+      a:`<p><b>0x45:</b> 4 = IP versiyonu (IPv4), 5 = HLEN. HLEN 4 baytlık kelime cinsindendir: 5 × 4 = 20 bayt IP başlığı.</p><p><b>0x0024 = 36:</b> IP total length = 20 (IP başlığı) + 8 (ICMP başlığı) + 8 (zaman damgası). Ethernet başlığı dahil değildir.</p><p><b>50</b> = 14 (Ethernet) + 36. Hem <code>u_char packet[50]</code> hem <code>pcap_sendpacket(fp, packet, 50)</code> bu değeri kullanır.</p>`};
+    const q3 = wan
+      ? {q:`Paket router'dan geçip internete çıkarken hangi alanlar değişir, hangileri aynı kalır?`,
+         a:`<pre>${[
+           `packet[22]     = ${hx(ttl)} → ${hx(ttl-1)}   // TTL 1 azalır (${ttl} → ${ttl-1})`,
+           `packet[24..25] yeniden hesaplanır   // TTL değiştiği için IP checksum`,
+           `packet[0..5]   = sonraki durağın MAC'i`,
+           `packet[6..11]  = router'ın çıkış arayüzü MAC'i`].join('\n')}</pre><p><b>Aynı kalanlar:</b> kaynak ve hedef IP, protocol (01), ICMP tip/kod. IP adresleri uçtan uca, MAC adresleri her sıçramada değişir.</p><p class="muted">Not: Gerçekte özel IP'li bir ağdan çıkarken NAT kaynak IP'yi de değiştirir. Ders kapsamındaki temel cevap TTL ve checksum'dır.</p>`}
+      : {q:`PC-B bu pakete echo reply ile cevap verirse hangi baytlar değişir?`,
+         a:`<pre>${[
+           bl(0,5,A.mac)+'   // hedef MAC: A', bl(6,11,B.mac)+'   // kaynak MAC: B',
+           bl(26,29,B.ip)+'   // kaynak IP: '+ipStr(B.ip), bl(30,33,A.ip)+'   // hedef IP: '+ipStr(A.ip),
+           'packet[34]     = 00   // tip: echo reply'].join('\n')}</pre><p>MAC ve IP adresleri yer değiştirir, ICMP tipi 8'den 0'a döner. ping_server.c tam olarak bunu <code>swap()</code> ve <code>my_packet[34] = 0x00</code> ile yapar (adım 3).</p>`};
+    return [q1,q2,q3];
+  },
+};
+
+/* ====================== Modül: ping_server.c ====================== */
+function dumpHTML(bytes,fields,label){
+  const rows=[]; for(let s=0;s<bytes.length;s+=14) rows.push(s);
+  const fo=b=>fields.find(f=>b>=f.start&&b<f.start+f.len);
+  return `<div class="dump"><span class="eyebrow">${label}</span><div class="maprows">${rows.map(s=>{
+    const e=Math.min(s+14,bytes.length)-1;
+    return `<div class="maprow"><span class="rl">packet[${s}..${e}]</span><div class="map">${range(s,e-s+1).map(b=>{const f=fo(b);return `<div class="cell ${f.g}" title="packet[${b}] · ${esc(f.cm)}"><span class="i">${b}</span><span class="v">${hx(bytes[b])}</span></div>`;}).join('')}</div></div>`;
+  }).join('')}</div></div>`;
+}
+const PS_FILE = "\n\n#include <stdio.h>\n#include <pcap.h>\n#include <netinet/in.h>\n#include <netinet/if_ether.h>\n#include <arpa/inet.h>\n#include <string.h>\n\n//Function Prototypes\nvoid swap(u_char *t1, u_char *t2);⟦b1 proto⟧\nvoid my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);⟦b1 proto⟧\nvoid filter_ip_address(char *device, char *dest_ip, char *filter_exp);\n//Global variables\nchar *device;\nchar error_buffer[PCAP_ERRBUF_SIZE];\npcap_t *handle;\n/* Snapshot length is how many bytes to capture from each packet. This includes*/\nint snapshot_length = 1024;\n\n/* End the loop after this many packets are captured */\nint total_packet_count = 0;⟦b1 count⟧\n\nu_char *my_arguments = NULL;\n\nstruct bpf_program filter;\nchar filter_exp[30] = \"\";\nbpf_u_int32 subnet_mask, ip;\nstruct in_addr address;\n\nchar dest_ip[25];\n\nint main(int argc, char **argv)\n{\n\n    //printf(\"hello\");\n\n    device = pcap_lookupdev(error_buffer);⟦b1 lookup⟧\n    if (device == NULL)\n    {\n        printf(\"%s\\n\", error_buffer);\n        return 1;\n    }\n\n    strcpy(filter_exp, \" icmp && dst \");⟦b2 filt⟧\n    filter_ip_address(device, dest_ip, filter_exp);⟦b1 filtfn⟧\n\n    if (pcap_lookupnet(device, &ip, &subnet_mask, error_buffer) == -1)⟦b1 lookupnet⟧\n    {\n        printf(\"Could not get information for device: %s\\n\", device);\n        ip = 0;\n        subnet_mask = 0;\n    }\n\n    handle = pcap_open_live(device, BUFSIZ, 1, 1000, error_buffer);⟦b1 open⟧\n\n    if (handle == NULL)\n    {\n        fprintf(stderr, \"Couldn't open device %s: %s\\n\", device, error_buffer);\n        return (2);\n    }\n\n    if (handle == NULL)\n    {\n        printf(\"Could not open %s - %s\\n\", device, error_buffer);\n        return 2;\n    }\n    if (pcap_compile(handle, &filter, filter_exp, 0, ip) == -1)⟦b1 comp⟧\n    {\n        printf(\"Bad filter - %s\\n\", pcap_geterr(handle));\n        return 2;\n    }\n    if (pcap_setfilter(handle, &filter) == -1)⟦b1 setf⟧\n    {\n        printf(\"Error setting filter - %s\\n\", pcap_geterr(handle));\n        return 2;\n    }\n\n    pcap_loop(handle, total_packet_count, my_packet_handler, my_arguments);⟦b2 loop⟧\n    return 0;\n}\n\nvoid my_packet_handler(\n    u_char *args,\n    const struct pcap_pkthdr *header,\n    const u_char *packet)\n{\n\n    char error_buffer[PCAP_ERRBUF_SIZE];\n\n    handle = pcap_open_live(device, BUFSIZ, 1, 1000, error_buffer);⟦b1 open2⟧\n    unsigned char my_packet[50];⟦b2 mp⟧\n  \n\n    if (packet[34] == 0x08 && packet[35] == 0x08) //ICMP echo request⟦b4 cond⟧\n    {\n        //printf(\"yakaladım!!\");\n        for (int i = 0; i < header->caplen; i++)⟦b2 copy⟧\n        {\n            /* code */\n            my_packet[i] = packet[i];⟦b3 copy⟧\n        }\n\n        //mac adresses swap\n\n        //ip & mac adresses swap\n\n        for (int i = 0; i < 4; i++)⟦b3 loop4⟧\n        {\n            swap(&my_packet[i + 0], &my_packet[i + 6]);   //mac adress swap \"first 4 byte\"⟦b4 macsw | alt=swap(&my_packet[i], &my_packet[i + 6]);⟧\n            swap(&my_packet[i + 26], &my_packet[i + 30]); //ip adresss swap⟦b4 ipsw⟧\n        }\n        swap(&my_packet[4], &my_packet[10]);⟦b4 macsw2⟧\n        swap(&my_packet[5], &my_packet[11]); //mac adress swap \"last 2 byte\"⟦b4 macsw2⟧\n\n        //tip echo reply\n        my_packet[34] = 0x00;⟦b4 reply⟧\n\n        if (pcap_sendpacket(handle, my_packet, 50) != 0)⟦b3 send⟧\n        {\n            fprintf(stderr, \"\\nError sending the packet: \\n\", pcap_geterr(handle));\n            return;\n        }\n        pcap_close(handle);⟦b1 close⟧\n\n        /* First, lets make sure we have an IP packet */\n        struct ether_header *eth_header;\n        eth_header = (struct ether_header *)packet;⟦b1 eth⟧\n        if (ntohs(eth_header->ether_type) != ETHERTYPE_IP)⟦b2 etype⟧\n        {\n            printf(\"Not an IP packet. Skipping...\\n\");\n            return;\n        }\n        printf(\"it was captured a ICMP packet from %u.%u.%u.%u  !!\\n\", packet[26], packet[27], packet[28], packet[29]);⟦b2 print⟧\n        printf(\"Total packet available: %d bytes\\n\\n\", header->caplen);⟦b1 caplen⟧\n        //printf(\"Expected packet size: %d bytes\\n\\n\", header->len);\n    }\n}\n\nvoid swap(u_char *t1, u_char *t2)\n{\n    u_char t;\n\n    t = *t1;⟦b3 swapb⟧\n    *t1 = *t2;⟦b3 swapb⟧\n    *t2 = t;⟦b3 swapb⟧\n}\n\nvoid filter_ip_address(char *device, char *dest_ip, char *filter_exp)\n{\n\n    pcap_if_t *alldevs;\n    int status = pcap_findalldevs(&alldevs, error_buffer);⟦b1 fad⟧\n    if (status != 0)\n    {\n        printf(\"%s\\n\", error_buffer);\n        return;\n    }\n\n    for (pcap_if_t *d = alldevs; d != NULL; d = d->next)⟦b1 fad⟧\n    {\n        if (strcmp(d->name, device) == 0)⟦b1 fad⟧\n        {\n            //  printf(\"%s:\", d->name);\n            for (pcap_addr_t *a = d->addresses; a != NULL; a = a->next)⟦b1 fad⟧\n            {\n                if (a->addr->sa_family == AF_INET)⟦b2 afinet⟧\n                    //printf(\" %s\", inet_ntoa(((struct sockaddr_in*)a->addr)->sin_addr));\n                    strcat(dest_ip, inet_ntoa(((struct sockaddr_in *)a->addr)->sin_addr));⟦b1 afinet⟧\n            }\n        }\n    }\n\n    strcat(filter_exp, dest_ip);⟦b2 filtcat⟧\n    pcap_freealldevs(alldevs);\n    printf(\"ip address : %s\\n\\n\", dest_ip);\n}\n";
+const PS = {
+  key:'pings', step:3, file:'ping_server.c', size:50,
+  modes:[['mix','Karışık']],
+  legend:ICMP_LEGEND, fields:ICMP_FIELDS, noMap:true,
+  make(){
+    const [ipA,ipB]=randIPs();
+    const A={ip:ipA,mac:randMac()}, B={ip:ipB,mac:randMac()};
+    const ttl=[64,128][rnd(2)];
+    const inc={
+      edst:B.mac, esrc:A.mac, etype:[0x08,0x00],
+      verihl:[0x45], tos:[0x00], tlen:[0x00,0x24], ident:[0x10,0xfd], frag:[0x00,0x00],
+      ttl:[ttl], proto:[0x01], csum:[0x00,0x00], sip:A.ip, dip:B.ip,
+      itype:[0x08], icode:[0x08], icsum:[0x00,0x00], rest:[0x11,0x8d,0x00,0x1b], ts:TS,
+    };
+    const inBytes=new Array(50); ICMP_FIELDS.forEach(f=>inc[f.id].forEach((v,i)=>inBytes[f.start+i]=v));
+    return {A,B,ttl,inBytes,val:inc};
+  },
+  lines(){ return parseSrc(PS_FILE); },
+  topo(S){
+    const {A,B}=S;
+    return `<div class="topo" style="width:100%">`
+      + hostBox('PC-A · ping_client',{ip:A.ip,mac:A.mac})
+      + midBox('Echo Request<span class="ar">──▶</span>08 08','SWITCH')
+      + hostBox('PC-B · ping_server',{ip:B.ip,mac:B.mac,run:true})
+      + `</div>` + dumpHTML(S.inBytes,ICMP_FIELDS,'Sunucuya gelen paket (packet)');
+  },
+  scen(){
+    return `PC-A'daki ping_client, PC-B'ye bir echo request gönderdi (yukarıdaki baytlar). PC-B'de <b>ping_server.c</b> çalışıyor: paketi yakalıyor, <code>my_packet</code>'e kopyalıyor, adresleri swap edip tipi değiştiriyor ve geri gönderiyor. Kod orijinal dosyanın aynısıdır; satır numaraları gerçek dosyayla aynı.`;
+  },
+  lw(S,k){
+    const W={
+      proto:['Fonksiyon prototipleri',`Fonksiyonlar <code>main</code>'den sonra tanımlandığı için önce prototipleri yazılır: <code>void swap(u_char *t1, u_char *t2);</code> ve <code>void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);</code>.`],
+      count:['total_packet_count = 0',`<code>pcap_loop</code>'a verilen paket sayısı. <b>0</b> (veya negatif) sonsuz döngü demektir, sunucu sürekli dinler.`],
+      lookup:['pcap_lookupdev',`Yakalama yapılacak ağ arayüzünü bulur. Bulamazsa NULL döner.`],
+      filt:['strcpy(filter_exp, " icmp && dst ")',`BPF filtresinin ilk kısmı: sadece <b>ICMP</b> paketleri ve hedefi bu makine olanlar. Sonuna kendi IP'si eklenir: <code>" icmp &amp;&amp; dst ${ipStr(S.B.ip)}"</code>.`],
+      filtfn:['filter_ip_address(...)',`Arayüzün IPv4 adresini bulup <code>dest_ip</code>'ye ve filtre metninin sonuna ekleyen yardımcı fonksiyon.`],
+      lookupnet:['pcap_lookupnet',`Arayüzün ağ adresini ve maskesini alır. <code>pcap_compile</code>'a verilen <code>ip</code> buradan gelir.`],
+      open:['pcap_open_live',`Arayüzü canlı yakalama için açar: cihaz, BUFSIZ bayt, 1 = promiscuous, 1000 ms zaman aşımı, hata tamponu.`],
+      open2:['pcap_open_live (handler içinde)',`Cevabı göndermek için arayüz handler içinde yeniden açılıyor. Gönderimden sonra <code>pcap_close(handle)</code> ile kapatılıyor.`],
+      comp:['pcap_compile',`Filtre metnini BPF programına derler. -1 dönerse filtre hatalıdır.`],
+      setf:['pcap_setfilter',`Derlenen filtreyi tutamaca uygular. Bundan sonra sadece filtreye uyan paketler yakalanır.`],
+      loop:['pcap_loop',`<code>pcap_loop(handle, total_packet_count, my_packet_handler, my_arguments)</code>: her paket yakalandığında 3. parametredeki callback fonksiyonunu çağırır.`],
+      mp:['unsigned char my_packet[50]',`Cevap paketinin hazırlanacağı kopya. Gelen <code>packet</code> const olduğu için değiştirilemez, bu yüzden 50 baytlık yeni bir dizi açılır.`],
+      cond:['if (packet[34] == 0x08 && packet[35] == 0x08)',`packet[34] ICMP <b>tip</b>, packet[35] ICMP <b>kod</b> alanıdır. Tip 8 = echo request. Bu uygulamada istemci kod alanına da standart dışı <b>0x08</b> yazıyor (standartta 0x00). Sunucu ikisini de kontrol ediyor, böylece sadece kendi ping_client'ının paketlerine cevap veriyor.`],
+      copy:['Kopyalama döngüsü',`<code>for (int i = 0; i &lt; header-&gt;caplen; i++) my_packet[i] = packet[i];</code>. <code>caplen</code> yakalanan bayt sayısıdır. Paket olduğu gibi kopyalanır, değişiklikler kopyada yapılır.`],
+      loop4:['for (int i = 0; i < 4; i++)',`Döngü 4 tur döner. IP adresleri 4 bayt olduğu için tek döngüde tamamen swap edilir. MAC'lerin de ilk 4 baytı bu döngüde swap edilir.`],
+      macsw:['swap(&my_packet[i + 0], &my_packet[i + 6])',`Hedef MAC 0–5'te, kaynak MAC 6–11'de. i ile i+6 yer değiştirir (i = 0..3).`],
+      ipsw:['swap(&my_packet[i + 26], &my_packet[i + 30])',`Kaynak IP 26–29'da, hedef IP 30–33'te. 4 turda tamamı yer değiştirir. Cevapta kaynak = sunucu (${ipStr(S.B.ip)}), hedef = istemci (${ipStr(S.A.ip)}).`],
+      macsw2:['MAC son 2 bayt: 4↔10, 5↔11',`Döngü sadece i = 0..3'ü kapsadığı için MAC'in kalan 2 baytı döngüden sonra ayrıca swap edilir.`],
+      reply:['my_packet[34] = 0x00',`ICMP tip alanı <b>0 = echo reply</b> yapılır. Kod alanı (35) 0x08 olarak kalır. İstemci cevabı <code>packet[34]==0x00 &amp;&amp; packet[35]==0x08</code> ile tanır.`],
+      send:['pcap_sendpacket(handle, my_packet, 50)',`Değiştirilmiş kopya gönderilir. Başarılıysa 0 döner, bu yüzden <code>!= 0</code> hata kontrolüdür. 50 = 14 + 20 + 8 + 8.`],
+      close:['pcap_close(handle)',`Handler içinde açılan gönderim tutamacı kapatılır.`],
+      eth:['eth_header = (struct ether_header *)packet',`Paketin ilk 14 baytı Ethernet başlığı struct'ı gibi okunur (tip dönüşümü).`],
+      etype:['ntohs(...) != ETHERTYPE_IP',`<code>ntohs</code> 16 bitlik değeri ağ bayt sırasından (big-endian) host sırasına çevirir. <code>ETHERTYPE_IP</code> = 0x0800.`],
+      print:['printf(... packet[26], packet[27], packet[28], packet[29])',`Gelen paketin kaynak IP'si 26–29'dadır, yani ping atan istemci (${ipStr(S.A.ip)}). Burada değiştirilmemiş orijinal <code>packet</code> okunuyor.`],
+      caplen:['printf(... header->caplen)',`Yakalanan toplam bayt sayısını yazdırır (bu senaryoda 50).`],
+      swapb:['swap() gövdesi',`Üç adımlı takas: <code>t = *t1; *t1 = *t2; *t2 = t;</code>. Parametreler pointer olduğu için <code>*</code> ile gösterilen bayt değiştirilir.`],
+      fad:['Arayüz listesini gezme',`<code>pcap_findalldevs</code> tüm arayüzleri listeler. Döngü, adı <code>device</code> ile aynı olan arayüzü (<code>strcmp(...) == 0</code>) ve onun adreslerini gezer.`],
+      afinet:['AF_INET → inet_ntoa',`Adres ailesi <code>AF_INET</code> (IPv4) olan adres bulununca <code>inet_ntoa</code> ile "a.b.c.d" metnine çevrilip <code>dest_ip</code>'ye eklenir.`],
+      filtcat:['strcat(filter_exp, dest_ip)',`Kendi IP'si filtre metninin sonuna eklenir. Sonuç: <code>" icmp &amp;&amp; dst ${ipStr(S.B.ip)}"</code>.`],
+    };
+    const w=W[k]; return {t:w[0],why:w[1]};
+  },
+  qs(S){
+    const {A,B,ttl}=S;
+    return [
+      {q:`Sunucu, gelen paketin kendi istemcisinden gelen bir echo request olduğunu nasıl anlıyor? Standart bir ping (kod = 0x00) gelseydi ne olurdu?`,
+       a:`<p><code>if (packet[34] == 0x08 &amp;&amp; packet[35] == 0x08)</code>. packet[34] ICMP tip alanı (8 = echo request), packet[35] kod alanı. Bu uygulamada istemci kod alanına standart dışı olarak 0x08 yazıyor.</p><p>Standart bir ping'de kod 0x00 olduğu için koşul sağlanmaz ve ping_server cevap üretmez. (O pakete işletim sisteminin kendisi cevap verir.)</p>`},
+      {q:`MAC swap'ı neden "döngü + iki ayrı swap" şeklinde yapılıyor? Döngü 4 yerine 6 tur dönseydi ne bozulurdu?`,
+       a:`<p>MAC adresi 6, IP adresi 4 bayt. İkisi aynı döngüde swap edildiği için döngü 4 tur dönüyor. Bu da IP'nin tamamını ve MAC'in ilk 4 baytını kapsıyor. MAC'in son 2 baytı (4↔10, 5↔11) döngüden sonra ayrıca swap ediliyor.</p><p>Döngü 6 tur dönseydi MAC doğru swap edilirdi, ama IP satırı i = 4 ve 5 için <code>swap(30, 34)</code> ve <code>swap(31, 35)</code> de yapardı. Bu, hedef IP'nin ilk iki baytını ICMP tip/kod alanıyla karıştırıp paketi bozardı.</p>`},
+      {q:`Bu topolojide PC-B'nin gönderdiği my_packet'in 0–11, 22–25 ve 26–35 baytlarını yaz. Kod TTL'yi ve checksum'ı güncelliyor mu?`,
+       a:`<pre>my_packet[0..5]   = ${hexList(A.mac)}   // hedef MAC: istemci
+my_packet[6..11]  = ${hexList(B.mac)}   // kaynak MAC: sunucu
+my_packet[22]     = ${hx(ttl)}      // TTL: gelen paketteki ${ttl} aynen kalır
+my_packet[24..25] = 00 00   // checksum: hesaplanmıyor
+my_packet[26..29] = ${hexList(B.ip)}   // kaynak IP: ${ipStr(B.ip)}
+my_packet[30..33] = ${hexList(A.ip)}   // hedef IP: ${ipStr(A.ip)}
+my_packet[34]     = 00      // tip: echo reply
+my_packet[35]     = 08      // kod: değişmiyor</pre><p>Hayır. Kod sadece MAC'leri ve IP'leri swap eder, [34]'ü 0x00 yapar. TTL ve checksum gelen paketten aynen kopyalanır.</p>`},
+    ];
+  },
+};
+
+/* ====================== Modül: ping_client.c ====================== */
+const PC_FILE = "\n#include <stdlib.h>\n#include <stdio.h>\n#include <pcap.h>\n#include <arpa/inet.h>\n#include <netinet/in.h>\n#include <netinet/if_ether.h>\n#include <arpa/inet.h>\n#include <string.h>\n#include <unistd.h>\n#include <time.h>\n#include <signal.h>\n\nchar *dev = NULL;\npcap_t *fp;\nchar errbuffer[PCAP_ERRBUF_SIZE];\nu_char packet[50];⟦b2 size⟧\nint snapshot_length = 1024;\n\n/* End the loop after this many packets are captured */\nint total_packet_count = 10;\n\nu_char *my_arguments = NULL;\n\nstruct bpf_program filter;\nbpf_u_int32 subnet_mask, ip;\nchar filter_exp[26] = \"icmp && dst \";⟦b2 filt⟧\nchar dest_ip_str[30];\nint src_ip[4];⟦b2 ipArr⟧\nint dest_ip[4];⟦b2 ipArr⟧\ndouble time_spent = 0.0;\nclock_t begin = 0.0;\nclock_t end = 0.0;\n\nvoid packet_generator(int src_ip[4], int dest_ip[4]);⟦b1 proto⟧\nvoid filter_ip_address(char *device, char *dest_ip_str, char *filter_exp);\nvoid my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);⟦b1 proto⟧\n\nint main(int argc, char **argv)\n{\n\n    if (argc != 4)⟦b3 argc⟧\n    {\n        printf(\"\\nFormat: %s <address> -c <count>\\n\", argv[0]);\n        return 0;\n    }\n\n    dev = pcap_lookupdev(errbuffer);⟦b1 lookup⟧\n\n    if (dev == NULL)\n    {\n        printf(\"Error finding device: %s\\n\", errbuffer);\n        exit(EXIT_FAILURE);\n    }\n\n    filter_ip_address(dev, dest_ip_str, filter_exp);⟦b1 filtfn⟧\n\n    // printf(\"filters:%s\\n\", filter_exp);\n\n    if (pcap_lookupnet(dev, &ip, &subnet_mask, errbuffer) == -1)⟦b1 lookupnet⟧\n    {\n        printf(\"Could not get information for device: %s\\n\", dev);\n        ip = 0;\n        subnet_mask = 0;\n    }\n\n    //printf(\"Active ethernet device: %s\\n\", dev);\n\n    fp = pcap_open_live(dev, 100, 0, 1000, errbuffer);⟦b1 open⟧\n    if (fp == NULL)\n    {\n        fprintf(stderr, \"Couldn't open device %s: %s\\n\", dev, errbuffer);\n        return (2);\n    }\n\n    if (fp == NULL)\n    {\n        printf(\"Could not open %s - %s\\n\", dev, errbuffer);\n        return 2;\n    }\n    if (pcap_compile(fp, &filter, filter_exp, 0, ip) == -1)⟦b1 comp⟧\n    {\n        printf(\"Bad filter - %s\\n\", pcap_geterr(fp));\n        return 2;\n    }\n    if (pcap_setfilter(fp, &filter) == -1)⟦b1 setf⟧\n    {\n        printf(\"Error setting filter - %s\\n\", pcap_geterr(fp));\n        return 2;\n    }\n\n    //destination ip parse\n    {\n        char *dest;\n        dest = strtok(argv[1], \".\");⟦b3 parse⟧\n\n        int i = 0;\n\n        while (dest != NULL)⟦b2 parse⟧\n        {\n            int tmp = atoi(dest);⟦b2 parse⟧\n            dest_ip[i] = tmp;⟦b3 parse⟧\n            //printf(\"destip:%d \\n\", dest_ip[i]);\n            dest = strtok(NULL, \".\");⟦b2 parse⟧\n            i++;\n        }\n\n        // source ip parse\n\n        char *src;\n        src = strtok(dest_ip_str, \".\");⟦b2 sparse⟧\n\n        int j = 0;\n\n        while (src != NULL)\n        {\n            int tmp = atoi(src);\n            src_ip[j] = tmp;⟦b2 sparse⟧\n            // printf(\"srcip:%d \\n\", src_ip[j]);\n            src = strtok(NULL, \".\");⟦b1 sparse⟧\n            j++;\n        }\n    }\n  \n    packet_generator(src_ip, dest_ip);⟦b3 gen⟧\n    int c = 1;\n    int c_send = 0;\n    int c_recieve = 0;\n    int s = 0;\n    printf(\"\\n\");\n    while (s < atoi(argv[3]))⟦b3 count⟧\n    {\n        /* Send down the packet */\n\n        time_spent = 0.0;\n        if (pcap_sendpacket(fp, packet, 50 /* size */) != 0)⟦b3 send⟧\n        {\n            fprintf(stderr, \"\\nError sending the packet: \\n\", pcap_geterr(fp));\n            return 0;\n        }\n\n        c_send++;⟦b2 cnt⟧\n        begin = clock();⟦b1 time⟧\n       \n        pcap_loop(fp, 1, my_packet_handler, my_arguments);   ⟦b3 loop1⟧\n            c_recieve++; ⟦b1 cnt⟧\n       \n    \n        s++;⟦b1 count⟧\n    }\n\n    printf(\"\\n<===PING RESULTS===>\");\n    printf(\"\\n\\n%d packet transmitted %d packet recieved ,%.2f%%packet loss\", c_send, c_recieve, (double)((c_send - c_recieve) / c_send) * 100);⟦b1 loss⟧\n    pcap_close(fp);⟦b1 close⟧\n    return 0;\n}\nvoid my_packet_handler(\n    u_char *args,\n    const struct pcap_pkthdr *header,\n    const u_char *packet)\n{\n\n\n\n    if (packet[34] == 0x00 && packet[35] == 0x08) // capture only echo reply⟦b4 cond⟧\n    {\n\n        end = clock();⟦b1 time⟧\n        //printf(\"packet is received succesfully\\n\\n\");\n\n        /* First, lets make sure we have an IP packet */\n        struct ether_header *eth_header;\n        eth_header = (struct ether_header *)packet;⟦b1 eth⟧\n        if (ntohs(eth_header->ether_type) != ETHERTYPE_IP)⟦b2 etype⟧\n        {\n            printf(\"Not an IP packet. Skipping...\\n\\n\");\n            return;\n        }\n\n        time_spent += (double)(end - begin) / CLOCKS_PER_SEC;⟦b1 time⟧\n\n        printf(\"%d bytes from %u.%u.%u.%u \", header->caplen, packet[30], packet[31], packet[32], packet[33]);⟦b3 printip⟧\n        printf(\"ttl=%u time=%f milliseconds \\n\", packet[22], time_spent);⟦b2 printttl⟧\n    }\n}\n\nvoid filter_ip_address(char *device, char *dest_ip_str, char *filter_exp)\n{\n\n    pcap_if_t *alldevs;\n    int status = pcap_findalldevs(&alldevs, errbuffer);⟦b1 fad⟧\n    if (status != 0)\n    {\n        printf(\"%s\\n\", errbuffer);\n        return;\n    }\n\n    for (pcap_if_t *d = alldevs; d != NULL; d = d->next)⟦b1 fad⟧\n    {\n        if (strcmp(d->name, device) == 0)⟦b1 fad⟧\n        {\n            //  printf(\"%s:\", d->name);\n            for (pcap_addr_t *a = d->addresses; a != NULL; a = a->next)⟦b1 fad⟧\n            {\n                if (a->addr->sa_family == AF_INET)⟦b2 afinet⟧\n                    //printf(\" %s\", inet_ntoa(((struct sockaddr_in*)a->addr)->sin_addr));\n                    strcat(dest_ip_str, inet_ntoa(((struct sockaddr_in *)a->addr)->sin_addr));⟦b1 afinet⟧\n            }\n        }\n    }\n    strcat(filter_exp, dest_ip_str);⟦b2 filtcat⟧\n    //printf(\":%s:\\n\\n\",dest_ip_str);\n}\n\nvoid packet_generator(int src_ip[4], int dest_ip[4])\n{\n\n    //ICMP packet generate\n\n    //Destination Mac-00:50:56:FC:18:27\n    packet[0] = 0x00;\n    packet[1] = 0x50;\n    packet[2] = 0x56;\n    packet[3] = 0xfc;\n    packet[4] = 0x18;\n    packet[5] = 0x27;\n\n    //Source Mac-00:0C:29:cd:27:50\n    packet[6] = 0x00;\n    packet[7] = 0x0c;\n    packet[8] = 0x29;\n    packet[9] = 0xcd;\n    packet[10] = 0x27;\n    packet[11] = 0x50;\n\n    //Tip\n\n    packet[12] = 0x08;\n    packet[13] = 0x00;\n\n    //IP BAŞLIK YAPISI\n\n    //versiyon+header lenght\n    packet[14] = 0x45;\n\n    //servis alanı\n\n    packet[15] = 0x00;\n\n    // total length\n\n    packet[16] = 0x00;\n    packet[17] = 0x24;\n\n    //identification\n\n    packet[18] = 0x10;\n    packet[19] = 0xfd;\n\n    //Fragmantaston\n\n    packet[20] = 0x00;\n    packet[21] = 0x00;\n\n    //ttl değeri\n\n    packet[22] = 0x40;\n\n    //protocol bilgisi\n\n    packet[23] = 0x01; //ICMPs\n\n    //header cheksum\n\n    packet[24] = 0x00;\n    packet[25] = 0x00;\n\n    //kaynak IP-192.168.1.37\n    packet[26] = src_ip[0];⟦b4 srcip⟧\n    packet[27] = src_ip[1];⟦b4 srcip⟧\n    packet[28] = src_ip[2];⟦b4 srcip⟧\n    packet[29] = src_ip[3];⟦b4 srcip⟧\n\n    //hedef IP-192.168.1.34\n    packet[30] = dest_ip[0];⟦b4 dstip⟧\n    packet[31] = dest_ip[1];⟦b4 dstip⟧\n    packet[32] = dest_ip[2];⟦b4 dstip⟧\n    packet[33] = dest_ip[3];⟦b4 dstip⟧\n\n    //ICMP REQUEST\n\n    //tip alanı\n    packet[34] = 0x08;\n\n    //kod\n    packet[35] = 0x08;⟦b4 icode8⟧\n\n    //checksum\n\n    packet[36] = 0x00;\n    packet[37] = 0x00;\n\n    //rest of header\n\n    packet[38] = 0x11;\n    packet[39] = 0x8d;\n    packet[40] = 0x00;\n    packet[41] = 0x1b;\n\n    //zaman damgası\n    packet[42] = 0xa6;\n    packet[43] = 0x5d;\n    packet[44] = 0x4d;\n    packet[45] = 0x5e;\n    packet[46] = 0x00;\n    packet[47] = 0x00;\n    packet[48] = 0x00;\n    packet[49] = 0x00;\n}\n";
+const PC_CMT={
+  219:S=>`    //Destination Mac⟪-${macStr(S.val.edst)}⟫`,
+  227:S=>`    //Source Mac⟪-${macStr(S.val.esrc)}⟫`,
+  277:S=>`    //kaynak IP⟪-${ipStr(S.A.ip)}⟫`,
+  283:S=>`    //hedef IP⟪-${ipStr(S.B.ip)}⟫`,
+};
+const PC = {
+  key:'pingc', step:4, file:'ping_client.c', size:50,
+  modes:[['mix','Karışık']],
+  legend:ICMP_LEGEND, fields:ICMP_FIELDS, noMap:true,
+  make(){
+    const [ipA,ipB]=randIPs();
+    const A={ip:ipA,mac:randMac()}, B={ip:ipB,mac:randMac()};
+    const ttl=[64,128][rnd(2)], n=3+rnd(4);
+    const val={
+      edst:B.mac, esrc:A.mac, etype:[0x08,0x00],
+      verihl:[0x45], tos:[0x00], tlen:[0x00,0x24], ident:[0x10,0xfd], frag:[0x00,0x00],
+      ttl:[ttl], proto:[0x01], csum:[0x00,0x00], sip:A.ip, dip:B.ip,
+      itype:[0x08], icode:[0x08], icsum:[0x00,0x00], rest:[0x11,0x8d,0x00,0x1b], ts:TS,
+    };
+    return {A,B,ttl,n,val};
+  },
+  lines(S){ return srcLines(PC_FILE,S,this,{cmt:PC_CMT,from:214,skip:['ident','rest','ts']}); },
+  topo(S){
+    const {A,B}=S;
+    return hostBox('PC-A · ping_client',{ip:A.ip,mac:A.mac,run:true})
+      + midBox('Echo Request<span class="ar">──▶</span>08 08','SWITCH')
+      + hostBox('PC-B · ping_server',{ip:B.ip,mac:B.mac});
+  },
+  scen(S){
+    const {B,ttl,n}=S;
+    return `PC-A'da ping_client şu komutla çalıştırılıyor: <code>./ping_client ${ipStr(B.ip)} -c ${n}</code>. PC-B'de ping_server çalışıyor. PC-A, B'nin MAC adresini daha önce ARP ile öğrendi. Gönderilen paketlerin <b>TTL değeri ${ttl}</b> olsun. Kod orijinal dosyanın aynısıdır; satır numaraları gerçek dosyayla aynı.`;
+  },
+  why(S,id){
+    const {A,B,ttl}=S;
+    if(id==='edst') return `Hedef MAC = ping atılan PC-B: <code>${macStr(B.mac)}</code>. (Orijinal koddaki <code>00:50:56:FC:18:27</code> sanal makinenin gateway'iydi; MAC'ler kodda sabit yazılı.)`;
+    if(id==='esrc') return `Kaynak MAC = istemcinin kendisi, PC-A: <code>${macStr(A.mac)}</code>.`;
+    return ICMP.why({wan:false,A,B,ttl},id);
+  },
+  lw(S,k){
+    const {A,B,n}=S;
+    const W={
+      size:['u_char packet[50]',`Gönderilecek paket: 14 (Ethernet) + 20 (IP) + 8 (ICMP başlığı) + 8 (zaman damgası) = 50 bayt. Global tanımlı, <code>packet_generator</code> doldurur.`],
+      filt:['char filter_exp[26] = "icmp && dst "',`BPF filtresinin başı. <code>filter_ip_address</code> sonuna kendi IP'yi ekler: <code>"icmp &amp;&amp; dst ${ipStr(A.ip)}"</code>. Böylece istemci sadece kendisine gelen ICMP paketlerini yakalar.`],
+      ipArr:['int src_ip[4]; int dest_ip[4];',`IP adresinin 4 okteti ayrı ayrı tamsayı olarak tutulur. <code>packet_generator</code> bunları packet[26..29] ve packet[30..33]'e yazar.`],
+      proto:['Fonksiyon prototipleri',`Fonksiyonlar main'den sonra tanımlandığı için önce prototipleri yazılır.`],
+      argc:['if (argc != 4)',`Program <code>./ping_client &lt;adres&gt; -c &lt;sayı&gt;</code> şeklinde çalışır: argv[0] program adı, argv[1] hedef IP, argv[2] "-c", argv[3] paket sayısı. Toplam 4 argüman yoksa kullanım mesajı basılır. Bu senaryoda: <code>argv[1] = "${ipStr(B.ip)}"</code>, <code>argv[3] = "${n}"</code>.`],
+      lookup:['pcap_lookupdev',`Kullanılacak ağ arayüzünü bulur.`],
+      filtfn:['filter_ip_address(dev, dest_ip_str, filter_exp)',`Arayüzün kendi IPv4 adresini <code>dest_ip_str</code>'ye yazar ve filtre metninin sonuna ekler. Dikkat: adı "dest" ama içinde <b>istemcinin kendi IP'si</b> (${ipStr(A.ip)}) var.`],
+      lookupnet:['pcap_lookupnet',`Arayüzün ağ adresi ve maskesi alınır; <code>pcap_compile</code>'a verilir.`],
+      open:['pcap_open_live(dev, 100, 0, 1000, errbuffer)',`Arayüz açılır. Burada promiscuous parametresi <b>0</b>: istemci sadece kendine gelen paketlerle ilgilenir. (Sunucuda 1'di.)`],
+      comp:['pcap_compile',`Filtre metni BPF programına derlenir.`],
+      setf:['pcap_setfilter',`Derlenen filtre arayüze uygulanır.`],
+      parse:['Hedef IP ayrıştırma (strtok + atoi)',`<code>strtok(argv[1], ".")</code> "${ipStr(B.ip)}" metnini noktalardan böler. Her parça <code>atoi</code> ile sayıya çevrilip <code>dest_ip[i]</code>'ye yazılır. Devam için <code>strtok(NULL, ".")</code> çağrılır. Sonuç: dest_ip = {${B.ip.join(', ')}}.`],
+      sparse:['Kaynak IP ayrıştırma',`Aynı işlem <code>dest_ip_str</code> (istemcinin kendi IP'si) için yapılır ve <code>src_ip[j]</code>'ye yazılır. Sonuç: src_ip = {${A.ip.join(', ')}}.`],
+      gen:['packet_generator(src_ip, dest_ip)',`Paket bir kez, döngüden önce oluşturulur. Döngüde aynı paket tekrar tekrar gönderilir.`],
+      count:['while (s < atoi(argv[3])) … s++',`argv[3] = "${n}" metni <code>atoi</code> ile sayıya çevrilir. Döngü ${n} kez döner, her turda bir echo request gönderilir.`],
+      send:['pcap_sendpacket(fp, packet, 50)',`Hazır paket gönderilir. 0 dışında bir değer hata demektir.`],
+      cnt:['c_send++ / c_recieve++',`Gönderilen ve alınan paket sayaçları. Dikkat: <code>c_recieve++</code>, <code>pcap_loop</code> döndükten sonra koşulsuz artıyor, yani cevap kontrol edilmeden sayılıyor.`],
+      time:['clock() ile süre ölçümü',`<code>begin = clock()</code> gönderimden hemen sonra, <code>end = clock()</code> cevap yakalanınca alınır. Fark <code>CLOCKS_PER_SEC</code>'e bölünerek saniyeye çevrilir. (Ekranda "milliseconds" yazsa da değer saniye cinsinden.)`],
+      loop1:['pcap_loop(fp, 1, my_packet_handler, my_arguments)',`Paket sayısı <b>1</b>: tek bir paket yakalanınca döner. Böylece her gönderimden sonra tam bir cevap beklenir.`],
+      loss:['Paket kaybı yüzdesi',`<code>(c_send - c_recieve) / c_send</code> tamsayı bölmesidir, sonuç 0 ya da 1 olur. <code>(double)</code> dönüşümü bölmeden sonra yapıldığı için ara değerler kaybolur.`],
+      close:['pcap_close(fp)',`Yakalama tutamacı kapatılır.`],
+      cond:['if (packet[34] == 0x00 && packet[35] == 0x08)',`Cevabı tanıma koşulu: tip <b>0x00 = echo reply</b>. Kod alanı, istemcinin kendi yazdığı standart dışı <b>0x08</b>. ping_server bu alana dokunmadığı için cevapta da 0x08 gelir.`],
+      eth:['eth_header = (struct ether_header *)packet',`İlk 14 bayt Ethernet başlığı struct'ı olarak okunur.`],
+      etype:['ntohs(...) != ETHERTYPE_IP',`<code>ntohs</code> ağ bayt sırasından host sırasına çevirir. <code>ETHERTYPE_IP</code> = 0x0800.`],
+      printip:['printf(... packet[30], packet[31], packet[32], packet[33])',`Cevap paketinde 30–33 <b>hedef IP</b>'dir, yani istemcinin kendi IP'si (${ipStr(A.ip)}). Kod "bytes from" dediği hâlde kendi IP'sini yazdırıyor. Gönderen sunucuyu göstermek için 26–29 kullanılmalıydı.`],
+      printttl:['printf("ttl=%u ...", packet[22], time_spent)',`packet[22] TTL alanıdır. ping_server TTL'yi değiştirmediği için ekranda istemcinin gönderdiği ${S.ttl} görünür.`],
+      fad:['Arayüz listesini gezme',`<code>pcap_findalldevs</code> ile arayüzler listelenir. Adı <code>device</code> ile eşleşen arayüzün adresleri gezilir.`],
+      afinet:['AF_INET → inet_ntoa',`IPv4 adresi bulununca "a.b.c.d" metnine çevrilip <code>dest_ip_str</code>'ye eklenir.`],
+      filtcat:['strcat(filter_exp, dest_ip_str)',`Kendi IP'si filtre metninin sonuna eklenir.`],
+      srcip:['packet[26..29] = src_ip[0..3]',`Kaynak IP baytları diziden yazılır: src_ip = {${A.ip.join(', ')}} → <code>${hexList(A.ip)}</code>. Değer sabit değil, çalışma anında bulunan kendi IP'si.`],
+      dstip:['packet[30..33] = dest_ip[0..3]',`Hedef IP komut satırından (argv[1]) gelir: dest_ip = {${B.ip.join(', ')}} → <code>${hexList(B.ip)}</code>.`],
+      icode8:['packet[35] = 0x08',`Kod alanı standartta 0x00 olmalı. Bu uygulamada <b>0x08</b> yazılıyor. ping_server sadece kodu 0x08 olan istekleri cevaplıyor, istemci de cevapta 0x08 arıyor.`],
+    };
+    const w=W[k]; return {t:w[0],why:w[1]};
+  },
+  qs(S){
+    const {A,B,ttl,n}=S;
+    return [
+      {q:`Bu topolojide program hangi komutla çalıştırılır? <code>argc != 4</code> kontrolünü, argv[1] ve argv[3]'ün ne tuttuğunu açıkla.`,
+       a:`<pre>./ping_client ${ipStr(B.ip)} -c ${n}
+argv[0] = "./ping_client"   argv[1] = "${ipStr(B.ip)}"
+argv[2] = "-c"              argv[3] = "${n}"</pre><p>Toplam 4 argüman olmalı. argv[1] <code>strtok</code> + <code>atoi</code> ile <code>dest_ip[]</code> dizisine ayrıştırılır. argv[3] <code>atoi(argv[3])</code> ile döngü sayısı olur: ${n} paket gönderilir.</p>`},
+      {q:`İstemci gelen cevabı nasıl tanıyor? packet[34] ve packet[35] cevapta hangi değerleri taşır ve neden?`,
+       a:`<p><code>if (packet[34] == 0x00 &amp;&amp; packet[35] == 0x08)</code>. packet[34] tip alanı: sunucu <code>my_packet[34] = 0x00</code> yaptığı için <b>echo reply = 0</b>. packet[35] kod alanı: istemci isteği <b>0x08</b> ile gönderdi, sunucu bu alanı değiştirmediği için cevapta da 0x08 gelir.</p>`},
+      {q:`Ekranda "… bytes from a.b.c.d ttl=…" satırında hangi IP ve TTL görünür? Bu IP doğru mu?`,
+       a:`<pre>50 bytes from ${ipStr(A.ip)} ttl=${ttl} ...</pre><p>Kod packet[30..33]'ü yazdırıyor. Cevapta sunucu IP'leri swap ettiği için 30–33 <b>hedef IP</b>, yani istemcinin kendi IP'si (${ipStr(A.ip)}). Doğrusu, cevabı gönderen sunucuyu gösteren packet[26..29] (${ipStr(B.ip)}) olmalıydı.</p><p>TTL = packet[22] = ${ttl}, çünkü ping_server TTL'yi değiştirmeden geri gönderiyor.</p>`},
+    ];
+  },
+};
+
+/* ====================== Modüller: TCP sunucu / istemci ====================== */
+function tcpMake(pick){
+  const mode = pick==='mix' ? (Math.random()<0.65?'lan':'lo') : pick;
+  const lo = mode==='lo';
+  const [ipC,ipS]=randIPs();
+  const port=[8080,5000,9000,6000,3000,7070,8888,4444][rnd(8)];
+  const backlog=[3,5,10][rnd(3)];
+  const any = lo ? Math.random()<0.6 : Math.random()<0.65;
+  const srvIp = lo?[127,0,0,1]:ipS;
+  return {lo,C:{ip:lo?ipS:ipC},Srv:{ip:srvIp,lan:ipS},port,backlog,any,val:{}};
+}
+function tcpTopo(S,side){
+  const run=side;
+  if(S.lo) return hostBox('Tek bilgisayar · tcp_server + tcp_client',{ip:S.Srv.lan,run:true})
+    + midBox(`loopback<span class="ar">⟲</span>127.0.0.1:${S.port}`,'');
+  return hostBox('İstemci · tcp_client',{ip:S.C.ip,run:run==='c'})
+    + midBox(`TCP<span class="ar">──▶</span>port ${S.port}`,'SWITCH')
+    + hostBox('Sunucu · tcp_server',{ip:S.Srv.ip,run:run==='s'});
+}
+const portHex=p=>`${p} = 0x${p.toString(16).padStart(4,'0')}`;
+function tcpW(S){
+  const p=S.port, ph=p.toString(16).padStart(4,'0');
+  return {
+    max:['#define MAX 80',`Mesaj tamponunun boyutu. <code>char buff[MAX]</code> ve <code>bzero(buff, MAX)</code> bu sabiti kullanır.`],
+    port:[`#define PORT ${p}`,`Senaryodaki port numarası. Sunucunun dinlediği ve istemcinin bağlandığı port <b>aynı</b> olmalı.`],
+    sa:['#define SA struct sockaddr',`<code>bind</code>, <code>accept</code> ve <code>connect</code> genel <code>struct sockaddr *</code> bekler. IPv4 adresi tutan <code>struct sockaddr_in</code>, kısaltma ile <code>(SA*)&amp;servaddr</code> şeklinde bu türe çevrilir.`],
+    func:['void func(int …)',`Sohbet fonksiyonu. Sunucuda bağlantı soketi <code>connfd</code>, istemcide <code>sockfd</code> parametre olarak gelir.`],
+    buff:['char buff[MAX];',`Gelen ve giden mesajın tutulduğu tampon (80 bayt).`],
+    forever:['for (;;) {',`Koşulsuz sonsuz döngü. Mesaj "exit" olunca <code>break</code> ile çıkılır.`],
+    bzero:['bzero(buff, …)',`Tamponu sıfırlar. Önceki mesajdan kalan karakterler yeni mesaja karışmasın diye her okuma/yazma öncesi yapılır.`],
+    read:['read(…, buff, sizeof(buff));',`Karşı taraftan gelen veriyi tampona okur. Sunucuda <b>connfd</b> kullanılır (dinleme soketi sockfd değil). İstemcide bağlandığı <b>sockfd</b>.`],
+    write:['write(…, buff, sizeof(buff));',`Tampondaki mesajı karşı tarafa gönderir. Sunucuda connfd, istemcide sockfd.`],
+    print:['printf(... buff)',`Gelen mesaj ekrana yazdırılır.`],
+    getchar:['n = 0; while ((buff[n++] = getchar()) != \'\\n\');',`Klavyeden Enter'a ('\\n') kadar karakter karakter okunup tampona yazılır. <code>n</code> her mesajda 0'dan başlar.`],
+    exit:['strncmp(…, "exit", 4) == 0 → break',`Mesajın ilk 4 karakteri "exit" ise sohbet biter ve döngüden çıkılır.`],
+    vars:['Değişken tanımları',`<code>sockfd</code> soket tanımlayıcısı. Sunucuda ayrıca <code>connfd</code> (kabul edilen bağlantı) ve <code>len</code> var. <code>struct sockaddr_in servaddr, cli;</code> sunucu ve istemci adres yapıları.`],
+    socket:['sockfd = socket(AF_INET, SOCK_STREAM, 0);',`<b>AF_INET</b> = IPv4, <b>SOCK_STREAM</b> = TCP (UDP olsaydı SOCK_DGRAM), <b>0</b> = varsayılan protokol. Hata olursa -1 döner.`],
+    sockchk:['if (sockfd == -1) {',`<code>socket()</code> başarısız olursa -1 döner, bu yüzden -1 kontrol edilir.`],
+    bzero2:['bzero(&servaddr, sizeof(servaddr));',`Adres yapısı doldurulmadan önce tamamen sıfırlanır.`],
+    family:['servaddr.sin_family = AF_INET;',`Adres ailesi IPv4.`],
+    addr: S.any
+      ? ['servaddr.sin_addr.s_addr = htonl(INADDR_ANY);',`<b>INADDR_ANY</b> = 0.0.0.0, sunucu makinedeki <b>tüm arayüzlerden</b> gelen bağlantıları kabul eder. <code>htonl</code> 32 bitlik değeri ağ bayt sırasına (big-endian) çevirir.`]
+      : [`servaddr.sin_addr.s_addr = inet_addr("${ipStr(S.Srv.ip)}");`,`Senaryo gereği sunucu sadece <b>${ipStr(S.Srv.ip)}</b> adresli arayüzden dinliyor. <code>inet_addr</code> "a.b.c.d" metnini zaten ağ bayt sırasında 32 bitlik sayıya çevirir, ayrıca htonl gerekmez. (Orijinal kodda htonl(INADDR_ANY) var.)`],
+    caddr:[`servaddr.sin_addr.s_addr = inet_addr("${ipStr(S.Srv.ip)}");`,`İstemci, bağlanacağı <b>sunucunun IP'sini</b> yazar: ${ipStr(S.Srv.ip)}${S.lo?' (aynı makine → loopback)':''}. <code>inet_addr</code> metni ağ bayt sırasında 32 bitlik sayıya çevirir.`],
+    sport:['servaddr.sin_port = htons(PORT);',`Port 16 bittir, <code>htons</code> ile ağ bayt sırasına çevrilir. ${portHex(p)}: ağda önce <code>${ph.slice(0,2)}</code>, sonra <code>${ph.slice(2)}</code> gider. Little-endian makinede htons olmasa bayt sırası ters olurdu.`],
+    bind:['bind(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0',`Soketi servaddr'daki IP ve porta (${p}) bağlar. 0 başarılı demektir. İstemcide bind yoktur.`],
+    listen:[`listen(sockfd, ${S.backlog}) != 0`,`Soketi pasif dinleme moduna alır. İkinci parametre <b>backlog</b>: kabul edilmeyi bekleyen bağlantı kuyruğunun uzunluğu. Senaryoda ${S.backlog}.`],
+    len:['len = sizeof(cli);',`<code>accept</code>'e adres yapısının boyutu verilir. accept, bağlanan istemcinin adresini <code>cli</code>'ye yazar.`],
+    accept:['connfd = accept(sockfd, (SA*)&cli, &len);',`Kuyruktaki bağlantıyı kabul eder ve <b>yeni bir soket</b> (connfd) döndürür. Veri alışverişi connfd üzerinden yapılır, sockfd dinlemeye devam eder. len'in adresi (&amp;len) verilir.`],
+    acc:['if (connfd < 0) {',`accept başarısız olursa negatif döner.`],
+    call:['func(…);',`Sohbet fonksiyonu çağrılır. Sunucuda <b>connfd</b>, istemcide <b>sockfd</b> verilir.`],
+    close:['close(sockfd);',`Soket kapatılır. (Sunucu kodu connfd'yi ayrıca kapatmıyor.)`],
+    connect:['connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0',`Sunucuya bağlanır ve TCP üçlü el sıkışmasını (SYN, SYN-ACK, ACK) başlatır. 0 başarılı demektir. İstemcinin kendi portu işletim sistemince geçici (ephemeral) olarak atanır.`],
+  };
+}
+const TCPS_SRC = S => String.raw`
+#include <stdio.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h> // read(), write(), close()
+#define MAX 80⟦b1 max⟧
+#define PORT ${S.port}⟦b3 port⟧
+#define SA struct sockaddr⟦b2 sa⟧
+
+// İstemci ve sunucu arasındaki sohbet için tasarlanmış fonksiyon.
+void func(int connfd)⟦b1 func⟧
+{
+    char buff[MAX];⟦b2 buff⟧
+    int n;
+    // infinite loop for chat
+    for (;;) {⟦b2 forever⟧
+        bzero(buff, MAX);⟦b2 bzero⟧
+
+        // istemciden gelen mesajı oku ve tampona kopyala
+        read(connfd, buff, sizeof(buff));⟦b4 read⟧
+        // istemci içeriklerini içeren yazdırma tamponu
+        printf("From client: %s\t To client : ", buff);⟦b1 print⟧
+
+        bzero(buff, MAX);⟦b2 bzero⟧
+        n = 0;⟦b1 getchar⟧
+
+        // sunucu mesajını tampon belleğe kopyala
+        while ((buff[n++] = getchar()) != '\n');⟦b3 getchar⟧
+
+        // ve bu tamponu istemciye gönder
+        write(connfd, buff, sizeof(buff));⟦b4 write⟧
+
+        // eğer mesaj "exit" içeriyorsa sunucudan çıkılır ve sohbet sonlandırılır.
+        if (strncmp("exit", buff, 4) == 0) {⟦b3 exit⟧
+            printf("Server Exit...\n");
+            break;⟦b1 exit⟧
+        }
+    }
+}
+
+int main()
+{
+    int sockfd, connfd, len;⟦b1 vars⟧
+    struct sockaddr_in servaddr, cli;⟦b2 vars⟧
+
+    // Soket oluşturma ve doğrulama
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);⟦b4 socket⟧
+
+    if (sockfd == -1) {⟦b2 sockchk⟧
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully created..\n");
+
+    bzero(&servaddr, sizeof(servaddr));⟦b2 bzero2⟧
+
+    // IP, PORT adresi atama
+    servaddr.sin_family = AF_INET;⟦b4 family⟧
+    servaddr.sin_addr.s_addr = ${S.any?'htonl(INADDR_ANY)':`inet_addr("${ipStr(S.Srv.ip)}")`};⟦b4 addr⟧
+    servaddr.sin_port = htons(PORT);⟦b4 sport⟧
+
+    // Yeni oluşturulan soketin verilen IP'ye bağlanması ve doğrulanması
+    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {⟦b4 bind | alt=if (bind(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {⟧
+        printf("socket bind failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully binded..\n");
+
+    // Artık sunucu dinlemeye ve doğrulamaya hazır
+    if ((listen(sockfd, ${S.backlog})) != 0) {⟦b4 listen | alt=if (listen(sockfd, ${S.backlog}) != 0) {⟧
+        printf("Listen failed...\n");
+        exit(0);
+    }
+    else
+        printf("Server listening..\n");
+    len = sizeof(cli);⟦b3 len⟧
+
+    // İstemciden gelen veri paketini kabul etme ve doğrulama
+    connfd = accept(sockfd, (SA*)&cli, &len);⟦b4 accept⟧
+    if (connfd < 0) {⟦b2 acc⟧
+        printf("server accept failed...\n");
+        exit(0);
+    }
+    else
+        printf("server accept the client...\n");
+
+    // İstemci ve sunucu arasında sohbet etme fonksiyonu
+    func(connfd);⟦b3 call⟧
+
+    // Soketi Kapatma
+    close(sockfd);⟦b3 close⟧
+}`;
+const TCPC_SRC = S => String.raw`
+#include <arpa/inet.h> // inet_addr()
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h> // bzero()
+#include <sys/socket.h>
+#include <unistd.h> // read(), write(), close()
+#define MAX 80⟦b1 max⟧
+#define PORT ${S.port}⟦b3 port⟧
+#define SA struct sockaddr⟦b2 sa⟧
+void func(int sockfd)⟦b1 func⟧
+{
+    char buff[MAX];⟦b2 buff⟧
+    int n;
+    for (;;) {⟦b2 forever⟧
+        bzero(buff, sizeof(buff));⟦b2 bzero⟧
+        printf("Enter the string : ");
+        n = 0;⟦b1 getchar⟧
+        while ((buff[n++] = getchar()) != '\n')⟦b3 getchar⟧
+            ;
+        write(sockfd, buff, sizeof(buff));⟦b4 write⟧
+        bzero(buff, sizeof(buff));⟦b2 bzero⟧
+        read(sockfd, buff, sizeof(buff));⟦b4 read⟧
+        printf("From Server : %s", buff);⟦b1 print⟧
+        if ((strncmp(buff, "exit", 4)) == 0) {⟦b3 exit | alt=if (strncmp(buff, "exit", 4) == 0) {⟧
+            printf("Client Exit...\n");
+            break;⟦b1 exit⟧
+        }
+    }
+}
+int main()
+{
+    int sockfd, connfd;⟦b1 vars⟧
+    struct sockaddr_in servaddr, cli;⟦b2 vars⟧
+    // soket oluşturma ve doğrulama
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);⟦b4 socket⟧
+    if (sockfd == -1) {⟦b2 sockchk⟧
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));⟦b2 bzero2⟧
+    // IP, PORT adresi atama
+    servaddr.sin_family = AF_INET;⟦b4 family⟧
+    servaddr.sin_addr.s_addr = inet_addr("${ipStr(S.Srv.ip)}");⟦b4 caddr⟧
+    servaddr.sin_port = htons(PORT);⟦b4 sport⟧
+    // İstemci soketini sunucu soketine bağla
+    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))⟦b4 connect⟧
+        != 0) {
+        printf("connection with the server failed...\n");
+        exit(0);
+    }
+    else
+        printf("connected to the server..\n");
+    // Chat fonksiyonu
+    func(sockfd);⟦b3 call⟧
+    // Soketi kapatma
+    close(sockfd);⟦b3 close⟧
+}`;
+const TCP_MODES=[['mix','Karışık'],['lan','Ayrı bilgisayarlar'],['lo','Aynı bilgisayar (127.0.0.1)']];
+const TCPS = {
+  key:'tcps', step:5, file:'tcp_server.c', size:0, modes:TCP_MODES, legend:[], fields:[], noMap:true,
+  make:tcpMake,
+  lines(S){ return parseSrc(TCPS_SRC(S)); },
+  topo(S){ return tcpTopo(S,'s'); },
+  scen(S){
+    const bindTxt = S.any ? 'Sunucu makinedeki <b>tüm ağ arayüzlerinden</b> gelen bağlantıları kabul etsin.' : `Sunucu <b>sadece ${ipStr(S.Srv.ip)}</b> adresinden dinlesin.`;
+    return `${S.lo?'Sunucu ve istemci <b>aynı bilgisayarda</b> çalışıyor.':`Sunucu <b>${ipStr(S.Srv.ip)}</b>, istemci <b>${ipStr(S.C.ip)}</b> adresli bilgisayarda.`} Sunucu <b>${S.port}</b> numaralı TCP portundan hizmet veriyor. ${bindTxt} Kabul edilmeyi bekleyen en fazla <b>${S.backlog}</b> bağlantı kuyrukta tutulsun. Kod PDF'teki TCP sunucu kodudur.`;
+  },
+  lw(S,k){ const w=tcpW(S)[k]; return {t:w[0],why:w[1]}; },
+  qs(S){
+    const ph=S.port.toString(16).padStart(4,'0');
+    return [
+      {q:`Sunucuda soket fonksiyonlarının çağrılma sırasını yaz ve her birinin görevini kısaca açıkla. İstemcide hangileri yok, yerine ne var?`,
+       a:`<pre>socket()  → TCP soketi oluştur (AF_INET, SOCK_STREAM)
+bind()    → soketi IP + port ${S.port}'e bağla
+listen()  → pasif dinlemeye geç (kuyruk: ${S.backlog})
+accept()  → bağlantıyı kabul et, yeni soket connfd dön
+read()/write() → connfd üzerinden mesajlaş (func)
+close()   → soketi kapat</pre><p>İstemcide <b>bind, listen, accept yok</b>. İstemci <code>socket()</code> sonrası doğrudan <code>connect()</code> çağırır, kendi portu işletim sistemince atanır.</p>`},
+      {q:`Bu topolojiye göre servaddr alanlarını doldur. htons ve htonl neden kullanılıyor? PORT = ${S.port} ağa hangi bayt sırasıyla gider?`,
+       a:`<pre>servaddr.sin_family      = AF_INET;
+servaddr.sin_addr.s_addr = ${S.any?'htonl(INADDR_ANY)':`inet_addr("${ipStr(S.Srv.ip)}")`};
+servaddr.sin_port        = htons(PORT);   // PORT = ${S.port}</pre><p>Ağ bayt sırası <b>big-endian</b>dır. x86 gibi little-endian makinelerde sayılar bellekte ters tutulduğu için gönderilmeden önce çevrilir: 16 bit port için <b>htons</b>, 32 bit adres için <b>htonl</b>.</p><p>${portHex(S.port)} → ağda <code>${ph.slice(0,2)} ${ph.slice(2)}</code> sırasıyla gider (önce yüksek bayt).</p>`},
+      {q:`sockfd ile connfd arasındaki fark nedir? func() neden connfd ile çağrılıyor? Sohbet nasıl sonlanır?`,
+       a:`<p><b>sockfd</b> dinleme soketidir; bind/listen/accept bunun üzerinde çalışır. <b>connfd</b>, accept'in her kabul edilen istemci için döndürdüğü <b>yeni bağlantı soketidir</b>. Veri bu bağlantı üzerinden akar, bu yüzden read/write ve func(connfd) bunu kullanır.</p><p>Sunucu tarafında yazılan mesajın ilk 4 karakteri "exit" ise <code>strncmp("exit", buff, 4) == 0</code> sağlanır, "Server Exit..." basılır ve döngüden çıkılır. İstemci de aynı mesajı alınca çıkar.</p>`},
+    ];
+  },
+};
+const TCPC = {
+  key:'tcpc', step:6, file:'tcp_client.c', size:0, modes:TCP_MODES, legend:[], fields:[], noMap:true,
+  make:tcpMake,
+  lines(S){ return parseSrc(TCPC_SRC(S)); },
+  topo(S){ return tcpTopo(S,'c'); },
+  scen(S){
+    return `${S.lo?'Sunucu ve istemci <b>aynı bilgisayarda</b> çalışıyor.':`İstemci <b>${ipStr(S.C.ip)}</b>, sunucu <b>${ipStr(S.Srv.ip)}</b> adresli bilgisayarda.`} Sunucu <b>${S.port}</b> numaralı TCP portunu dinliyor. Aşağıdaki kod <b>istemcide</b> çalışıyor ve sunucuya bağlanıp sohbet ediyor. Kod PDF'teki TCP istemci kodudur.`;
+  },
+  lw(S,k){ const w=tcpW(S)[k]; return {t:w[0],why:w[1]}; },
+  qs(S){
+    return [
+      {q:`İstemci neden bind(), listen() ve accept() çağırmıyor? İstemcinin kendi port numarası nereden gelir?`,
+       a:`<p>Bu üç fonksiyon <b>bağlantı bekleyen</b> taraf (sunucu) içindir. İstemci bağlantıyı başlatan taraftır: <code>socket()</code> sonrası doğrudan <code>connect()</code> çağırır.</p><p>İstemcinin portu <code>connect()</code> sırasında işletim sistemi tarafından <b>geçici (ephemeral)</b> bir port olarak otomatik atanır. Sunucu bu adresi accept'teki <code>cli</code> yapısından öğrenir.</p>`},
+      {q:`Bu topolojide inet_addr satırı nasıl yazılmalı? Sunucu ${S.lo?'başka bir bilgisayarda':'aynı bilgisayarda'} olsaydı ne değişirdi?`,
+       a:`<pre>servaddr.sin_addr.s_addr = inet_addr("${ipStr(S.Srv.ip)}");
+servaddr.sin_port        = htons(PORT);   // PORT = ${S.port}</pre><p>${S.lo
+          ?`Sunucu başka bir bilgisayarda olsaydı (örneğin ${ipStr(S.Srv.lan)}), 127.0.0.1 yerine <b>o bilgisayarın IP'si</b> yazılırdı. Port aynı kalırdı.`
+          :`Sunucu aynı bilgisayarda olsaydı <b>"127.0.0.1"</b> (loopback) yazılırdı. Orijinal PDF kodunda da bu var. Port aynı kalırdı.`}</p>`},
+      {q:`connect() başarılı olduğunda TCP katmanında ne olur? Bağlantı kurulduktan sonra ilk mesajı kim gönderir?`,
+       a:`<p><code>connect()</code> TCP <b>üçlü el sıkışmasını</b> başlatır: istemci <b>SYN</b> gönderir, sunucu <b>SYN-ACK</b> ile cevap verir, istemci <b>ACK</b> gönderir. Sunucudaki <code>accept()</code> bu bağlantıyı alıp connfd döndürür.</p><p>İlk mesajı <b>istemci</b> gönderir: istemcinin func'ı önce klavyeden okuyup <code>write</code> yapar. Sunucunun func'ı ise önce <code>read</code> ile bekler.</p>`},
+    ];
+  },
+};
+
+const MODULES=[TCPS];
+const ALLSTEPS=[[1,'arpgonder.c'],[2,'icmpgonder.c'],[3,'ping_server.c'],[4,'ping_client.c'],[5,'TCP sunucu'],[6,'TCP istemci']];
+// Topoloji kutusu tek kutu olduğunda (loopback) orta kutunun boş switch etiketini gizle
+document.head.insertAdjacentHTML('beforeend','<style>.switch:empty{display:none}</style>');
+
+/* ====================== Ortak motor ====================== */
+let M=MODULES[0], S=null;
+function stKey(){return 'bosluk-satir-'+M.key+'-stats';}
+function getStats(){try{const s=JSON.parse(localStorage.getItem(stKey())||'null');if(s&&typeof s.n==='number')return s;}catch(e){}return {n:0,full:0};}
+function saveStats(s){try{localStorage.setItem(stKey(),JSON.stringify(s));}catch(e){}renderStats();}
+function renderStats(){const s=getStats();$('#stats').textContent=s.n?`Bu sayfada ${s.n} senaryo kontrol edildi, ${s.full} tanesi tam`:'';}
+
+function renderSteps(){
+  $('#steps').innerHTML=ALLSTEPS.map(([n,t])=>`<li><span class="${n===M.step?'cur':'soon'}"${n===M.step?' aria-current="step"':''}><span class="n">${n}</span>${t}</span></li>`).join('');
+}
+function setModule(){
+  renderSteps();
+  $('#mode').innerHTML=M.modes.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');
+  $('#modeLbl').hidden=M.modes.length<2;
+  $('#hCode').textContent=M.file;
+  $('#mapbox').hidden=!!M.noMap;
+  $('#mapHint').textContent=`packet[0..${M.size-1}]. Sınavda bu harita olmayacak, o yüzden ipucu olarak kapalı başlıyor.`;
+  $('#legend').innerHTML=M.legend.map(([c,t])=>`<span><i style="background:var(--${c})"></i>${t}</span>`).join('');
+  renderStats();
+  newScenario();
+}
+
+function wsample(items,k){
+  const pool=items.slice(), out=[];
+  while(out.length<k&&pool.length){
+    const tot=pool.reduce((a,x)=>a+x.b,0); let r=Math.random()*tot, j=0;
+    for(;j<pool.length;j++){r-=pool[j].b;if(r<=0)break;}
+    out.push(pool.splice(Math.min(j,pool.length-1),1)[0]);
+  }
+  return out;
+}
+
+function newScenario(){
+  const sc=M.make($('#mode').value);
+  sc.bytes=new Array(M.size);
+  M.fields.forEach(f=>(sc.val[f.id]||[]).forEach((v,i)=>sc.bytes[f.start+i]=v));
+  sc.lines=M.lines(sc);
+  sc.lines.forEach((l,i)=>l.no=i+1);
+  const k=+$('#diff').value;
+  sc.blank=new Set(wsample(sc.lines.filter(l=>l.b>0),k).map(l=>l.no));
+  sc.checked=false;
+  S=sc;
+  render();
+}
+
+const KW=/^(int|char|void|u_char|unsigned|const|struct|if|for|while|return|else|double|NULL|break|sizeof|clock_t)$/;
+function hl(t){
+  const re=/(\/\/.*$|\/\*.*?\*\/)|("(?:[^"\\]|\\.)*")|(#\w+(?:\s*<[^>]*>)?)|\b([A-Za-z_]\w*)\b|\b(0x[0-9a-fA-F]+|\d+)\b/g;
+  let out='', last=0, m;
+  while((m=re.exec(t))){
+    out+=esc(t.slice(last,m.index));
+    if(m[1]) out+=`<span class="cm">${esc(m[1])}</span>`;
+    else if(m[2]) out+=`<span class="s">${esc(m[2])}</span>`;
+    else if(m[3]) out+=`<span class="pp">${esc(m[3])}</span>`;
+    else if(m[4]) out+=KW.test(m[4])?`<span class="kw">${m[4]}</span>`:esc(m[4]);
+    else out+=`<span class="nu">${m[5]}</span>`;
+    last=re.lastIndex;
+  }
+  return out+esc(t.slice(last));
+}
+
+function normLine(s){
+  s=s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/,'');
+  s=s.replace(/\b0x([0-9a-f]+)\b/gi,(m,h)=>String(parseInt(h,16))).replace(/\b\d+\b/g,m=>String(parseInt(m,10)));
+  return s.replace(/\s+/g,'').replace(/;+$/,'').toLowerCase().replace(/\(structsockaddr\*\)/g,'(sa*)');
+}
+const lineByNo=no=>S.lines[no-1];
+const disp=t=>$('#cmt').value==='1'?t.replace(/[⟪⟫]/g,''):t.replace(/⟪[^⟫]*⟫/g,'');
+function isRight(i){
+  const l=lineByNo(+i.dataset.no); const v=normLine(i.value);
+  return v!==''&&[l.t,...(l.alts||[])].some(a=>normLine(a)===v);
+}
+
+function render(){
+  $('#topo').innerHTML=M.topo(S);
+  $('#scen').innerHTML=M.scen(S);
+  $('#blankCount').textContent=`${S.blank.size} eksik satır · toplam ${S.lines.length} satır`;
+  $('#code').innerHTML=S.lines.map(l=>{
+    if(!S.blank.has(l.no)) return `<div class="ln" id="ln${l.no}"><span class="no">${l.no}</span><span class="tx">${hl(disp(l.t))||' '}</span></div>`;
+    const ind=l.t.match(/^\s*/)[0];
+    return `<div class="ln blank" id="ln${l.no}"><span class="no">${l.no}</span><span class="tx">${ind}<input class="li" id="in${l.no}" data-no="${l.no}"${l.byte!==undefined?` data-byte="${l.byte}"`:''} autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Satır ${l.no}"></span></div>`
+      + `<div class="ln fixln" id="fx${l.no}" hidden><span class="no">↳</span><span class="tx">${esc(l.t)}</span></div>`;
+  }).join('');
+  if(!M.noMap) renderMap();
+  renderQs();
+  $('#explBox').hidden=true; $('#expl').innerHTML='';
+  $('#score').textContent=''; $('#score').className='score';
+  $('#mapbox').open=false;
+  bindInputs();
+}
+
+function fieldOfByte(b){return M.fields.find(f=>b>=f.start&&b<f.start+f.len);}
+function blankBytes(){return new Set(S.lines.filter(l=>S.blank.has(l.no)&&l.byte!==undefined).map(l=>l.byte));}
+function renderMap(){
+  const bb=blankBytes();
+  const rows=[]; for(let s=0;s<M.size;s+=14) rows.push(s);
+  $('#map').innerHTML=rows.map(s=>{
+    const e=Math.min(s+14,M.size)-1;
+    return `<div class="maprow"><span class="rl">packet[${s}..${e}]</span><div class="map">${
+      range(s,e-s+1).map(b=>{
+        const f=fieldOfByte(b), bl=bb.has(b);
+        return `<div class="cell ${f.g}${bl?' blank':''}" data-cell="${b}" title="packet[${b}] · ${esc(f.cm)}"><span class="i">${b}</span><span class="v">${bl?'··':hx(S.bytes[b])}</span></div>`;
+      }).join('')}</div></div>`;
+  }).join('');
+  document.querySelectorAll('.cell.blank').forEach(c=>c.addEventListener('click',()=>{
+    const i=document.querySelector(`input[data-byte="${c.dataset.cell}"]`); if(i)i.focus();
+  }));
+}
+
+function bindInputs(){
+  const all=[...document.querySelectorAll('input.li')];
+  all.forEach((i,k)=>{
+    i.addEventListener('input',()=>{
+      const ln=$('#ln'+i.dataset.no); ln.classList.remove('ok','bad'); $('#fx'+i.dataset.no).hidden=true;
+      if(i.dataset.byte!==undefined&&!M.noMap){
+        const c=document.querySelector(`[data-cell="${i.dataset.byte}"]`);
+        const m=i.value.match(/=\s*(0x[0-9a-f]+|\d+)/i);
+        c.classList.remove('ok','bad');
+        c.querySelector('.v').textContent=m?hx(parseInt(m[1])&255):(i.value.trim()?'?':'··');
+      }
+    });
+    i.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){e.preventDefault(); if(all[k+1])all[k+1].focus(); else check();}
+    });
+  });
+}
+
+function check(){
+  const all=[...document.querySelectorAll('input.li')];
+  let ok=0;
+  all.forEach(i=>{
+    const r=isRight(i); if(r)ok++;
+    const ln=$('#ln'+i.dataset.no); ln.classList.toggle('ok',r); ln.classList.toggle('bad',!r);
+    $('#fx'+i.dataset.no).hidden=r;
+    if(i.dataset.byte!==undefined&&!M.noMap){
+      const c=document.querySelector(`[data-cell="${i.dataset.byte}"]`);
+      c.classList.toggle('ok',r); c.classList.toggle('bad',!r);
+      c.querySelector('.v').textContent=hx(S.bytes[+i.dataset.byte]);
+    }
+  });
+  const sc=$('#score'); sc.textContent=`${ok} / ${all.length} satır doğru`; sc.className='score'+(ok===all.length?' full':'');
+  if(!S.checked){S.checked=true;const s=getStats();s.n++;if(ok===all.length)s.full++;saveStats(s);}
+  if(!M.noMap) $('#mapbox').open=true;
+  renderExpl(all);
+}
+function reveal(){
+  document.querySelectorAll('input.li').forEach(i=>{i.value=lineByNo(+i.dataset.no).t.trim();});
+  S.checked=true; check();
+}
+function clearAll(){
+  document.querySelectorAll('input.li').forEach(i=>{i.value='';$('#ln'+i.dataset.no).classList.remove('ok','bad');$('#fx'+i.dataset.no).hidden=true;});
+  if(!M.noMap) renderMap();
+  $('#explBox').hidden=true; $('#score').textContent='';
+}
+
+function renderExpl(all){
+  const chip=ok=>`<span class="chip ${ok?'ok':'bad'}">${ok?'doğru':'yanlış'}</span>`;
+  const groups=new Map();
+  all.forEach(i=>{const l=lineByNo(+i.dataset.no); const k=l.w; if(!groups.has(k))groups.set(k,[]); groups.get(k).push({l,i});});
+  const out=[];
+  groups.forEach((arr,k)=>{
+    const nos=arr.map(x=>x.l.no).join(', ');
+    let title, why;
+    if(k.startsWith('f:')){const f=M.fields.find(x=>x.id===k.slice(2)); title=f.cm; why=M.why(S,f.id);}
+    else {const x=M.lw(S,k); title=x.t; why=x.why;}
+    out.push(`<div class="ex">${chip(arr.every(x=>isRight(x.i)))}<div class="t">Satır ${nos} · ${esc(title)}</div><pre>${arr.map(x=>esc(x.l.t.trim())).join('\n')}</pre><div class="why">${why}</div></div>`);
+  });
+  $('#expl').innerHTML=out.join('');
+  $('#explBox').hidden=false;
+}
+
+function renderQs(){
+  const qs=M.qs(S);
+  $('#qs').innerHTML=qs.map((x,k)=>`<div class="q"><p class="qt"><b>${'abc'[k]})</b>${x.q}</p><textarea id="qa-${M.key}-${k}" aria-label="${'abc'[k]} şıkkı cevabın" placeholder="Cevabını buraya yaz…"></textarea><button type="button" data-k="${k}">Cevabı göster</button><div class="ans" id="qans${k}" hidden>${x.a}</div></div>`).join('');
+  $('#qs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    const a=$('#qans'+b.dataset.k); a.hidden=!a.hidden; b.textContent=a.hidden?'Cevabı göster':'Cevabı gizle';
+  }));
+}
+
+$('#hexgrid').innerHTML=range(0,16).map(n=>`<div>${n} = <b>${n.toString(16)}</b></div>`).join('');
+$('#btnNew').addEventListener('click',newScenario);
+$('#mode').addEventListener('change',newScenario);
+$('#diff').addEventListener('change',newScenario);
+$('#cmt').addEventListener('change',()=>S.lines.forEach(l=>{ if(!S.blank.has(l.no)){ const e=document.querySelector('#ln'+l.no+' .tx'); if(e) e.innerHTML=hl(disp(l.t))||' '; } }));
+$('#btnCheck').addEventListener('click',check);
+$('#btnReveal').addEventListener('click',reveal);
+$('#btnClear').addEventListener('click',clearAll);
+setModule();
+})();
+</script>
+
+</body>
+</html>

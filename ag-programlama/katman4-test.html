@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Katman 4 Protokolleri Testi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: tek sütun soru kartları; üstte yapışkan ilerleme + filtre çubuğu. Alıntılar fosforlu kalem gibi işaretlenir. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #142033;
+  --muted: #5b6779;
+  --line: #d6dde8;
+  --accent: #1d4fc4;
+  --accent-soft: #e3eafb;
+  --mark: #fff0a8;
+  --mark-ink: #3b3000;
+  --ok: #157a46;
+  --ok-soft: #e1f4e9;
+  --bad: #b42318;
+  --bad-soft: #fde7e5;
+  --ftp: #1f66d1;
+  --smtp: #c2410c;
+  --snmp: #0f766e;
+  --http: #7a3ee0;
+  --java: #a15c07;
+  --mesaj: #be185d;
+  --genel: #5b6779;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+    --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+    --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+    --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+  --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+  --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+  --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.wrap {
+  max-width: 820px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.intro { padding-block: 32px 20px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1; margin: 6px 0 12px; text-wrap: balance; letter-spacing: -0.01em;
+}
+.intro p { margin: 0 0 10px; max-width: 65ch; color: var(--muted); }
+.intro p strong { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend mark { background: var(--mark); color: var(--mark-ink); padding: 0 4px; border-radius: 2px; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.bar .wrap { padding-block: 10px; display: grid; gap: 10px; }
+.score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 14px; }
+.score b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.score .ok b { color: var(--ok); }
+.score .bad b { color: var(--bad); }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+.progress .p-ok { background: var(--ok); }
+.progress .p-bad { background: var(--bad); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 500 13px/1 var(--font-body); padding: 7px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:focus-visible, .opt:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.btn {
+  font: 600 13px/1 var(--font-body); padding: 7px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+
+main { padding-block: 20px 60px; }
+.section-head {
+  display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+}
+.section-head small { font: 400 13px var(--font-mono); color: var(--muted); }
+.list { display: grid; gap: 14px; }
+
+.q {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 18px 16px; min-width: 0;
+  border-left: 4px solid var(--sec);
+}
+.q-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+.num { font: 600 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag {
+  font: 600 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sec); border: 1px solid currentColor; padding: 4px 6px; border-radius: 4px;
+}
+.src {
+  margin-left: auto; font: 500 12px/1 var(--font-mono); color: var(--accent);
+  background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; white-space: nowrap;
+}
+.kl {
+  font: 600 11px/1 var(--font-body); color: var(--mark-ink); background: var(--mark);
+  padding: 5px 7px; border-radius: 4px; white-space: nowrap;
+}
+.q h3 { font: 600 17px/1.45 var(--font-body); margin: 0 0 12px; text-wrap: pretty; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; text-align: left;
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: 400 15px/1.45 var(--font-body); cursor: pointer;
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; }
+.opt .l {
+  font: 600 13px/22px var(--font-mono); text-align: center; border-radius: 50%;
+  width: 24px; height: 24px; border: 1px solid var(--line); color: var(--muted);
+}
+.opt.is-right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.is-right .l { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-wrong .l { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.opt.dim { opacity: .55; }
+
+.fb { margin-top: 14px; display: grid; gap: 10px; }
+.verdict { font: 600 14px var(--font-body); }
+.verdict.ok { color: var(--ok); }
+.verdict.bad { color: var(--bad); }
+.quote {
+  margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--bg);
+  border: 1px dashed var(--line); font-size: 15px;
+}
+.quote .where { display: block; font: 600 12px var(--font-mono); color: var(--accent); margin-bottom: 4px; }
+.quote mark { background: var(--mark); color: var(--mark-ink); padding: 1px 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.exp { margin: 0; font-size: 15px; color: var(--ink); }
+.exp b { font-weight: 600; }
+.exp code, .q h3 code, .opt code { font-family: var(--font-mono); font-size: .92em; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+@media (max-width: 520px) {
+  .src { margin-left: 0; }
+  .q { padding: 14px 14px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: .3; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<header class="wrap intro">
+  <div class="eyebrow">BSM 451 Ağ Programlama · Hafta 4 · Vize 09.11.2026</div>
+  <h1>Katman 4 Protokolleri Testi</h1>
+  <p>Sorular "Katman 4 Protokolleri ve Çalışma Yapıları" PDF'inin <strong>her slaytından</strong> sırayla çıkarıldı: TCP'nin genel yapısı ve başlığı, el sıkışma ve durumlar, pencere ve akış kontrolü, hata kontrolü (ARQ), tıkanıklık kontrolü, zamanlayıcılar ve UDP. Bir şıkkı seçtiğinde doğru cevap, sorunun geçtiği yer ve kısa bir açıklama açılır.</p>
+  <p>Bu konudan klasik soru gelmiyor, yani burası <strong>test (60p)</strong> kısmına hazırlık. Sayısal sorulara (seq/ack değerleri, rwnd, RTO hesabı) özellikle dikkat et.</p>
+  <div class="legend">
+    <span><b style="font-family:var(--font-mono);color:var(--accent)">PDF s.X · Slayt Y</b> = sorunun geçtiği yer</span>
+    <span><mark>sarı vurgu</mark> = PDF'teki ifade</span>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="score">
+      <span>Cevaplanan <b id="s-done">0</b>/<b id="s-total">0</b></span>
+      <span class="ok">Doğru <b id="s-ok">0</b></span>
+      <span class="bad">Yanlış <b id="s-bad">0</b></span>
+      <span>Başarı <b id="s-pct">%0</b></span>
+    </div>
+    <div class="progress" aria-hidden="true"><i class="p-ok" id="p-ok"></i><i class="p-bad" id="p-bad"></i></div>
+    <div class="filters" role="toolbar" aria-label="Filtreler">
+      <button class="chip" id="f-all" data-sec="all" aria-pressed="true">Tümü</button>
+      <button class="chip" id="f-genel" data-sec="GENEL" aria-pressed="false">TCP Genel</button>
+      <button class="chip" id="f-baglanti" data-sec="BAGLANTI" aria-pressed="false">Bağlantı</button>
+      <button class="chip" id="f-akis" data-sec="AKIS" aria-pressed="false">Akış</button>
+      <button class="chip" id="f-hata" data-sec="HATA" aria-pressed="false">Hata</button>
+      <button class="chip" id="f-tikanik" data-sec="TIKANIK" aria-pressed="false">Tıkanıklık</button>
+      <button class="chip" id="f-udp" data-sec="UDP" aria-pressed="false">UDP</button>
+      <span class="sep"></span>
+      <button class="chip" id="f-wrong" data-only="wrong" aria-pressed="false">Yanlışlarım</button>
+      <button class="chip" id="f-blank" data-only="blank" aria-pressed="false">Boşlar</button>
+      <span class="sep"></span>
+      <button class="btn" id="b-reveal">Tüm cevapları göster</button>
+      <button class="btn" id="b-reset">Sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<script>
+// o[0] her zaman doğru cevaptır; şıklar soru id'sine göre sabit karıştırılır.
+const Q = [
+// ───────────── TCP GENEL ─────────────
+{sec:"GENEL",p:1,s:2,q:"Hafta 4 \"Konu İçeriği\" slaytında TCP başlığı altında yer almayan alt konu hangisidir?",
+ o:["Yönlendirme (routing)","Başlık yapısı","Akış kontrol","Hata kontrol","Tıkanıklık kontrol"],
+ quote:"TCP: Genel bilgiler · Başlık yapısı · Bağlantı kurulum… · Akış kontrol · Hata kontrol · Tıkanıklık kontrol",
+ exp:"TCP alt başlıkları: <b>genel bilgiler, başlık yapısı, bağlantı kurulum/veri gönderme/sonlandırma, akış, hata ve tıkanıklık kontrol</b>. UDP'nin alt başlıkları ise sadece <b>genel bilgiler ve başlık yapısı</b>. Yönlendirme Katman 3'ün konusudur."},
+{sec:"GENEL",p:2,s:3,q:"TCP ile ilgili hangisi doğrudur?",
+ o:["Bağlantı yönelimlidir, güveniliridir ve kaynak ile hedef arasında sanal bir yol oluşturur","Bağlantısızdır ve güvenilir değildir","Akış kontrolü yapmaz","Veri baytlarını numaralandırmaz","Her segment farklı bir yoldan, bağımsız gönderilir"],
+ quote:"TCP bağlantı yönelimlidir ve güvenilirdir",
+ exp:"TCP kaynak ile hedef arasında <b>sanal bir yol</b> kurar ve bir mesajın tüm segmentleri bu yoldan gönderilir. <b>Hata, akış ve tıkanıklık kontrolü</b> yapar."},
+{sec:"GENEL",p:2,s:3,q:"TCP'de bir bağlantıda aktarılan veri baytlarının numaralandırılmasıyla ilgili hangisi doğrudur?",
+ o:["Numaralandırma rastgele oluşturulmuş bir numara ile başlar","Numaralandırma her zaman 0'dan başlar","Numaralandırma her zaman 1'den başlar","Sadece segmentler numaralandırılır, baytlar numaralandırılmaz","Numaralandırmayı IP katmanı yapar"],
+ quote:"Numaralandırma rastgele oluşturulmuş bir numara ile başlar.",
+ exp:"Bu yüzden el sıkışma örneklerindeki sıra numaraları 8000, 15000, 1400 gibi rastgele değerlerdir. TCP <b>segmentleri değil, baytları</b> numaralandırır."},
+{sec:"GENEL",p:2,s:3,q:"Bir TCP segmentindeki sıra numarası (sequence number) ve onay numarası (acknowledgment number) neyi tanımlar?",
+ o:["Sıra no: segmentteki ilk veri baytının numarası; onay no: almayı beklenen bir sonraki bayt","Sıra no: segmentteki son baytın numarası; onay no: alınan son bayt","Sıra no: segment sayısı; onay no: alınan segment sayısı","Sıra no: port numarası; onay no: pencere boyutu","İkisi de alınan son baytın numarasıdır"],
+ quote:"onay alanının değeri, bir tarafın almayı beklediği bir sonraki bayt sayısını tanımlar",
+ exp:"Ayrıca <b>onay numarası kümülatiftir</b>: ack 701 demek, \"700'e kadar her şeyi aldım, 701'i bekliyorum\" demektir. Hata kontrolü senaryolarında bu bilgi çok kullanılıyor."},
+{sec:"GENEL",p:2,s:4,q:"TCP'nin iletim birimi nasıl adlandırılır ve slayttaki şekilde taşıma katmanında hangi protokoller yer alır?",
+ o:["TCP segmenti; UDP, TCP ve SCTP","TCP datagramı; sadece TCP","TCP çerçevesi; TCP ve IP","TCP paketi; ICMP ve IGMP","TCP segmenti; IP ve ARP"],
+ quote:"TCP Protokolü taşıma katmanında … bir iletim mekanizmasıdır. TCP segmenti olarak ifade edilir.",
+ exp:"TCP'nin birimi <b>segment</b>, UDP'ninki <b>datagram</b>. Şekilde taşıma katmanında <b>UDP, TCP ve SCTP</b> var. Ağ katmanında IP, ICMP, IGMP ve ARP yer alıyor."},
+{sec:"GENEL",p:2,s:4,q:"TCP port tablosuna göre 23 numaralı port hangi protokole aittir?",
+ o:["TELNET","SMTP","DNS","FTP","Finger"],
+ quote:"23 — TELNET — Terminal Network",
+ exp:"TCP tablosu: <b>7</b> Echo, <b>9</b> Discard, <b>11</b> Users, <b>13</b> Daytime, <b>17</b> Quote, <b>19</b> Chargen, <b>20-21</b> FTP, <b>23</b> TELNET, <b>25</b> SMTP, <b>53</b> DNS, <b>67</b> BOOTP, <b>79</b> Finger, <b>80</b> HTTP."},
+{sec:"GENEL",p:3,s:5,q:"TCP başlığının (header) boyutu kaç bayt aralığındadır?",
+ o:["20–60 bayt","8 bayt sabit","20 bayt sabit","8–65.535 bayt","40–80 bayt"],
+ quote:"20 to 60 bytes — Header",
+ exp:"Sabit kısım <b>20 bayt</b>tır, buna <b>40 bayta kadar</b> opsiyon eklenebilir (20 + 40 = 60). UDP başlığı ise sabit <b>8 bayt</b>tır."},
+{sec:"GENEL",p:3,s:5,q:"TCP başlığında HLEN ve Reserved alanları kaç bittir?",
+ o:["HLEN 4 bit, Reserved 6 bit","HLEN 8 bit, Reserved 4 bit","HLEN 4 bit, Reserved 4 bit","HLEN 16 bit, Reserved 6 bit","HLEN 6 bit, Reserved 4 bit"],
+ quote:"HLEN 4 bits · Reserved 6 bits",
+ exp:"Başlık alanları: kaynak port <b>16</b>, hedef port <b>16</b>, sıra no <b>32</b>, onay no <b>32</b>, HLEN <b>4</b>, reserved <b>6</b>, bayraklar <b>6</b>, pencere boyutu <b>16</b>, checksum <b>16</b>, urgent pointer <b>16</b> bit. En sonda options and padding gelir."},
+{sec:"GENEL",p:3,s:5,q:"TCP başlığındaki 6 kontrol bayrağı (flag) hangileridir?",
+ o:["URG, ACK, PSH, RST, SYN, FIN","SYN, ACK, FIN, NAK, URG, ECN","URG, ACK, PSH, RST, SYN, TTL","SYN, FIN, RST, CHK, ACK, WIN","ACK, NAK, SYN, FIN, PSH, OPT"],
+ quote:"U R G · A C K · P S H · R S T · S Y N · F I N",
+ exp:"Sırasıyla: <b>URG</b> acil, <b>ACK</b> onay, <b>PSH</b> it (push), <b>RST</b> sıfırla, <b>SYN</b> senkronize et (bağlantı kur), <b>FIN</b> bitir. Slaytlardaki diyagramlarda A = ACK, S = SYN, P = PSH, F = FIN olarak geçiyor."},
+{sec:"GENEL",p:3,s:5,q:"TCP başlığında Window size (pencere boyutu) alanı kaç bittir?",
+ o:["16 bit","32 bit","8 bit","4 bit","6 bit"],
+ quote:"Window size 16 bits",
+ exp:"16 bitlik alanlar: <b>port numaraları, window size, checksum, urgent pointer</b>. 32 bitlik alanlar: <b>sıra numarası ve onay numarası</b>."},
+{sec:"GENEL",p:3,s:6,q:"\"Akış Gönderimi\" şekline göre TCP gönderen ve alıcı süreç arasında veriyi nasıl taşır?",
+ o:["Bir bayt akışı (stream of bytes) olarak; tamponlar kullanır ve akışı başlıklı segmentlere böler","Bağımsız datagramlar olarak, tampon kullanmadan","Sadece tek bir büyük segment olarak","Bit bit, başlıksız olarak","Mesaj sınırlarını koruyan kayıtlar olarak"],
+ quote:"Stream of bytes · Segment 1 H … Segment N H",
+ exp:"Gönderen tamponunda <b>gönderilmiş (sent)</b>, <b>gönderilmemiş (not sent)</b>, <b>next byte to write</b> ve <b>next byte to send</b> bölgeleri var. Alıcı tamponunda ise <b>next byte to read</b>, <b>next byte to receive</b> ve <b>not read</b>. Her segmentin önünde bir başlık (H) bulunur."},
+{sec:"GENEL",p:4,s:7,q:"TCP kapsülleme işleminde TCP başlığı + uygulama verisi neyin içine yerleştirilir?",
+ o:["IP yük alanına (IP payload); o da veri bağlantı katmanı çerçevesinin içine","Doğrudan Ethernet çerçevesine, IP olmadan","UDP datagramının içine","Uygulama katmanı verisinin içine","ARP paketinin içine"],
+ quote:"TCP payload · IP payload · Data-link layer payload",
+ exp:"Sıra şu: <b>uygulama verisi + TCP header = TCP segmenti</b> → <b>IP header</b> eklenir → <b>frame header</b> eklenir. Her alt katman, üstteki katmanın tamamını kendi yükü (payload) olarak taşır."},
+
+// ───────────── BAĞLANTI ─────────────
+{sec:"BAGLANTI",p:4,s:8,q:"3 yollu el sıkışma örneğinde istemci seq: 8000 ile SYN gönderiyor, sunucu seq: 15000 ile SYN+ACK dönüyor. Sunucunun SYN+ACK segmentindeki ack değeri nedir?",
+ o:["8001","8000","15001","15000","5000"],
+ quote:"SYN + ACK · seq: 15000 · ack: 8001 · rwnd: 5000",
+ exp:"SYN segmenti veri taşımasa da <b>bir sıra numarası tüketir</b>, bu yüzden onay = 8000 + 1 = <b>8001</b>. Üçüncü adımda istemci <b>ack: 15001</b> ile cevap verir. İstemci active open (connect), sunucu passive open (listen/accept) yapar.", k:true},
+{sec:"BAGLANTI",p:4,s:8,q:"3 yollu el sıkışmanın son ACK segmentinde istemcinin seq değerinin 8000 kalmasının anlamı nedir?",
+ o:["Bu segment veri taşımaz (\"no data\"); veri taşısaydı (piggybacking) seq 8001 olurdu","Segment hatalıdır ve yeniden gönderilecektir","Bağlantı reddedilmiştir","Sunucu SYN'i almamıştır","Pencere boyutu sıfırdır"],
+ quote:"Means \"no data\" ! · seq: 8001 if piggybacking",
+ exp:"Son ACK sadece onay verir ve sıra numarası tüketmez. ACK ile birlikte veri de gönderilseydi (<b>piggybacking</b>) seq 8001 olurdu. Bu ACK'te istemci <b>rwnd: 10000</b> ilan ediyor."},
+{sec:"BAGLANTI",p:5,s:9,q:"Veri transferi örneğinde istemci 8001–9000 ve 9001–10000 baytlarını gönderdikten sonra sunucunun gönderdiği segmentteki ack değeri nedir?",
+ o:["10001","10000","9001","15001","17001"],
+ quote:"seq: 15001 · ack: 10001 · bytes: 15001-17000",
+ exp:"Son alınan bayt 10000 olduğu için beklenen bir sonraki bayt <b>10001</b>. Sunucu bu onayı kendi verisiyle (15001–17000) birlikte gönderiyor. İstemcinin son ACK'i <b>ack: 17001</b>. İstemci segmentlerinde <b>P (PSH)</b> bayrağı da kullanılıyor."},
+{sec:"BAGLANTI",p:5,s:10,q:"3 yollu bağlantı sonlandırmada istemci seq: x, ack: y ile FIN gönderdikten sonra sunucunun FIN+ACK segmenti hangi değerleri taşır?",
+ o:["seq: y, ack: x + 1","seq: x, ack: y + 1","seq: y + 1, ack: x","seq: x + 1, ack: y + 1","seq: y, ack: x"],
+ quote:"FIN + ACK · seq: y · ack: x + 1",
+ exp:"Sıra şöyle: <b>FIN</b> (seq x, ack y) → <b>FIN+ACK</b> (seq y, ack x+1) → <b>ACK</b> (seq x, ack y+1). FIN de SYN gibi bir sıra numarası tüketir. İstemci <b>active close</b>, sunucu <b>passive close</b> yapar."},
+{sec:"BAGLANTI",p:6,s:11,q:"TCP zaman çizelgesine göre aktif kapatma yapan istemcinin FIN gönderdikten sonra geçtiği durum sırası hangisidir?",
+ o:["FIN-WAIT-1 → FIN-WAIT-2 → TIME-WAIT → CLOSED","CLOSE-WAIT → LAST-ACK → CLOSED","FIN-WAIT-1 → CLOSE-WAIT → CLOSED","TIME-WAIT → FIN-WAIT-1 → CLOSED","LAST-ACK → TIME-WAIT → CLOSED"],
+ quote:"Client States: ESTABLISHED → FIN-WAIT-1 → FIN-WAIT-2 → TIME-WAIT → CLOSED",
+ exp:"İstemci: CLOSED → SYN-SENT → ESTABLISHED → FIN-WAIT-1 → FIN-WAIT-2 → TIME-WAIT (2MSL zamanlayıcısı) → CLOSED. Sunucu: CLOSED → LISTEN → SYN-RCVD → ESTABLISHED → <b>CLOSE-WAIT → LAST-ACK</b> → CLOSED."},
+{sec:"BAGLANTI",p:6,s:11,q:"Pasif kapatma yapan sunucu, istemciden ilk FIN'i alıp ACK gönderdikten sonra hangi duruma geçer?",
+ o:["CLOSE-WAIT","FIN-WAIT-2","TIME-WAIT","SYN-RCVD","CLOSING"],
+ quote:"Server States: ESTABLISHED → CLOSE-WAIT → LAST-ACK → CLOSED",
+ exp:"CLOSE-WAIT'te sunucu uygulamanın kapanmasını bekler, bu arada hâlâ veri gönderebilir (yarı kapalı bağlantı). Sonra kendi FIN'ini gönderip <b>LAST-ACK</b>'e geçer."},
+{sec:"BAGLANTI",p:6,s:12,q:"Durum geçiş tablosuna göre \"İkinci FIN alındı, ACK gönderildi; 2MSL zaman aşımı bekleniyor\" hangi durumdur?",
+ o:["TIME-WAIT","LAST-ACK","FIN-WAIT-2","CLOSE-WAIT","CLOSING"],
+ quote:"TIME-WAIT — Second FIN received, ACK sent; waiting for 2MSL time-out",
+ exp:"Tablodaki diğer durumlar: <b>LISTEN</b> pasif açık alındı, SYN bekleniyor. <b>SYN-SENT</b> SYN gönderildi, ACK bekleniyor. <b>SYN-RCVD</b> SYN+ACK gönderildi, ACK bekleniyor. <b>FIN-WAIT-1</b> ilk FIN gönderildi, ACK bekleniyor. <b>FIN-WAIT-2</b> ilk FIN'e ACK geldi, ikinci FIN bekleniyor. <b>LAST-ACK</b> ikinci FIN gönderildi, ACK bekleniyor."},
+{sec:"BAGLANTI",p:6,s:12,q:"İki tarafın aynı anda bağlantıyı kapatmaya karar verdiği durum hangisidir?",
+ o:["CLOSING","TIME-WAIT","CLOSE-WAIT","LAST-ACK","SYN-RCVD"],
+ quote:"CLOSING — Both sides decided to close simultaneously",
+ exp:"Şemada FIN-WAIT-1 durumundayken karşıdan FIN gelirse (<b>Simultaneous close</b>) CLOSING'e geçilir, ardından ACK ile TIME-WAIT'e gidilir. Aynı şekilde <b>Simultaneous open</b> (SYN-SENT → SYN-RCVD) da mümkün."},
+{sec:"BAGLANTI",p:7,s:13,q:"Bağlantı reddetme ve bağlantı iptal etme senaryolarında hangi segmentler kullanılır?",
+ o:["Red: sunucu SYN'e RST ile cevap verir; İptal: RST + ACK gönderilir","Red: FIN; İptal: FIN + ACK","Red: SYN + ACK; İptal: SYN","Red: ACK; İptal: PSH","Red: URG; İptal: RST"],
+ quote:"Bağlantı Red Etme: SYN → RST · Bağlantı İptal Etme: RST + ACK",
+ exp:"<b>Red</b>: istemci SYN-SENT durumundayken sunucu <b>RST</b> gönderir, iki taraf da CLOSED olur. <b>İptal</b>: ESTABLISHED bağlantıda istemci <b>Abort</b> yapar ve <b>RST+ACK</b> gönderir, sunucu tarafında uygulamaya <b>Error</b> bildirilir. FIN ile yapılan düzgün kapanıştan farkı, bağlantının anında kopmasıdır."},
+
+// ───────────── AKIŞ ─────────────
+{sec:"AKIS",p:7,s:14,q:"TCP çift yönlü iletişimde toplam kaç pencere kullanır?",
+ o:["4 (her yön için bir gönderme ve bir alma penceresi)","2","1","3","8"],
+ quote:"TCP, veri aktarımının her yönü için iki pencere (gönderme penceresi ve alma penceresi) kullanır; bu, çift yönlü iletişim için dört pencere anlamına gelir.",
+ exp:"Gönderme penceresinde <b>Sf</b> ilk onaylanmamış bayt, <b>Sn</b> gönderilecek sonraki bayttır. Gönderme penceresinin boyutunu <b>alıcı ilan eder</b>. Alma penceresi ise <b>rwnd</b> (receive window size) ile gösterilir, <b>Rn</b> beklenen sonraki bayttır."},
+{sec:"AKIS",p:7,s:14,q:"Gönderme penceresi (send window) şekline göre pencerenin boyutunu kim belirler?",
+ o:["Alıcı (advertised by the receiver)","Gönderici kendisi","IP katmanı","Yönlendirici","Uygulama katmanı"],
+ quote:"Send window size (advertised by the receiver)",
+ exp:"Gönderme penceresi açılabilir (opens), kapanabilir (closes) ve küçülebilir (<b>shrinks</b>). Alma penceresi yalnızca açılır ve kapanır. Pencerenin solundaki baytlar onaylanmıştır ve tampondan silinebilir."},
+{sec:"AKIS",p:8,s:15,q:"TCP'de akış kontrolünün tanımı hangisidir?",
+ o:["Üreticinin veri yaratma hızını, tüketicinin verileri kullanma oranıyla dengeler","Bozulan paketleri tespit edip yeniden gönderir","Ağdaki tıkanıklığı algılayıp pencereyi küçültür","Paketlerin yolunu belirler","Bağlantıyı kurar ve sonlandırır"],
+ quote:"Akış kontrolü, üreticinin veri yaratma hızını, tüketicinin verileri kullanma oranıyla dengeler.",
+ exp:"Önemli bir ayrıntı: <b>TCP akış kontrolünü hata kontrolünden ayırır.</b> Şekildeki adımlar şöyle: (1) mesajlar itilir, (2) segmentler itilir, (3) mesajlar çekilir, (4) ve (5) akış kontrol geri bildirimi."},
+{sec:"AKIS",p:8,s:16,q:"Akış kontrolü örneğinde sunucu başta rwnd = 800 ilan ediyor. İstemci 200 bayt gönderdikten ve sunucu bunları aldıktan sonra sunucunun ilan ettiği rwnd kaçtır?",
+ o:["600","800","400","1000","200"],
+ quote:"ackNo: 301 · rwnd: 600 — 200 bytes received, window closes.",
+ exp:"800 − 200 = <b>600</b>. Sonra istemci 300 bayt daha gönderir: <b>ack 601, rwnd 400</b> (300 bayt alındı, 100'ü tüketildi). Ardından 200 bayt tüketilince <b>rwnd 600</b> olur ve pencere yeniden açılır."},
+
+// ───────────── HATA ─────────────
+{sec:"HATA",p:9,s:17,q:"TCP'nin güvenilir olması ne anlama gelir?",
+ o:["Akışı hatasız, hiçbir parça kaybolmadan veya çoğaltılmadan iletmesi","Verinin şifreli iletilmesi","Verinin en hızlı yoldan iletilmesi","Sadece kayıpsız, ancak tekrarlı iletim yapması","Bağlantı kurmadan veri göndermesi"],
+ quote:"hatasız ve herhangi bir parça kaybolmadan veya çoğaltılmadan iletmek için TCP'ye bağlı olduğu anlamına gelir",
+ exp:"Bunu \"<b>hatasız + kayıpsız + çoğaltmasız</b>\" diye aklında tut."},
+{sec:"HATA",p:9,s:17,q:"TCP'de hata denetimi hangi üç araç kullanılarak sağlanır?",
+ o:["Checksum, onay ve zaman aşımı","Checksum, şifreleme ve sıkıştırma","Pencere, tıkanıklık ve akış","SYN, FIN ve RST","CRC, parity ve Hamming"],
+ quote:"TCP'de hata denetimi üç araç kullanılarak sağlanır: Checksum · Onay · Zaman aşımı",
+ exp:"Kaybolan veya bozulan paketlerin tespit edilip yeniden iletilmesini sağlayan yöntemlere <b>Automatic Repeat Request (ARQ)</b> denir."},
+{sec:"HATA",p:9,s:17,q:"Kaybolan ya da bozulan paketlerin sezimi ve yeniden iletimini ilgilendiren hata kontrol yöntemleri nasıl adlandırılır?",
+ o:["Automatic Repeat Request (ARQ)","Forward Error Correction (FEC)","Cyclic Redundancy Check (CRC)","Slow Start","Fast Recovery"],
+ quote:"Automatic Repeat Request (ARQ) error control olarak tanımlanır",
+ exp:"Yaygın ARQ yöntemleri: <b>Stop-and-Wait ARQ</b>, <b>Go-Back-N ARQ</b>, <b>Selective Repeat ARQ</b>."},
+{sec:"HATA",p:9,s:18,q:"Slaytta \"yaygın olarak kullanılan ARQ yeniden iletim yöntemleri\" arasında sayılmayan hangisidir?",
+ o:["Slow Start ARQ","Stop-and-Wait ARQ","Go-Back-N ARQ","Selective Repeat ARQ","Hepsi sayılmıştır"],
+ quote:"Stop-and-Wait ARQ · Go-Back-N ARQ · Selective Repeat ARQ",
+ exp:"Şekilde iki çalışma biçimi karşılaştırılıyor: <b>stop-and-wait</b> (bir paket gönder, ACK bekle) ve <b>pipelined</b> (ardışık birçok paket). Go-Back-N ve Selective Repeat pipelined yöntemlerdir. Slow Start ise bir tıkanıklık kontrolü algoritmasıdır."},
+{sec:"HATA",p:10,s:19,q:"\"Hata Kontrolü-Senaryolar\" slaytında listelenmeyen senaryo hangisidir?",
+ o:["Bağlantı reddi","Segment kaybı (Go-Back-N / Selective Repeat)","Hızlı yeniden iletim","Kayıp onay bildirimi","Kayıp segmentin yeniden gönderimi"],
+ quote:"Segment Kaybı · Hızlı Yeniden İletim · Kayıp Onay Bildirimi · Kayıp Segmentin Yeniden Gönderimi",
+ exp:"Dört senaryo var ve sonraki slaytlarda (20–24) her biri ayrı bir şekille anlatılıyor."},
+{sec:"HATA",p:10,s:20,q:"Go-Back-N ARQ örneğinde Packet 2 kaybolursa ve zaman aşımı olursa ne olur?",
+ o:["Packet 2, 3, 4 ve 5'in hepsi yeniden iletilir","Sadece Packet 2 yeniden iletilir","Hiçbir paket yeniden iletilmez","Sadece Packet 5 yeniden iletilir","Bağlantı sonlandırılır"],
+ quote:"Timeout for Packet 2 · Packets 2,3,4,5 are retransmitted",
+ exp:"Alıcı sıra dışı paketleri kabul etmez ve sürekli <b>ACK 2</b> gönderir. Zaman aşımında gönderici, kaybolan paketten itibaren <b>hepsini</b> geri dönüp yeniden yollar. Adı da buradan geliyor: \"N geri git\"."},
+{sec:"HATA",p:11,s:21,q:"Selective Repeat örneğinde 701–800 segmenti kaybolup 801–900 alındığında alıcı ne yapar?",
+ o:["801–900'ü sıra dışı (out of order) olarak tamponda saklar ve Ack: 701 gönderir","801–900'ü atar ve hiçbir şey göndermez","Ack: 901 gönderir","Bağlantıyı sıfırlar (RST)","801–900'ü uygulamaya hemen iletir"],
+ quote:"Ack: 701 · Out of order (Rule 4)",
+ exp:"Zaman aşımında sadece kayıp olan <b>701–800 yeniden gönderilir</b>. Bu gelince alıcı tamponu tamamlanır ve kümülatif <b>Ack: 901</b> döner (Rule 5). Go-Back-N'den farkı, <b>sadece kayıp segmentin</b> tekrar gönderilmesidir."},
+{sec:"HATA",p:11,s:22,q:"Hızlı yeniden iletim (fast retransmit) hangi durumda tetiklenir?",
+ o:["Aynı onay numarası için üçüncü tekrar (duplicate) ACK alındığında, RTO dolmadan","RTO zamanlayıcısı dolduğunda","İlk ACK alındığında","Pencere boyutu sıfır olduğunda","FIN alındığında"],
+ quote:"Third duplicate · Fast retransmit · Seq: 301–400 Resent",
+ exp:"Örnekte 301–400 kayboluyor ve sonraki her segment için alıcı <b>Ack: 301</b> tekrarlıyor. <b>Üçüncü tekrarda</b> gönderici zamanlayıcıyı beklemeden 301–400'ü yeniden yolluyor, ardından <b>Ack: 701</b> geliyor."},
+{sec:"HATA",p:12,s:23,q:"Kayıp onay bildirimi senaryosunda Ack: 701 kaybolur ama ardından Ack: 901 gelirse ne olur?",
+ o:["Onay kümülatif olduğu için yeniden iletim gerekmez; 901'e kadar her şey onaylanmış olur","501–700 yeniden gönderilir","Bağlantı kapanır","Sadece 601–700 yeniden gönderilir","Gönderici RST yollar"],
+ quote:"Ack: 701 lost · Ack: 901",
+ exp:"Bu senaryo <b>kümülatif onayın</b> faydasını gösteriyor: sonraki ACK, kaybolan ACK'in bilgisini de kapsar. RTO zamanlayıcısı durur."},
+{sec:"HATA",p:12,s:24,q:"\"Kayıp Segmentin Yeniden Gönderimi\" senaryosunda Ack: 701 kaybolur ve RTO dolarsa gönderici ne yapar?",
+ o:["İlk onaylanmamış segmenti (501–600) yeniden gönderir; alıcı tekrar Ack: 701 döner","Tüm segmentleri baştan gönderir","Hiçbir şey yapmaz","Sadece 601–700'ü gönderir","Bağlantıyı iptal eder"],
+ quote:"Seq: 501–600 Resent · Ack: 701 (Rule 6)",
+ exp:"Zaman aşımında <b>kabul edilmemiş ilk segment</b> yeniden iletilir. Alıcıda bu veri zaten var (tekrar/duplicate), bu yüzden atılır ve beklenen sonraki bayt olan <b>Ack: 701</b> yeniden gönderilir (Rule 6)."},
+{sec:"HATA",p:13,s:25,q:"TCP yeniden iletim zamanlayıcısı RTO değerine ulaşırsa gönderici ne yapar?",
+ o:["Kabul edilmemiş olan ilk segmenti yeniden iletir","Tüm pencereyi yeniden iletir","Bağlantıyı kapatır","Pencere boyutunu iki katına çıkarır","Prob segmenti gönderir"],
+ quote:"gönderici kabul edilmemiş olan ilk segmenti yeniden iletir",
+ exp:"TCP <b>her bağlantı için bir</b> yeniden iletim zamanlayıcısı kullanır. Zamanlayıcı şu durumlarda başlar: veri alanlı paket iletilmeye başlandığında, yeni veriyi kabul eden bir ACK alındığında, bir segment yeniden iletildiğinde. <b>Tüm segmentler kabul edilince durur.</b>"},
+{sec:"HATA",p:13,s:25,q:"Yeniden iletim zaman aşımı değeri çok küçük ve çok büyük seçilirse sırasıyla ne olur?",
+ o:["Çok küçükse gereksiz yeniden iletimler, çok büyükse uzun bekleme süreleri","Çok küçükse uzun beklemeler, çok büyükse gereksiz iletimler","İkisinde de bağlantı kopar","İkisinde de performans artar","Çok küçükse tıkanıklık azalır, çok büyükse akış kontrolü durur"],
+ quote:"Süreaşımı değeri çok küçük olursa gereksiz yeniden iletimlere neden olur",
+ exp:"Ağdaki gecikmeler sabit olmadığı için <b>yeniden iletim zamanlayıcısı adaptif olmalıdır</b>. Bu yüzden RTT ölçülerek RTO sürekli güncellenir."},
+
+// ───────────── TIKANIKLIK + ZAMANLAYICILAR ─────────────
+{sec:"TIKANIK",p:13,s:26,q:"TCP'deki tıkanıklık kontrolü hangi mekanizmalara dayanır?",
+ o:["Hem açık döngü hem de kapalı döngü mekanizmalarına","Sadece açık döngü mekanizmalarına","Sadece kapalı döngü mekanizmalarına","Sadece checksum'a","Sadece alıcının rwnd değerine"],
+ quote:"TCP'deki tıkanıklık kontrolü, hem açık döngü hem de kapalı döngü mekanizmalarına dayanır.",
+ exp:"TCP tıkanıklığı önleyen, gerçekleştikten sonra da algılayıp hafifleten bir <b>tıkanıklık penceresi (cwnd)</b> ve bir <b>tıkanıklık ilkesi</b> kullanır."},
+{sec:"TIKANIK",p:13,s:26,q:"Yavaş başlatma (slow start) algoritmasında tıkanıklık penceresinin boyutu nasıl artar?",
+ o:["Bir eşiğe (threshold) ulaşıncaya kadar katlanarak (üstel) artar: 1, 2, 4, 8…","Her RTT'de 1 artar (doğrusal)","Sabit kalır","Her ACK'te yarıya iner","Rastgele değişir"],
+ quote:"Yavaş başlatma algoritmasında, tıkanıklık penceresinin boyutu bir eşiğe ulaşıncaya kadar katlanarak artar.",
+ exp:"Şekilde cwnd her RTT'de <b>1 → 2 → 4 → 8</b> şeklinde artıyor (Yavaş Başlatma, Üstel Artış). Adının \"yavaş\" olmasına aldanma: başlangıç değeri küçüktür ama artış üsteldir."},
+{sec:"TIKANIK",p:13,s:26,q:"Slayta göre Fast Recovery (hızlı kurtarma) ilk olarak hangi TCP sürümüyle gelmiştir?",
+ o:["TCP Reno (1990)","TCP Tahoe (1988)","New Reno (1996)","SACK (1996)","TCP Vegas"],
+ quote:"TCP Reno (1990, FreeBSD 4.3 Reno) · Fast Recovery",
+ exp:"<b>TCP Tahoe (1988)</b>: Slow Start, Congestion Avoidance, Fast Retransmit. <b>TCP Reno (1990)</b>: Fast Recovery. Sonrasında <b>New Reno (1996)</b> ve <b>SACK (1996)</b> geldi."},
+{sec:"TIKANIK",p:14,s:27,q:"Tıkanıklıktan kaçınma (congestion avoidance) algoritmasında tıkanıklık penceresi nasıl artar?",
+ o:["Katkı artışı (additive): her RTT'de 1 artar (i, i+1, i+2…)","Üstel artış: her RTT'de iki katına çıkar","Her RTT'de yarıya iner","Sabit kalır","Her ACK'te sıfırlanır"],
+ quote:"Tıkanıklıktan Kaçış, Katkı Artışı",
+ exp:"Şekilde cwnd <b>i=4 → i+1 → i+2 → i+3</b> şeklinde artıyor. Eşiğin altında üstel (slow start), eşiğin üstünde doğrusal (congestion avoidance) artış var."},
+{sec:"TIKANIK",p:14,s:27,q:"Tıkanıklık penceresi grafiğinde eşik (threshold) başta 32 KB'dır ve pencere 40 KB'dayken zaman aşımı (timeout) olur. Sonra ne olur?",
+ o:["Pencere en küçük değere (1) düşer, yeni eşik 20 KB olur ve yavaş başlatma yeniden başlar","Pencere 32 KB'a düşer","Pencere 40 KB'da sabit kalır","Eşik 64 KB olur","Bağlantı kapanır"],
+ quote:"Timeout · Threshold (32) → Threshold (20)",
+ exp:"Zaman aşımında yeni eşik, o anki pencerenin <b>yarısı</b> olur (40/2 = 20) ve pencere <b>1</b>'e iner. Sonra eşiğe kadar üstel, eşikten sonra doğrusal artış tekrarlanır."},
+{sec:"TIKANIK",p:14,s:28,q:"TCP tarafından kullanılan zamanlayıcılar arasında slaytta sayılmayan hangisidir?",
+ o:["Congestion (tıkanıklık) zamanlayıcısı","Retransmission","Persistence","Keepalive","TIME-WAIT"],
+ quote:"Timers: Retransmission · Persistence · Keepalive · TIME-WAIT",
+ exp:"Dört zamanlayıcı var: <b>Retransmission</b> (kayıp segment), <b>Persistence</b> (sıfır pencere kilitlenmesi), <b>Keepalive</b> (boşta kalan bağlantı), <b>TIME-WAIT</b> (kapanış sonrası). Her biri verinin düzgün gönderilmesini sağlar."},
+{sec:"TIKANIK",p:15,s:29,q:"RTO'yu (yeniden iletim zaman aşımı) hesaplamak için önce hangi değerin hesaplanması gerekir ve kaç türü vardır?",
+ o:["RTT (gidiş-dönüş süresi); Measured, Smoothed, Deviated olmak üzere 3 tür","MSS; 2 tür","rwnd; 3 tür","cwnd; 4 tür","Checksum; 2 tür"],
+ quote:"Measured RTT(RTTm) · Smoothed RTT(RTTs) · Deviated RTT(RTTd)",
+ exp:"Segment gönderilince zamanlama başlar, onay alınınca durur. Süre dolarsa zaman aşımı oluşur ve segment yeniden iletilir. RTO hesabı: <b>RTO = RTTs + 4 × RTTd</b>."},
+{sec:"TIKANIK",p:15,s:30,q:"Kalıcılık (persistence) zamanlayıcısı hangi problemle başa çıkmak için kullanılır?",
+ o:["Sıfır pencere boyutu kilitlenme durumu","Uzun süre boşta kalan bağlantı","Kapanan portun hemen yeniden açılması","Kayıp segmentlerin yeniden iletimi","Tıkanıklık"],
+ quote:"Sıfır pencere boyutu kilitlenme durumuyla başa çıkmak için TCP bir kalıcılık zamanlayıcısı kullanır.",
+ exp:"Gönderen, sıfır pencereli bir onay alınca zamanlayıcıyı başlatır. Süre dolunca <b>prob</b> adlı özel bir segment gönderir: <b>yalnızca 1 bayt</b> yeni veri içerir, sıra numarası vardır ama asla kabul edilmez. Prob, alıcının kaybolan bildirimi yeniden göndermesini sağlar."},
+{sec:"TIKANIK",p:15,s:30,q:"Persistence zamanlayıcısı dolduğunda gönderilen prob segmenti kaç bayt yeni veri içerir?",
+ o:["1 bayt","0 bayt","20 bayt","40 bayt","MSS kadar"],
+ quote:"Bu segment yalnızca 1 bayt yeni veri içeriyor.",
+ exp:"Bu baytın sıra numarası <b>asla kabul edilmez</b> ve verilerin geri kalanının sıra numarası hesaplanırken bile göz ardı edilir."},
+{sec:"TIKANIK",p:16,s:31,q:"Keepalive zamanlayıcısında zaman aşımı genellikle ne kadardır ve kaç prob sonrası bağlantı sonlandırılır?",
+ o:["2 saat; her biri 75 sn arayla 10 prob","1 saat; 5 prob","2 saat; 3 prob","30 dakika; 10 prob","75 saniye; 2 prob"],
+ quote:"Zaman aşımı genellikle 2 saattir. … Her biri 75 s arayla 10 probdan sonra yanıt yoksa",
+ exp:"Amaç, istemci çöktüğünde bağlantının <b>sonsuza kadar açık kalmasını</b> önlemek. Sunucu istemciden her haber aldığında zamanlayıcıyı sıfırlar. 2 saat ses çıkmazsa prob gönderir, 10 proba cevap gelmezse istemcinin kapalı olduğunu varsayıp bağlantıyı kapatır."},
+{sec:"TIKANIK",p:16,s:32,q:"TIME-WAIT zamanlayıcısı ne zaman başlar ve amacı nedir?",
+ o:["2. FIN için son ACK gönderildikten sonra başlar; kapanan portun hemen yeniden açılıp ağda kalan eski datagramları almasını önler","SYN gönderildiğinde başlar; bağlantı kurulumunu hızlandırır","Pencere sıfır olduğunda başlar; kilitlenmeyi önler","İlk veri segmentiyle başlar; RTT ölçer","Bağlantı boşta kaldığında başlar; istemciyi yoklar"],
+ quote:"Zamanlayıcı, 2. FIN için son Ack gönderildikten ve bağlantı kapatıldıktan sonra başlar.",
+ exp:"Bağlantı kapandıktan sonra ağda yoluna devam eden datagramlar o porta ulaşabilir. Slaytta \"<b>sessiz zamanlayıcı</b>\" olarak da geçiyor. Durum şemasında bu süre <b>2MSL</b>."},
+{sec:"TIKANIK",p:17,s:33,q:"Zamanlayıcı örneğinde SYN segmenti gönderildiğinde henüz RTT ölçümü yokken RTO hangi değere ayarlanmıştır?",
+ o:["6.00 saniye","1.5 saniye","4.5 saniye","2 saat","75 saniye"],
+ quote:"RTO değeri 6.00 saniyeye ayarlanmıştır.",
+ exp:"İlk ölçümden önce RTTm, RTTs ve RTTd değerleri yoktur, bu yüzden başlangıç RTO'su <b>6 saniye</b>."},
+{sec:"TIKANIK",p:17,s:33,q:"SYN+ACK geldiğinde RTTm = 1.5 sn ölçülüyor. Bu ilk ölçümde RTTs, RTTd ve RTO değerleri nedir?",
+ o:["RTTs = 1.5, RTTd = 0.75, RTO = 4.5","RTTs = 1.5, RTTd = 1.5, RTO = 7.5","RTTs = 0.75, RTTd = 1.5, RTO = 6.75","RTTs = 1.5, RTTd = 0.75, RTO = 6.0","RTTs = 1.625, RTTd = 0.78, RTO = 4.74"],
+ quote:"RTTD = (1.5) / 2 = 0.75 · RTO = 1.5 + 4 × 0.75 = 4.5",
+ exp:"İlk ölçümde: <b>RTTs = RTTm</b>, <b>RTTd = RTTm / 2</b>, <b>RTO = RTTs + 4 × RTTd</b>. Bunları hesaplamaya hazırlıklı ol, formül sorusu gelebilir."},
+{sec:"TIKANIK",p:17,s:33,q:"İkinci ölçümde RTTm = 2.5 sn oluyor (önceki RTTs = 1.5, RTTd = 0.75). Yeni RTTs ve RTO değeri nedir?",
+ o:["RTTs = 1.625, RTO = 4.74","RTTs = 2.5, RTO = 4.5","RTTs = 2.0, RTO = 5.0","RTTs = 1.5, RTO = 6.0","RTTs = 1.625, RTO = 4.5"],
+ quote:"RTTS = 7/8 × 1.5 + (1/8) × 2.5 = 1.625 · RTO = 1.625 + 4 × 0.78 = 4.74",
+ exp:"Formüller: <b>RTTs = 7/8 × RTTs(eski) + 1/8 × RTTm</b>. <b>RTTd = 3/4 × RTTd(eski) + 1/4 × |RTTs − RTTm|</b> = 3/4 × 0.75 + 1/4 × 0.875 ≈ <b>0.78</b>. <b>RTO = 1.625 + 4 × 0.78 = 4.74</b>. (Slaytta \"3/4 (7.5)\" yazıyor, doğrusu 0.75.)"},
+{sec:"TIKANIK",p:17,s:34,q:"Örnekte iki veri segmenti art arda gönderildiğinde RTT ölçümüyle ilgili hangisi doğrudur?",
+ o:["Bir ölçüm zaten devam ettiği için ikinci veri segmenti için yeni RTT ölçümü başlatılmaz","Her segment için ayrı RTT ölçülür","İkinci segment için ölçüm başlar, ilki iptal edilir","RTT sadece SYN için ölçülür","Kümülatif ACK geldiği için ölçüm yapılmaz"],
+ quote:"Bir ölçüm zaten devam ettiği için ikinci veri segmenti için RTT ölçümü başlatılmaz.",
+ exp:"Son ACK (Ack: 1601) iki segmenti de kümülatif olarak kabul eder, ama ölçülen RTTm <b>ilk segment</b> için geçerlidir: 2.50 sn. Şekildeki değerler: SYN Seq 1400 → SYN+ACK Seq 4000, Ack 1401 → veri 1401–1500 ve 1501–1600."},
+{sec:"TIKANIK",p:18,s:35,q:"TCP üstbilgisinde (header) en fazla kaç bayt opsiyon bulunabilir?",
+ o:["40 bayt","20 bayt","60 bayt","8 bayt","16 bayt"],
+ quote:"TCP üstbilgisinde 40 bayta kadar isteğe bağlı bilgi bulunabilir.",
+ exp:"Opsiyonlar hedefe ek bilgi aktarır veya diğer opsiyonları hizalar. <b>Tek baytlık</b> opsiyonlar: End of option list, No operation. <b>Çok baytlık</b> opsiyonlar: Maximum segment size (MSS), Window scale factor, Timestamp, SACK-permitted, SACK."},
+{sec:"TIKANIK",p:18,s:35,q:"Aşağıdaki TCP opsiyonlarından hangisi tek baytlık (single-byte) bir opsiyondur?",
+ o:["No operation","Maximum segment size","Window scale factor","Timestamp","SACK"],
+ quote:"Single-byte: End of option list · No operation",
+ exp:"Tek baytlık opsiyonlar sadece iki tane: <b>End of option list</b> ve <b>No operation</b>. Geri kalan hepsi çok baytlıdır."},
+{sec:"TIKANIK",p:18,s:36,q:"TCP İletim Kontrol Bloğu (TCB) şemasındaki modüller arasında yer almayan hangisidir?",
+ o:["Routing module","Main module","Input processing module","Output processing module","Timers"],
+ quote:"Timers · Main module · Input processing module · Output processing module · TCBs",
+ exp:"TCP paketi; <b>ana modül, giriş ve çıkış işleme modülleri, zamanlayıcılar ve TCB'lerden</b> oluşur. TCB tablosunda <b>State, Process, …, Pointer</b> alanları var ve pointer tamponları (buffers) gösterir."},
+
+// ───────────── UDP ─────────────
+{sec:"UDP",p:19,s:37,q:"UDP ile ilgili hangisi doğrudur?",
+ o:["Bağlantısız, güvenilir olmayan bir aktarım protokolüdür; iletim birimi datagram olarak ifade edilir","Bağlantı yönelimli ve güvenilirdir","Akış kontrolü ve onay mekanizması vardır","İletim birimi segment olarak ifade edilir","Hiçbir hata kontrolü yapmaz"],
+ quote:"Kullanıcı Datagram Protokolü (UDP) bağlantısız, güvenilir olmayan bir aktarım protokolüdür.",
+ exp:"UDP'de <b>akış kontrol mekanizması ve onay/geri bildirim mekanizması yoktur</b>. Ama <b>kısıtlı</b> bir hata kontrolü var: hata tespit ederse paketi <b>drop eder</b> (atar)."},
+{sec:"UDP",p:19,s:37,q:"UDP hata tespit ettiğinde ne yapar?",
+ o:["Paketi drop eder (atar)","Paketi yeniden ister","Göndericiye NAK gönderir","Hatayı düzeltir","Bağlantıyı sıfırlar"],
+ quote:"Kısıtlı olarak hata kontrol mekanizması sağlamaktadır. Eğer hata tespit ederse, paketi drop eder.",
+ exp:"UDP'nin işlevleri: <b>Encapsulation-Decapsulation</b>, <b>Kuyruklama</b>, <b>Multiplexing-Demultiplexing</b>. Yeniden iletim yapmaz."},
+{sec:"UDP",p:19,s:37,q:"UDP genellikle hangi tür uygulamalar için uygundur?",
+ o:["En ufak gecikmenin tolere edilemediği gerçek zamanlı uygulamalar (özellikle multimedia streaming)","Dosya transferi gibi kayıpsız iletim gerektiren uygulamalar","E-posta gönderimi","Web sayfası indirme","Bankacılık işlemleri"],
+ quote:"gerçek zamanlı uygulamalar (özellikle multimedia streaming) için uygundur",
+ exp:"Gerçek zamanlı uygulamalarda geç gelen veri işe yaramaz, bu yüzden yeniden iletim beklemek yerine hızlı akış tercih edilir."},
+{sec:"UDP",p:19,s:38,q:"UDP başlığı kaç bayttır ve hangi alanlardan oluşur?",
+ o:["8 bayt: kaynak port, hedef port, toplam uzunluk, checksum","20 bayt: port, sıra no, onay no, checksum","8 bayt: kaynak IP, hedef IP","20–60 bayt: değişken","4 bayt: sadece portlar"],
+ quote:"8 bytes — Header · Source port number · Destination port number · Total length · Checksum",
+ exp:"UDP datagramının toplam boyutu <b>8 ile 65.535 bayt</b> arasında. Başlık sabit <b>8 bayt</b>, 4 alanın her biri 16 bit. TCP ile kıyasla: TCP başlığı 20–60 bayt."},
+{sec:"UDP",p:19,s:38,q:"UDP port tablosuna göre 69 ve 123 numaralı portlar hangi protokollere aittir?",
+ o:["69 TFTP, 123 NTP","69 DNS, 123 SNMP","69 FTP, 123 HTTP","69 Bootpc, 123 RPC","69 TELNET, 123 SMTP"],
+ quote:"69 — TFTP · 123 — NTP",
+ exp:"UDP tablosu: <b>53</b> DNS, <b>67</b> Bootps (sunucu), <b>68</b> Bootpc (istemci), <b>69</b> TFTP, <b>111</b> RPC, <b>123</b> NTP, <b>161</b> SNMP, <b>162</b> SNMP (trap). DNS (53) hem TCP hem UDP tablosunda var."},
+{sec:"UDP",p:19,s:38,q:"UDP port tablosunda 162 numaralı port için hangi açıklama yapılmıştır?",
+ o:["Simple Network Management Protocol (trap)","Simple Network Management Protocol (istek)","Network Time Protocol","Remote Procedure Call","Trivial File Transfer Protocol"],
+ quote:"162 — SNMP — Simple Network Management Protocol (trap)",
+ exp:"Dikkat: Hafta 6 slaytında \"ajan cevaplarını 162'den gönderir\" yazıyordu, bu tabloda ise <b>162 = SNMP trap</b>. Hafta 6 sorusunda o slaytın ifadesine, bu soruda bu tabloya göre cevap ver. <b>161</b> = SNMP."},
+{sec:"UDP",p:20,s:39,q:"UDP checksum hesaplamasında kullanılan sözde başlıkta (pseudoheader) hangi alanlar bulunur?",
+ o:["32 bit kaynak IP, 32 bit hedef IP, tüm 0'lar, 8 bit protokol, 16 bit UDP toplam uzunluk","Kaynak MAC, hedef MAC, EtherType","Sadece kaynak ve hedef port","Sıra numarası ve onay numarası","TTL ve protokol"],
+ quote:"32-bit source IP address · 32-bit destination IP address · All 0s · 8-bit protocol · 16-bit UDP total length",
+ exp:"Örnekte protokol alanı <b>17</b> (UDP'nin protokol numarası). Veri, <b>16 bitin katı</b> olacak şekilde dolgu (padding) ile tamamlanır. Checksum hesaplanırken checksum alanı önce <b>0</b> kabul edilir."},
+{sec:"UDP",p:20,s:39,q:"UDP checksum hesabında veri 16 bitin katı değilse ne yapılır?",
+ o:["Verinin 16 bitin katı olması için dolgu (padding) eklenir","Veri kesilir","Checksum hesaplanmaz","Paket iki parçaya bölünür","Veri 32 bite tamamlanır"],
+ quote:"Padding must be added to make the data a multiple of 16 bits",
+ exp:"Örnekte \"TESTING\" (7 karakter) verisinin sonuna <b>Pad</b> (0) ekleniyor ve 16 bitlik kelimeler toplanıp checksum bulunuyor."},
+{sec:"UDP",p:20,s:40,q:"UDP kapsülleme (encapsulation) işleminde gönderen tarafta sıra nasıldır?",
+ o:["Mesaj → UDP başlığı + UDP verisi → IP başlığı + IP verisi → Çerçeve başlığı + çerçeve verisi","Çerçeve → IP → UDP → Mesaj","Mesaj → IP → UDP → Çerçeve","UDP → Mesaj → IP → Çerçeve","Mesaj doğrudan çerçeveye konur"],
+ quote:"a. Encapsulation · b. Decapsulation",
+ exp:"Gönderen <b>kapsüller</b> (aşağı doğru başlık ekler), alıcı <b>kapsül açar</b> (decapsulation, yukarı doğru başlıkları çıkarır) ve mesajı alıcı sürece verir."},
+{sec:"UDP",p:21,s:41,q:"UDP kuyruklama (queuing) şekliyle ilgili hangisi doğrudur?",
+ o:["Her port için bir giden (outgoing) ve bir gelen (incoming) kuyruk vardır","Sadece sunucu tarafında kuyruk vardır","Tüm portlar tek bir kuyruğu paylaşır","Kuyruklar sadece TCP'de kullanılır","Sadece gelen kuyruk vardır"],
+ quote:"Outgoing queue · Incoming queue · Daytime client · Daytime server",
+ exp:"Örnekte Daytime istemcisi ve sunucusu kendi portlarında <b>giden ve gelen kuyruklarla</b> haberleşiyor (şekilde 13 ve 52000 numaralı portlar). Süreç mesajı giden kuyruğa yazar, gelen mesajlar da gelen kuyruktan okunur."},
+{sec:"UDP",p:21,s:42,q:"UDP multiplexing-demultiplexing şekline göre hangisi doğrudur?",
+ o:["Gönderen tarafta birçok süreç tek UDP'yi kullanır (multiplexer); alıcıda UDP gelen datagramları ilgili sürece dağıtır (demultiplexer)","Her süreç ayrı bir IP katmanı kullanır","Multiplexing alıcı tarafta yapılır","UDP sadece tek bir süreçle çalışabilir","Demultiplexing IP katmanında yapılır"],
+ quote:"UDP (Multiplexer) · UDP (Demultiplexer)",
+ exp:"Ayrımı yapan bilgi <b>port numarasıdır</b>: datagramın hedef portu, hangi sürece teslim edileceğini belirler."},
+{sec:"UDP",p:22,s:43,q:"UDP çalışma yapısı şemasında bulunmayan bileşen hangisidir?",
+ o:["Retransmission timer (yeniden iletim zamanlayıcısı)","Control-block table","Control-block module","Input module","Output module"],
+ quote:"Queues · Control-block module · Control-block table · Input module · Output module",
+ exp:"UDP'nin yeniden iletimi olmadığı için <b>zamanlayıcısı yoktur</b>. TCP'nin TCB şemasında ise Timers vardı. UDP'de süreçler başladığında control-block modülüne kaydolur, gelen datagram input modülünden kuyruklara gider."}
+];
+
+const SEC_COLOR = {GENEL:"var(--ftp)",BAGLANTI:"var(--smtp)",AKIS:"var(--snmp)",HATA:"var(--http)",TIKANIK:"var(--java)",UDP:"var(--mesaj)"};
+const SEC_NAME = {GENEL:"TCP Genel Bilgiler ve Segment Yapısı",BAGLANTI:"Bağlantı Kurulumu, Veri Transferi ve Sonlandırma",AKIS:"Pencere Kavramı ve Akış Kontrolü",HATA:"Hata Kontrolü ve ARQ",TIKANIK:"Tıkanıklık Kontrolü, Zamanlayıcılar ve Opsiyonlar",UDP:"UDP (User Datagram Protocol)"};
+const LETTERS = "ABCDE";
+const KEY = "k4-test-v1";
+
+// Sabit karıştırma: her soru her açılışta aynı şık sırasıyla gelir.
+function seeded(n){ let x = (n + 1) * 2654435761 % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+Q.forEach((q, i) => {
+  q.id = i;
+  const r = seeded(i * 7 + 3);
+  const idx = q.o.map((_, k) => k);
+  for (let k = idx.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+  q.order = idx; // order[görünen konum] = orijinal indeks
+});
+
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { answers = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) {} }
+
+let fSec = "all", fOnly = null, revealAll = false;
+const main = document.getElementById("main");
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(){
+  main.innerHTML = "";
+  let lastSec = null, list = null, shown = 0;
+  Q.forEach(q => {
+    if (fSec !== "all" && q.sec !== fSec) return;
+    const a = answers[q.id];
+    if (fOnly === "wrong" && !(a !== undefined && a !== 0)) return;
+    if (fOnly === "blank" && a !== undefined) return;
+    if (q.sec !== lastSec) {
+      lastSec = q.sec;
+      const h = document.createElement("h2");
+      h.className = "section-head";
+      h.style.color = SEC_COLOR[q.sec];
+      const cnt = Q.filter(x => x.sec === q.sec).length;
+      h.innerHTML = `<span>${SEC_NAME[q.sec]}</span><small>${cnt} soru</small>`;
+      main.appendChild(h);
+      list = document.createElement("div"); list.className = "list"; main.appendChild(list);
+    }
+    list.appendChild(card(q)); shown++;
+  });
+  if (!shown) main.innerHTML = `<p class="empty">Bu filtrede gösterilecek soru yok.</p>`;
+  stats();
+}
+
+function card(q){
+  const el = document.createElement("article");
+  el.className = "q"; el.style.setProperty("--sec", SEC_COLOR[q.sec]); el.id = "q" + q.id;
+  const a = answers[q.id];
+  const answered = a !== undefined;
+  const open = answered || revealAll;
+  el.innerHTML = `
+    <div class="q-top">
+      <span class="num">Soru ${q.id + 1}</span>
+      <span class="tag">${q.sec}</span>
+      <span class="src">PDF s.${q.p} · Slayt ${q.s}</span>${q.k ? '<span class="kl">Klasiğe de yarar</span>' : ''}
+    </div>
+    <h3>${esc(q.q)}</h3>
+    <div class="opts"></div>`;
+  const opts = el.querySelector(".opts");
+  q.order.forEach((orig, pos) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button"; b.id = `q${q.id}o${pos}`;
+    b.innerHTML = `<span class="l">${LETTERS[pos]}</span><span></span>`;
+    b.lastChild.textContent = q.o[orig];
+    if (open) {
+      b.disabled = true;
+      if (orig === 0) b.classList.add("is-right");
+      else if (answered && orig === a) b.classList.add("is-wrong");
+      else b.classList.add("dim");
+    } else {
+      b.addEventListener("click", () => { answers[q.id] = orig; save(); el.replaceWith(card(q)); stats(); });
+    }
+    opts.appendChild(b);
+  });
+  if (open) {
+    const rightPos = q.order.indexOf(0);
+    const fb = document.createElement("div"); fb.className = "fb";
+    let verdict = "";
+    if (answered) verdict = a === 0
+      ? `<div class="verdict ok">Doğru. Cevap ${LETTERS[rightPos]}.</div>`
+      : `<div class="verdict bad">Yanlış. Doğru cevap ${LETTERS[rightPos]}.</div>`;
+    fb.innerHTML = `${verdict}
+      <blockquote class="quote"><span class="where">PDF sayfa ${q.p}, slayt ${q.s}'te şu ifadeyle geçiyor:</span><mark>${esc(q.quote)}</mark></blockquote>
+      <p class="exp">${q.exp}</p>`;
+    el.appendChild(fb);
+  }
+  return el;
+}
+
+function stats(){
+  const total = Q.length;
+  const done = Object.keys(answers).length;
+  const ok = Object.values(answers).filter(v => v === 0).length;
+  const bad = done - ok;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-done").textContent = done;
+  document.getElementById("s-ok").textContent = ok;
+  document.getElementById("s-bad").textContent = bad;
+  document.getElementById("s-pct").textContent = "%" + (done ? Math.round(ok / done * 100) : 0);
+  document.getElementById("p-ok").style.width = (ok / total * 100) + "%";
+  document.getElementById("p-bad").style.width = (bad / total * 100) + "%";
+}
+
+document.querySelectorAll("[data-sec]").forEach(b => b.addEventListener("click", () => {
+  fSec = b.dataset.sec;
+  document.querySelectorAll("[data-sec]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+document.querySelectorAll("[data-only]").forEach(b => b.addEventListener("click", () => {
+  fOnly = fOnly === b.dataset.only ? null : b.dataset.only;
+  document.querySelectorAll("[data-only]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.only === fOnly)));
+  render();
+}));
+const reveal = document.getElementById("b-reveal");
+reveal.addEventListener("click", () => {
+  revealAll = !revealAll;
+  reveal.textContent = revealAll ? "Cevapları gizle" : "Tüm cevapları göster";
+  render();
+});
+const reset = document.getElementById("b-reset");
+let armed = false;
+reset.addEventListener("click", () => {
+  if (!armed) { armed = true; reset.textContent = "Emin misin? Tekrar bas"; setTimeout(() => { armed = false; reset.textContent = "Sıfırla"; }, 3000); return; }
+  armed = false; reset.textContent = "Sıfırla";
+  answers = {}; save(); revealAll = false; reveal.textContent = "Tüm cevapları göster"; render();
+});
+
+render();
+</script>
+
+</body>
+</html>

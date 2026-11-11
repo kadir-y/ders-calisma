@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ağ Programlama Vize Çalışma</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: tek sütun dizin — sınav künyesi, sonra iki liste (test / klasik), her satır bir sayfa */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --ink:#17202b; --muted:#5a6676; --line:#d8dee6;
+  --accent:#1d5fc4; --test:#2b74c7; --test-bg:#e2edfa; --klasik:#a8650f; --klasik-bg:#faefdc;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131a; --surface:#151c26; --ink:#e3e8ef; --muted:#95a1b2; --line:#283240;
+  --accent:#6aa5ff; --test:#6aa9ef; --test-bg:#17283d; --klasik:#e2a656; --klasik-bg:#33261a;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e131a; --surface:#151c26; --ink:#e3e8ef; --muted:#95a1b2; --line:#283240;
+  --accent:#6aa5ff; --test:#6aa9ef; --test-bg:#17283d; --klasik:#e2a656; --klasik-bg:#33261a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+.wrap{max-width:820px;margin:0 auto;padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--f-display);margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(28px,5vw,38px);font-weight:700}
+h2{font-size:21px;font-weight:600}
+p{margin:0}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;font:13.5px/1.4 var(--f-mono);color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+section{display:flex;flex-direction:column;gap:10px}
+.sh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.pts{font:600 12px/1 var(--f-mono);padding:6px 9px;border-radius:6px}
+.t .pts{background:var(--test-bg);color:var(--test)}
+.k .pts{background:var(--klasik-bg);color:var(--klasik)}
+.note{font-size:14px;color:var(--muted);max-width:68ch}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+li{border-top:1px solid var(--line)}
+li:first-child{border-top:none}
+li a,li .off{display:grid;grid-template-columns:3.2em 1fr auto;gap:4px 14px;align-items:center;padding:14px 16px;color:inherit;text-decoration:none}
+li a:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+li a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.no{font:600 13px/1 var(--f-mono);color:var(--muted)}
+.t .no{color:var(--test)}
+.k .no{color:var(--klasik)}
+.ti{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ti b{font-weight:600}
+.ti span{font:12.5px/1.35 var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+.cnt{font:500 13px/1 var(--f-mono);color:var(--muted);text-align:right;white-space:nowrap}
+li a .cnt::after{content:" ↗";color:var(--accent)}
+li .off{opacity:.55}
+@media (max-width:480px){li a,li .off{grid-template-columns:2.4em 1fr}.cnt{grid-column:2;text-align:left}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:12px">
+    <a href="../" style="font:500 13px/1 var(--f-mono);color:var(--accent);text-decoration:none">← Tüm dersler</a>
+    <span class="eyebrow">BSM 451 · Ağ Programlama · Dr. Öğr. Üyesi Musa BALTA</span>
+    <h1>Ağ Programlama Vize Çalışma</h1>
+    <div class="meta">
+      <span>Sınav: <b>9 Kasım 2026 Pazartesi</b></span>
+      <span>Test <b>60 puan</b> · Klasik <b>40 puan</b></span>
+      <span id="where"></span>
+    </div>
+  </header>
+
+  <section class="t" aria-labelledby="hT">
+    <div class="sh"><h2 id="hT">Testler</h2><span class="pts">60 puan · 354 soru</span></div>
+    <p class="note">Sistemdeki tüm sunular sınavda, pcap sunusu hariç. Her soru, cevabın geçtiği slaytı ve ifadeyi gösteriyor.</p>
+    <ul>
+      <li><a href="https://claude.ai/artifact/WQAXyhVxFoPGhZW6uFv5FL" data-local="osi-test.html" target="_blank" rel="noopener"><span class="no">H1</span><span class="ti"><b>OSI Referans Modeli ve Katmansal Yapı</b><span>osi-test.html</span></span><span class="cnt">31 soru</span></a></li>
+      <li><a href="https://claude.ai/artifact/Ck8tTnbYvTz7TsKLLGnRim" data-local="katman2-test.html" target="_blank" rel="noopener"><span class="no">H2</span><span class="ti"><b>Katman 2 Protokolleri</b><span>katman2-test.html</span></span><span class="cnt">30 soru</span></a></li>
+      <li><a href="https://claude.ai/artifact/JAHJ9sGrohhYrSeJRuaFqh" data-local="katman3-test.html" target="_blank" rel="noopener"><span class="no">H3</span><span class="ti"><b>Katman 3 Protokolleri</b><span>katman3-test.html</span></span><span class="cnt">47 soru</span></a></li>
+      <li><a href="https://claude.ai/artifact/V47nUTi57jLBrQ4YkMa492" data-local="katman4-test.html" target="_blank" rel="noopener"><span class="no">H4</span><span class="ti"><b>Katman 4 Protokolleri</b><span>katman4-test.html</span></span><span class="cnt">67 soru</span></a></li>
+      <li><a href="https://claude.ai/artifact/BS9DVwsGYENwT6vM7HGd6u" data-local="soket-test.html" target="_blank" rel="noopener"><span class="no">H5</span><span class="ti"><b>Soket Programlama</b><span>soket-test.html</span></span><span class="cnt">82 soru</span></a></li>
+      <li><a href="https://claude.ai/artifact/CF5x7mqFJdkhQBfECf7Q4X" data-local="katman7-test.html" target="_blank" rel="noopener"><span class="no">H6</span><span class="ti"><b>Katman 7 Protokolleri</b><span>katman7-test.html</span></span><span class="cnt">97 soru</span></a></li>
+    </ul>
+  </section>
+
+  <section class="k" aria-labelledby="hK">
+    <div class="sh"><h2 id="hK">Klasik boşluk doldurma</h2><span class="pts">40 puan</span></div>
+    <p class="note">Katman 2-3 kodları ve TCP istemci-sunucu C kodu. Satır numaralı orijinal kod; her açılışta yeni bir topoloji ve farklı eksik satırlar geliyor. Eksik satırı tamamen sen yazıyorsun.</p>
+    <ul>
+      <li><a href="https://claude.ai/artifact/UTvpfGRhVJEF3sNWM52RA4" data-local="bosluk-1-arp.html" target="_blank" rel="noopener"><span class="no">1</span><span class="ti"><b>arpgonder.c</b><span>ARP isteği ve cevabı · bosluk-1-arp.html</span></span><span class="cnt">Katman 2</span></a></li>
+      <li><a href="https://claude.ai/artifact/5eEf9nkEKa54fHesFpVped" data-local="bosluk-2-icmp.html" target="_blank" rel="noopener"><span class="no">2</span><span class="ti"><b>icmpgonder.c</b><span>Aynı ağ ve router üzerinden ping · bosluk-2-icmp.html</span></span><span class="cnt">Katman 3</span></a></li>
+      <li><a href="https://claude.ai/artifact/ReXDLJXaDWG37BzWTbCJKZ" data-local="bosluk-3-ping-server.html" target="_blank" rel="noopener"><span class="no">3</span><span class="ti"><b>ping_server.c</b><span>Koşul, swap ve echo reply · bosluk-3-ping-server.html</span></span><span class="cnt">Katman 3</span></a></li>
+      <li><a href="https://claude.ai/artifact/1vTG3iHFUn8ZY8KT6n8CyA" data-local="bosluk-4-ping-client.html" target="_blank" rel="noopener"><span class="no">4</span><span class="ti"><b>ping_client.c</b><span>argv ayrıştırma, paket üretimi, cevap yakalama · bosluk-4-ping-client.html</span></span><span class="cnt">Katman 3</span></a></li>
+      <li><a href="https://claude.ai/artifact/HbGurTELapy7ufc82v6XJZ" data-local="bosluk-5-tcp-sunucu.html" target="_blank" rel="noopener"><span class="no">5</span><span class="ti"><b>TCP sunucu</b><span>socket, bind, listen, accept · bosluk-5-tcp-sunucu.html</span></span><span class="cnt">Soket</span></a></li>
+      <li><a href="https://claude.ai/artifact/HF62aphkAhiMRzs4CF7Vuv" data-local="bosluk-6-tcp-istemci.html" target="_blank" rel="noopener"><span class="no">6</span><span class="ti"><b>TCP istemci</b><span>socket, connect, sohbet döngüsü · bosluk-6-tcp-istemci.html</span></span><span class="cnt">Soket</span></a></li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  // Bilgisayardan (file://) ya da GitHub Pages'ten açılınca linkler aynı klasördeki .html dosyalarına gider
+  var gh = /\.github\.io$/.test(location.hostname);
+  var local = location.protocol === 'file:' || gh;
+  if (local) document.querySelectorAll('a[data-local]').forEach(function(a){
+    a.href = a.getAttribute('data-local'); a.removeAttribute('target');
+  });
+  var w = document.getElementById('where');
+  if (w) w.innerHTML = gh ? '' : local ? 'Linkler: <b>yerel dosyalar</b>' : 'Linkler: <b>claude.ai</b>';
+})();
+</script>
+
+</body>
+</html>

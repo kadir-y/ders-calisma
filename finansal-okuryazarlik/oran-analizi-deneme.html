@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Oran Analizi Deneme Sınavı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek sütun sınav kâğıdı; tablolar açılır kutu + modal. Renkler öğrencinin defterinden: yeşil fosforlu kutu, pembe kalem. */
+:root{
+  --paper:#f5f7f5; --card:#ffffff; --ink:#16201b; --muted:#56655d; --line:#d3ddd7;
+  --green:#178a6a; --green-soft:#dcf2ea; --pink:#bd2e66; --pink-soft:#fbe4ed;
+  --ok:#178a4a; --ok-soft:#ddf3e5; --bad:#c23a2b; --bad-soft:#fbe2de;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111814; --card:#18211c; --ink:#e4ece7; --muted:#9aaba2; --line:#2b3832;
+  --green:#4fcfa4; --green-soft:#183a2f; --pink:#f17aa7; --pink-soft:#3c1d2a;
+  --ok:#5bd68b; --ok-soft:#173726; --bad:#f08374; --bad-soft:#3f1e1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111814; --card:#18211c; --ink:#e4ece7; --muted:#9aaba2; --line:#2b3832;
+  --green:#4fcfa4; --green-soft:#183a2f; --pink:#f17aa7; --pink-soft:#3c1d2a;
+  --ok:#5bd68b; --ok-soft:#173726; --bad:#f08374; --bad-soft:#3f1e1a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pink);font-weight:600}
+.lead{color:var(--muted);max-width:65ch;margin:8px 0 0}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* üst çubuk */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line);padding-block:10px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+.score{display:flex;gap:14px;align-items:baseline;font-size:.92rem;color:var(--muted)}
+.score b{font-family:var(--f-mono);font-size:1.15rem;color:var(--ink)}
+.score .c b{color:var(--ok)} .score .w b{color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:5px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--card)}
+.btn{font:inherit;font-size:.88rem;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--green)}
+.btn.ghost{background:transparent}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+
+/* bilgi notu */
+.note{border:1px dashed var(--pink);background:var(--pink-soft);border-radius:10px;padding:12px 16px;font-size:.93rem}
+.note p{margin:0} .note p+p{margin-top:6px}
+
+/* bölüm */
+section.part{display:grid;gap:16px}
+.qs{display:grid;gap:18px}
+.part-head{display:grid;gap:6px;border-top:3px solid var(--green);padding-top:14px}
+details.tbl{background:var(--card);border:1px solid var(--line);border-radius:10px}
+details.tbl summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--green)}
+details.tbl .inner{padding:0 16px 16px;display:grid;gap:18px}
+
+/* finansal tablo */
+.scroll{overflow-x:auto;min-width:0}
+table.fs{border-collapse:collapse;width:100%;min-width:460px;font-size:.86rem}
+table.fs caption{text-align:left;font-family:var(--f-display);font-weight:600;font-size:1rem;padding-bottom:6px}
+table.fs th,table.fs td{padding:3px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.fs th{text-align:right;font-size:.75rem;color:var(--muted);font-weight:600;letter-spacing:.04em}
+table.fs th:first-child{text-align:left}
+table.fs td.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.fs tr.grp td{font-weight:600;padding-top:10px;border-bottom:none}
+table.fs tr.tot td{font-weight:600;background:var(--green-soft)}
+table.fs tr.key td:first-child{box-shadow:inset 3px 0 0 var(--pink)}
+.legend{font-size:.8rem;color:var(--muted)}
+
+/* soru kartı */
+.q{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 16px;display:grid;gap:12px}
+.q[hidden]{display:none!important}
+.q-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.q-no{font-family:var(--f-mono);font-weight:500;color:var(--muted);font-size:.85rem}
+.tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:2px 8px;border-radius:5px}
+.tag.hesap{background:var(--green-soft);color:var(--green)}
+.tag.yorum{background:var(--pink-soft);color:var(--pink)}
+.tag.kavram{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.q-text{margin:0;font-weight:500}
+.q-text .given{display:block;margin-top:6px;font-family:var(--f-mono);font-size:.88rem;color:var(--muted)}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.opt{width:100%;text-align:left;font:inherit;display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:9px;padding:9px 12px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--green)}
+.opt .L{font-family:var(--f-mono);font-weight:500;min-width:1.2em;color:var(--muted)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.right .L{color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt.wrong .L{color:var(--bad)}
+.ex{border-left:3px solid var(--green);background:var(--green-soft);border-radius:0 8px 8px 0;padding:10px 14px;font-size:.93rem}
+.ex .verdict{font-weight:600;margin-bottom:4px}
+.ex .verdict.ok{color:var(--ok)} .ex .verdict.no{color:var(--bad)}
+.ex code{font-family:var(--f-mono);font-size:.88em}
+.q-tools{display:flex;gap:8px;flex-wrap:wrap}
+.linkbtn{font:inherit;font-size:.82rem;background:none;border:none;color:var(--green);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* formül kartı */
+.formulas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.f{border:2px solid var(--green);border-radius:8px;padding:10px 12px;background:var(--card);display:grid;gap:4px;min-width:0}
+.f b{font-family:var(--f-display);font-weight:600}
+.f .eq{font-family:var(--f-mono);font-size:.85rem}
+.f .mean{font-size:.85rem;color:var(--muted)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,16,13,.55);display:flex;align-items:flex-start;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 20px max(12px,env(safe-area-inset-left,0px));overflow:auto}
+.modal .box{background:var(--card);border-radius:12px;max-width:900px;width:100%;padding:16px;display:grid;gap:14px}
+.modal .box-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+
+.final{text-align:center;display:grid;gap:8px;justify-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.final .big{font-family:var(--f-display);font-weight:800;font-size:2.4rem}
+@media (prefers-reduced-motion: no-preference){.opt{transition:border-color .15s,background .15s}}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:4px">
+    <span class="eyebrow">SAU 751 · Finansal Okuryazarlık · 2. Ünite</span>
+    <h1>Oran Analizi Deneme Sınavı</h1>
+    <p class="lead">Hoca finansal tabloları verip oranları hesaplatacak, ardından ne anlama geldiklerini ve nasıl yorumlanacağını soracak. Bu deneme de öyle kuruldu: önce tabloyu incele, sonra 5 şıklı soruları çöz. Her cevaptan sonra çözüm adımları açılır.</p>
+  </header>
+
+  <div class="note">
+    <p><b>Kurallar:</b> Formüller ders notlarındaki gibidir. Bilançodaki dönem sonu tutarları kullanılır, yıl 360 gün sayılır. Sonuçlar 2 ondalığa yuvarlanmıştır, gün sayıları yaklaşıktır.</p>
+    <p><b>Ticari borç devir hızı:</b> Notlarda <i>SMM / Ticari Borçlar</i>, tahtada <i>Net Satış / Ticari Borçlar</i> yazıyor. Sorularda hangisinin kullanılacağı belirtilmiştir. Sınavdan önce hocaya hangisini kullanacağını sor.</p>
+    <p><b>Kısaltmalar (notlarda ve slaytlarda geçtiği gibi):</b> KVB = Kısa vadeli borçlar · UVB = Uzun vadeli borçlar · DV = Dönen varlıklar · SMM = Satılan malın maliyeti · ROA = Aktif kârlılığı · ROE (ÖSK) = Özkaynak kârlılığı · NKM = Net kâr marjı · SDH = Stok devir hızı · ADH = Alacak devir hızı</p>
+  </div>
+
+  <div class="bar" role="region" aria-label="Puan ve filtre">
+    <div class="score" aria-live="polite">
+      <span class="c">Doğru <b id="sc-ok">0</b></span>
+      <span class="w">Yanlış <b id="sc-no">0</b></span>
+      <span>Kalan <b id="sc-left">0</b></span>
+    </div>
+    <div class="chips" role="group" aria-label="Soru türü">
+      <button class="chip" data-f="all" aria-pressed="true">Tümü</button>
+      <button class="chip" data-f="hesap" aria-pressed="false">Hesaplama</button>
+      <button class="chip" data-f="yorum" aria-pressed="false">Yorum</button>
+      <button class="chip" data-f="kavram" aria-pressed="false">Kavram</button>
+    </div>
+    <button class="btn ghost" id="reset">Baştan başla</button>
+  </div>
+
+  <section class="part" id="p1">
+    <div class="part-head">
+      <span class="eyebrow">Bölüm 1 · Tablo 1</span>
+      <h2>Ders slaytındaki şirket (2018 / 2017)</h2>
+      <p class="lead" style="margin:0">Bu tablo hocanın <i>finansaltablolar.pptx</i> sunumundaki bilanço ve gelir tablosudur. Sınavda aynı tablonun gelme ihtimali var, iyi çalış.</p>
+    </div>
+    <details class="tbl" open>
+      <summary>Tablo 1'i göster / gizle</summary>
+      <div class="inner" id="t1"></div>
+    </details>
+    <div class="qs" data-sec="1"></div>
+  </section>
+
+  <section class="part" id="p2">
+    <div class="part-head">
+      <span class="eyebrow">Bölüm 2 · Tablo 2</span>
+      <h2>Örnek Tekstil A.Ş. (kurgusal, 2025)</h2>
+      <p class="lead" style="margin:0">Hesabı kolay, yuvarlak rakamlarla hazırlanmış bir şirket. Formülleri oturtmak için önce bu bölümü çözebilirsin.</p>
+    </div>
+    <details class="tbl" open>
+      <summary>Tablo 2'yi göster / gizle</summary>
+      <div class="inner" id="t2"></div>
+    </details>
+    <div class="qs" data-sec="2"></div>
+  </section>
+
+  <section class="part" id="p3">
+    <div class="part-head">
+      <span class="eyebrow">Bölüm 3 · Tablosuz</span>
+      <h2>Kavram, anlam ve kısa hesap</h2>
+      <p class="lead" style="margin:0">Oranların neyi ölçtüğü ve yüksek ya da düşük çıkmasının ne anlama geldiği.</p>
+    </div>
+    <div class="qs" data-sec="3"></div>
+  </section>
+
+  <div class="final" id="final" hidden>
+    <span class="eyebrow">Sonuç</span>
+    <div class="big" id="final-score"></div>
+    <p id="final-msg" style="margin:0;color:var(--muted)"></p>
+  </div>
+
+  <section class="part" id="p4">
+    <div class="part-head">
+      <span class="eyebrow">Son tekrar</span>
+      <h2>Formül kartı</h2>
+    </div>
+    <details class="tbl">
+      <summary>15 oranı göster (sınavdan önce bir kez oku)</summary>
+      <div class="inner"><div class="formulas" id="formulas"></div></div>
+    </details>
+  </section>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="box">
+    <div class="box-head"><h3 id="modal-title">Tablo</h3><button class="btn" id="modal-close">Kapat</button></div>
+    <div id="modal-body" style="display:grid;gap:18px"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- TABLOLAR ---------- */
+function fsTable(caption, cols, rows){
+  // rows: [label, v1, v2?, cls?]
+  let h = '<div class="scroll"><table class="fs"><caption>'+caption+'</caption><thead><tr><th>Kalem</th>';
+  cols.forEach(c=> h+='<th>'+c+'</th>'); h+='</tr></thead><tbody>';
+  rows.forEach(r=>{
+    const cls=r[r.length-1]; const isCls = typeof cls==='string' && ['grp','tot','key','tot key'].includes(cls);
+    const vals = isCls ? r.slice(1,-1) : r.slice(1);
+    h+='<tr'+(isCls?' class="'+cls+'"':'')+'><td>'+r[0]+'</td>';
+    vals.forEach(v=> h+='<td class="n">'+(v===''?'':v)+'</td>');
+    if(isCls && cls==='grp') for(let i=vals.length;i<cols.length;i++) h+='<td></td>';
+    h+='</tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+const T1 = fsTable('Bilanço (31 Aralık)', ['2018','2017'], [
+  ['Dönen varlıklar','grp'],
+  ['Nakit ve nakit benzerleri','173.017','228.958','key'],
+  ['Ticari alacaklar','870.457','445.329','key'],
+  ['Diğer alacaklar','304','68'],
+  ['Devam eden inşaat sözleşmelerinden alacaklar','–','312.030'],
+  ['Stoklar','690.013','413.056','key'],
+  ['Türev araçlar','297','1.325'],
+  ['Peşin ödenmiş giderler','7.470','190.153'],
+  ['Diğer dönen varlıklar','60.923','40.632'],
+  ['Toplam dönen varlıklar','1.802.481','1.631.551','tot key'],
+  ['Duran varlıklar','grp'],
+  ['Ticari alacaklar (uzun vadeli)','7.930','10.235'],
+  ['Diğer alacaklar','707','281'],
+  ['Finansal yatırımlar','–','41'],
+  ['Özkaynak yöntemiyle değerlenen yatırımlar','13.305','–'],
+  ['Maddi duran varlıklar, net','107.603','101.009'],
+  ['Maddi olmayan duran varlıklar, net','280.656','219.864'],
+  ['Ertelenmiş vergi varlığı','90.064','46.606'],
+  ['Toplam duran varlıklar','500.265','378.036','tot'],
+  ['TOPLAM VARLIKLAR','2.302.746','2.009.587','tot key'],
+  ['Kısa vadeli yükümlülükler','grp'],
+  ['Kısa vadeli borçlanmalar','–','429.248'],
+  ['Uzun vadeli borçlanmaların kısa vadeli kısımları','207.281','84.410'],
+  ['Ticari borçlar','269.459','62.117','key'],
+  ['Çalışanlara sağlanan faydalar kapsamında borçlar','30.344','24.294'],
+  ['Diğer borçlar','43.292','42.549'],
+  ['Ertelenmiş gelirler','196.791','21.084'],
+  ['Devlet teşvik ve yardımları','1.283','1.940'],
+  ['Kısa vadeli karşılıklar','104.281','403.935'],
+  ['Diğer kısa vadeli yükümlülükler','15.409','2.742'],
+  ['Toplam kısa vadeli yükümlülükler','868.140','1.072.319','tot key'],
+  ['Uzun vadeli yükümlülükler','grp'],
+  ['Uzun vadeli borçlanmalar','500.266','190.000'],
+  ['Devlet teşvik ve yardımları','1.124','1.441'],
+  ['Uzun vadeli karşılıklar','38.235','31.693'],
+  ['Ertelenmiş gelirler','505.395','430.580'],
+  ['Toplam uzun vadeli yükümlülükler','1.045.020','653.714','tot'],
+  ['Toplam yükümlülükler','1.913.160','1.726.033','tot'],
+  ['Özkaynaklar','grp'],
+  ['Ödenmiş sermaye','24.000','24.000'],
+  ['Sermaye düzeltme farkları','52.743','52.743'],
+  ['Kârdan ayrılan kısıtlanmış yedekler','66.678','59.798'],
+  ['Yeniden sınıflandırılmayacak diğer kapsamlı giderler','(3.586)','(4.880)'],
+  ['Yeniden sınıflandırılacak diğer kapsamlı gelirler','12.997','2.396'],
+  ['Geçmiş yıllar kârları','72.418','50.074'],
+  ['Net dönem kârı','164.336','99.423','key'],
+  ['Toplam özkaynaklar','389.586','283.554','tot key'],
+  ['TOPLAM KAYNAKLAR','2.302.746','2.009.587','tot']
+]) + fsTable('Gelir tablosu (1 Ocak – 31 Aralık)', ['2018','2017'], [
+  ['Hasılat (net satışlar)','1.678.661','1.785.272','key'],
+  ['Satışların maliyeti (–)','(1.085.704)','(1.313.646)','key'],
+  ['BRÜT KÂR','592.957','471.626','tot'],
+  ['Pazarlama giderleri (–)','(285.053)','(234.662)'],
+  ['Genel yönetim giderleri (–)','(91.886)','(69.524)'],
+  ['Araştırma ve geliştirme giderleri (–)','(50.481)','(43.644)'],
+  ['Esas faaliyetlerden diğer gelirler','344.701','448.664'],
+  ['Esas faaliyetlerden diğer giderler (–)','(278.826)','(346.746)'],
+  ['ESAS FAALİYET KÂRI','231.412','225.714','tot'],
+  ['Yatırım faaliyetlerinden gelirler','–','1.250'],
+  ['Yatırım faaliyetlerinden giderler (–)','(2.454)','–'],
+  ['Özkaynak yöntemiyle değerlenen yatırımların kâr payları','12.182','–'],
+  ['FİNANSMAN GİDERİ ÖNCESİ FAALİYET KÂRI','241.140','226.964','tot'],
+  ['Finansman gelirleri','45.891','14.548'],
+  ['Finansman giderleri (–)','(165.886)','(150.806)'],
+  ['VERGİ ÖNCESİ KÂR','121.145','90.706','tot'],
+  ['Dönem vergi gideri (–)','(632)','(66)'],
+  ['Ertelenmiş vergi geliri','43.823','8.783'],
+  ['DÖNEM KÂRI (NET KÂR)','164.336','99.423','tot key']
+]) + '<p class="legend">Pembe çizgili satırlar soruların hesabında kullanılan kalemlerdir. Hesaplarda yalnızca dönen varlıklardaki ticari alacaklar kullanılır.</p>';
+
+const T2 = fsTable('Bilanço (31 Aralık 2025, TL)', ['2025'], [
+  ['Dönen varlıklar','grp'],
+  ['Nakit ve nakit benzerleri','150.000','key'],
+  ['Finansal yatırımlar (kısa vadeli)','50.000','key'],
+  ['Ticari alacaklar','400.000','key'],
+  ['Stoklar','600.000','key'],
+  ['Diğer dönen varlıklar','100.000'],
+  ['Toplam dönen varlıklar','1.300.000','tot key'],
+  ['Duran varlıklar','grp'],
+  ['Maddi duran varlıklar','1.500.000'],
+  ['Maddi olmayan duran varlıklar','200.000'],
+  ['Toplam duran varlıklar','1.700.000','tot'],
+  ['TOPLAM VARLIKLAR','3.000.000','tot key'],
+  ['Kısa vadeli yükümlülükler','grp'],
+  ['Finansal borçlar','250.000'],
+  ['Ticari borçlar','360.000','key'],
+  ['Diğer kısa vadeli borçlar','40.000'],
+  ['Toplam kısa vadeli yükümlülükler','650.000','tot key'],
+  ['Uzun vadeli yükümlülükler','grp'],
+  ['Finansal borçlar','850.000'],
+  ['Toplam uzun vadeli yükümlülükler','850.000','tot'],
+  ['Özkaynaklar','grp'],
+  ['Ödenmiş sermaye','1.000.000'],
+  ['Geçmiş yıllar kârları','200.000'],
+  ['Net dönem kârı','300.000','key'],
+  ['Toplam özkaynaklar','1.500.000','tot key'],
+  ['TOPLAM KAYNAKLAR','3.000.000','tot']
+]) + fsTable('Gelir tablosu (2025, TL)', ['2025'], [
+  ['Hasılat (net satışlar)','3.600.000','key'],
+  ['Satışların maliyeti (–)','(2.700.000)','key'],
+  ['BRÜT KÂR','900.000','tot'],
+  ['Faaliyet giderleri (–)','(420.000)'],
+  ['ESAS FAALİYET KÂRI','480.000','tot'],
+  ['Finansman giderleri (–)','(105.000)'],
+  ['VERGİ ÖNCESİ KÂR','375.000','tot'],
+  ['Vergi gideri (–)','(75.000)'],
+  ['DÖNEM NET KÂRI','300.000','tot key']
+]);
+document.getElementById('t1').innerHTML = T1;
+document.getElementById('t2').innerHTML = T2;
+
+/* ---------- SORULAR ----------
+   a = doğru şıkkın (karıştırılmadan önceki) sırası. Şıklar her açılışta karıştırılır. */
+const Q = [
+/* ===== BÖLÜM 1 · TABLO 1 ===== */
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre işletmenin <b>2018 yılı cari oranı</b> yaklaşık kaçtır?',
+ o:['2,08','1,28','0,48','0,78','1,52'],a:0,
+ e:'Cari oran = Dönen varlıklar / KVB = <code>1.802.481 / 868.140 = 2,08</code>. 1,28 asit-test oranıdır. 0,48 formülün ters çevrilmiş halidir. 1,52 ise 2017 yılının cari oranıdır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı asit-test oranı</b> yaklaşık kaçtır?',
+ o:['1,28','2,08','0,79','1,14','0,20'],a:0,
+ e:'Asit-test = (Dönen varlıklar − Stoklar) / KVB = <code>(1.802.481 − 690.013) / 868.140 = 1.112.468 / 868.140 = 1,28</code>. 0,79 stokların KVB\'ye bölünmesiyle bulunur, yanlıştır. 1,14 ise 2017 yılının asit-test oranıdır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı nakit oranı</b> yaklaşık kaçtır? (Dönen varlıklarda finansal yatırım yoktur.)',
+ o:['0,20','0,10','1,00','0,48','2,08'],a:0,
+ e:'Nakit oranı = (Nakit ve nakit benzerleri + Finansal yatırımlar) / KVB = <code>(173.017 + 0) / 868.140 = 0,20</code>. Paydaya KVB yerine dönen varlıklar yazılırsa 0,10 bulunur, bu yanlıştır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı stok bağımlılık oranı</b> yaklaşık kaçtır?',
+ o:['1,01','0,99','1,26','0,25','2,04'],a:0,
+ e:'Stok bağımlılık = [KVB − (Nakit ve nakit benzerleri + Finansal yatırımlar)] / Stoklar = <code>(868.140 − 173.017) / 690.013 = 695.123 / 690.013 = 1,01</code>. 1,26 nakit düşülmeden bulunan (KVB / Stoklar) değerdir. 2,04 ise 2017 yılının oranıdır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı aktif kârlılığı (ROA)</b> yaklaşık yüzde kaçtır?',
+ o:['%7,14','%42,18','%9,79','%4,95','%8,59'],a:0,
+ e:'ROA = Net kâr / Toplam varlıklar = <code>164.336 / 2.302.746 = 0,0714 → %7,14</code>. %42,18 ROE, %9,79 net kâr marjıdır. %4,95 ise 2017 yılının ROA değeridir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı özkaynak kârlılığı (ROE)</b> yaklaşık yüzde kaçtır?',
+ o:['%42,18','%7,14','%35,06','%9,79','%8,59'],a:0,
+ e:'ROE = Net kâr / Toplam özkaynaklar = <code>164.336 / 389.586 = 0,4218 → %42,18</code>. %35,06 2017 yılının değeridir. %8,59 ise net kârın toplam yükümlülüklere bölünmesiyle bulunur, yanlıştır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı net kâr marjı (NKM)</b> yaklaşık yüzde kaçtır?',
+ o:['%9,79','%35,32','%13,79','%7,14','%5,57'],a:0,
+ e:'Net kâr marjı = Net kâr / Net satışlar (hasılat) = <code>164.336 / 1.678.661 = %9,79</code>. %35,32 brüt kâr marjıdır (592.957 / 1.678.661). %13,79 esas faaliyet kârının hasılata oranıdır. %5,57 ise 2017 yılının net kâr marjıdır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı stok devir hızı (SDH)</b> yaklaşık kaçtır?',
+ o:['1,57','2,43','0,64','3,18','1,25'],a:0,
+ e:'Stok devir hızı = Satılan malın maliyeti / Stoklar = <code>1.085.704 / 690.013 = 1,57</code>. Payda SMM yerine hasılat kullanılırsa 2,43 bulunur, bu yanlıştır. 3,18 2017 yılının stok devir hızıdır.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı ortalama stok tüketim süresi</b> yaklaşık kaç gündür?',
+ o:['229 gün','148 gün','113 gün','187 gün','89 gün'],a:0,
+ e:'Ortalama stok tüketim süresi = 360 / Stok devir hızı = <code>360 / 1,5735 ≈ 229 gün</code>. 113 gün 2017 yılının değeridir. 187 gün tahsilat süresi, 89 gün ise ticari borç ödeme süresidir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı alacak devir hızı (ADH)</b> yaklaşık kaçtır?',
+ o:['1,93','1,25','0,52','4,01','2,43'],a:0,
+ e:'Alacak devir hızı = Net satışlar / Ticari alacaklar = <code>1.678.661 / 870.457 = 1,93</code>. Pay olarak SMM kullanılırsa 1,25 bulunur, bu yanlıştır. 4,01 2017 yılının değeridir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı ortalama tahsilat süresi</b> yaklaşık kaç gündür?',
+ o:['187 gün','90 gün','229 gün','289 gün','58 gün'],a:0,
+ e:'Ortalama tahsilat süresi = 360 / Alacak devir hızı = <code>360 / 1,9285 ≈ 187 gün</code>. 90 gün 2017 yılının tahsilat süresidir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı özkaynak devir hızı</b> yaklaşık kaçtır?',
+ o:['4,31','0,23','6,30','0,73','2,79'],a:0,
+ e:'Özkaynak devir hızı = Net satışlar / Toplam özkaynaklar = <code>1.678.661 / 389.586 = 4,31</code>. 0,73 hasılatın toplam varlıklara bölünmesiyle bulunur. 6,30 ise 2017 yılının değeridir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı ticari borç devir hızı</b> kaçtır? (<i>SMM / Ticari borçlar</i> formülünü kullanınız.)',
+ o:['4,03','6,23','0,25','21,15','2,56'],a:0,
+ e:'Ticari borç devir hızı = SMM / Ticari borçlar = <code>1.085.704 / 269.459 = 4,03</code>. 6,23 tahtadaki formülle (net satış / ticari borçlar) bulunan değerdir. 21,15 ise 2017 yılının değeridir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı ticari borç ödeme süresi</b> yaklaşık kaç gündür? (<i>SMM / Ticari borçlar</i> formülünü kullanınız.)',
+ o:['89 gün','58 gün','17 gün','187 gün','229 gün'],a:0,
+ e:'Ticari borç ödeme süresi = 360 / Ticari borç devir hızı = <code>360 / 4,0292 ≈ 89 gün</code>. Net satış formülüyle hesaplanırsa 58 gün bulunur. 17 gün 2017 yılının değeridir.'},
+{s:1,t:'hesap',tb:'t1',q:'Tablo 1\'e göre <b>2018 yılı nakit döngüsü süresi</b> yaklaşık kaç gündür? (Ticari borç ödeme süresini <i>SMM</i> ile hesaplayınız.)',
+ o:['326 gün','505 gün','42 gün','358 gün','186 gün'],a:0,
+ e:'Nakit döngüsü = (Ort. stok tüketim süresi + Ort. tahsilat süresi) − Ticari borç ödeme süresi = <code>(228,8 + 186,7) − 89,3 ≈ 326 gün</code>. Borç ödeme süresi çıkarılmak yerine eklenirse 505 gün bulunur. 358 gün net satış formülüyle bulunan değer, 186 gün ise 2017 yılının değeridir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'deki işletmenin cari oranı 2017\'de <b>1,52</b> iken 2018\'de <b>2,08</b> olmuştur. Bu değişim için aşağıdakilerden hangisi söylenebilir?',
+ o:['Kısa vadeli borç ödeme gücü artmış ve oran genel kabul gören 2 düzeyine ulaşmıştır.','İşletmenin likiditesi azalmış ve kısa vadeli borç ödeme riski artmıştır.','Cari oran arttığı için işletmenin kârlılığı da kesinlikle artmıştır.','İşletme stoklarını önceki yıla göre daha hızlı satmıştır.','Oranın 2\'yi geçmesi işletmenin borçlarını hiç ödeyemeyeceğini gösterir.'],a:0,
+ e:'Cari oranın yükselmesi, dönen varlıkların KVB\'yi daha rahat karşıladığını gösterir. Genel kabul gören değer 2\'dir. Cari oran tek başına kârlılık hakkında bilgi vermez, slayttaki uyarıya göre likidite çok artarsa kârlılık düşebilir. Stokların satış hızını stok devir hızı gösterir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de stok devir hızı 2017\'de <b>3,18</b> iken 2018\'de <b>1,57</b>\'ye düşmüş, ortalama stok tüketim süresi ise yaklaşık 113 günden 229 güne çıkmıştır. Bu durum nasıl yorumlanır?',
+ o:['Stoklar daha yavaş eritilmektedir. Aşırı stok bulundurulduğuna ya da satışta sorun yaşandığına işaret eder, depolama maliyeti ve bozulma riski artar.','Stoklar bir yılda daha fazla kez yenilenmiştir, bu olumlu bir gelişmedir.','Stok devir hızının düşmesi her zaman olumlu yorumlanır.','Müşterilerden alacakların tahsil süresi kısalmıştır.','İşletmenin kısa vadeli borçları stoklarla tamamen kapatılmıştır.'],a:0,
+ e:'Stok devir hızı, stokların bir dönemde kaç kez yenilendiğini gösterir ve yüksek olması iyidir. Düşmesi stokların depoda daha uzun beklediği anlamına gelir: 2018\'de stoklar yaklaşık 229 gün depoda kalmıştır.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de ortalama tahsilat süresi 2017\'de yaklaşık <b>90 gün</b> iken 2018\'de <b>187 gün</b> olmuştur. Bu değişim aşağıdakilerden hangisini gösterir?',
+ o:['Müşterilerden tahsilat yavaşlamıştır, işletme nakit sıkıntısı yaşayabilir.','Alacaklar daha hızlı nakde dönmektedir.','Tedarikçilere olan borçlar daha geç ödenmektedir.','Stoklar daha hızlı satılmaktadır.','Özkaynak kârlılığı azalmıştır.'],a:0,
+ e:'Ortalama tahsilat süresi, kredili satışlardan doğan alacakların kaç günde nakde döndüğünü gösterir ve kısa olması iyidir. Sürenin yaklaşık iki katına çıkması alacak devir hızının düştüğünü (4,01 → 1,93) ve tahsilatta sorun olduğunu gösterir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de 2018 yılında cari oran <b>2,08</b>, asit-test oranı ise <b>1,28</b>\'dir. Bu iki oran arasındaki fark ne anlatır?',
+ o:['Dönen varlıkların önemli bir kısmı stoklardan oluşuyor. Stoklar satılamasa bile asit-test 1\'in üzerinde olduğu için KVB karşılanabilir.','İşletmenin hiç stoğu yoktur.','Asit-test oranı cari orandan büyük olmalıydı, tablo hatalıdır.','İşletme kısa vadeli borçlarını yalnızca stok satarak ödeyebilir.','Fark, işletmenin nakit oranının 1\'den büyük olduğunu gösterir.'],a:0,
+ e:'Asit-test oranında stoklar dönen varlıklardan çıkarılır, bu yüzden her zaman cari orandan küçük ya da ona eşittir. İkisi arasındaki fark stokların ağırlığını gösterir. Asit-testin genel kabul gören değeri 1\'dir. 1,28 olduğu için stoklar satılamasa da KVB ödenebilir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de stok bağımlılık oranı 2017\'de <b>2,04</b>, 2018\'de <b>1,01</b>\'dir. Bu düşüş için ne söylenebilir?',
+ o:['İşletme kısa vadeli borçlarını ödemek için stoklarına daha az bağımlı hale gelmiş, likidite pozisyonu güçlenmiştir.','İşletmenin stoklarına bağımlılığı artmış, likidite riski yükselmiştir.','Stok bağımlılık oranının düşmesi stokların bozulduğunu gösterir.','İşletmenin net kârı azalmıştır.','Oran düştüğü için cari oran da mutlaka düşmüştür.'],a:0,
+ e:'Stok bağımlılık oranı, KVB\'nin hazır değerlerle karşılanamayan kısmının stokların kaç katı olduğunu gösterir. Düşük olması olumludur. Oranın yarıya inmesi, borç ödemek için satılması gereken stok payının azaldığını gösterir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de nakit döngüsü süresi 2017\'de yaklaşık <b>186 gün</b> iken 2018\'de <b>326 gün</b> olmuştur. Bu durum nasıl yorumlanır?',
+ o:['Stok alımına ödenen nakit işletmeye daha geç dönmektedir. İşletmenin bu süreyi finanse etmek için daha fazla kaynağa ihtiyacı olur.','Nakit işletmeye daha hızlı dönmektedir, bu olumludur.','Nakit döngüsünün uzaması tedarikçilere daha hızlı ödeme yapıldığını gösterir.','Nakit döngüsü yalnızca kârlılığı ölçer.','İşletmenin nakit oranı kesinlikle artmıştır.'],a:0,
+ e:'Nakit döngüsü, stok alımı için ödenen nakdin satış ve tahsilattan geçip tekrar işletmeye dönmesi için geçen süredir. Kısa olması iyidir. 2018\'deki uzamanın nedeni stokların daha geç satılması ve alacakların daha geç tahsil edilmesidir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de 2018 yılında ROA <b>%7,14</b>, ROE ise <b>%42,18</b>\'dir. ROE\'nin ROA\'dan bu kadar yüksek olmasının temel nedeni nedir?',
+ o:['Varlıkların büyük kısmı borçla finanse edilmiştir, özkaynak payı düşüktür. Bu finansal kaldıraç etkisidir.','İşletmenin hiç borcu yoktur.','Net kâr, toplam varlıklardan büyüktür.','ROE her zaman ROA\'nın 6 katıdır.','İşletme zarar etmiştir.'],a:0,
+ e:'İki oranın payı aynıdır (net kâr), farkı paydaları belirler. Toplam varlıklar 2.302.746 iken özkaynaklar sadece 389.586\'dır, yani varlıkların yaklaşık %83\'ü borçla finanse edilmiştir. Du Pont analizindeki özkaynak çarpanı (Varlıklar / Özkaynak ≈ 5,9) ROE\'yi yükseltir.'},
+{s:1,t:'yorum',tb:'t1',q:'Tablo 1\'de hasılat 2017\'den 2018\'e azalmasına rağmen net kâr marjı <b>%5,57</b>\'den <b>%9,79</b>\'a çıkmıştır. Bu ne anlama gelir?',
+ o:['Yapılan satışların daha büyük bölümü net kâra dönüşmüştür, satış kârlılığı artmıştır.','Net kâr marjı arttığı için satışlar da kesin olarak artmıştır.','İşletme 2018\'de zarar etmiştir.','Net kâr marjı, varlıkların ne kadar verimli kullanıldığını gösterir.','İşletmenin kısa vadeli borç ödeme gücü azalmıştır.'],a:0,
+ e:'Net kâr marjı = Net kâr / Net satışlar. Bu oran satışların ne kadarının net kâra dönüştüğünü gösterir ve yıllara göre artması olumludur. Satış tutarı düşse bile maliyetler daha iyi kontrol edilirse marj artabilir. Varlık verimliliğini ROA ölçer.'},
+
+/* ===== BÖLÜM 2 · TABLO 2 ===== */
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre Örnek Tekstil A.Ş.\'nin <b>cari oranı</b> kaçtır?',
+ o:['2,00','1,08','0,50','0,43','1,86'],a:0,
+ e:'Cari oran = Dönen varlıklar / KVB = <code>1.300.000 / 650.000 = 2,00</code>. 0,50 formülün ters halidir. 0,43 dönen varlıkların toplam varlıklara oranıdır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>asit-test oranı</b> yaklaşık kaçtır?',
+ o:['1,08','0,92','2,00','0,31','1,38'],a:0,
+ e:'Asit-test = (Dönen varlıklar − Stoklar) / KVB = <code>(1.300.000 − 600.000) / 650.000 = 700.000 / 650.000 = 1,08</code>. Stok yerine ticari alacaklar düşülürse 1,38 bulunur, bu yanlıştır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>nakit oranı</b> yaklaşık kaçtır?',
+ o:['0,31','0,23','0,15','1,08','0,75'],a:0,
+ e:'Nakit oranı = (Nakit ve nakit benzerleri + Finansal yatırımlar) / KVB = <code>(150.000 + 50.000) / 650.000 = 0,31</code>. Finansal yatırımlar unutulursa 0,23 bulunur, sınavdaki en sık tuzak budur.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>stok bağımlılık oranı</b> kaçtır?',
+ o:['0,75','1,33','0,83','1,08','0,33'],a:0,
+ e:'Stok bağımlılık = [KVB − (Nakit + Finansal yatırımlar)] / Stoklar = <code>(650.000 − 200.000) / 600.000 = 0,75</code>. Finansal yatırımlar düşülmezse 0,83 bulunur. 1,33 ise formülün ters halidir.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>aktif kârlılığı (ROA)</b> yüzde kaçtır?',
+ o:['%10','%20','%8,33','%12,5','%16'],a:0,
+ e:'ROA = Net kâr / Toplam varlıklar = <code>300.000 / 3.000.000 = %10</code>. Pay olarak vergi öncesi kâr kullanılırsa %12,5, esas faaliyet kârı kullanılırsa %16 bulunur. Formülde <b>net kâr</b> kullanılır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>özkaynak kârlılığı (ROE)</b> yüzde kaçtır?',
+ o:['%20','%10','%25','%30','%8,33'],a:0,
+ e:'ROE = Net kâr / Toplam özkaynaklar = <code>300.000 / 1.500.000 = %20</code>. Payda olarak yalnızca ödenmiş sermaye alınırsa %30 bulunur. Formülde <b>toplam</b> özkaynak kullanılır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>net kâr marjı (NKM)</b> yaklaşık yüzde kaçtır?',
+ o:['%8,33','%25','%13,33','%10,42','%11,11'],a:0,
+ e:'Net kâr marjı = Net kâr / Net satışlar = <code>300.000 / 3.600.000 = %8,33</code>. %25 brüt kâr marjı (900.000 / 3.600.000), %13,33 esas faaliyet kâr marjıdır. Payda olarak SMM kullanılırsa %11,11 bulunur.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>stok devir hızı (SDH)</b> ve <b>ortalama stok tüketim süresi</b> sırasıyla hangisidir?',
+ o:['4,5 kez – 80 gün','6 kez – 60 gün','4,5 kez – 40 gün','9 kez – 40 gün','0,22 kez – 1.620 gün'],a:0,
+ e:'Stok devir hızı = SMM / Stoklar = <code>2.700.000 / 600.000 = 4,5</code>. Ortalama stok tüketim süresi = <code>360 / 4,5 = 80 gün</code>. "6 kez – 60 gün" pay olarak hasılat kullanılınca bulunur, yanlıştır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>alacak devir hızı (ADH)</b> ve <b>ortalama tahsilat süresi</b> sırasıyla hangisidir?',
+ o:['9 kez – 40 gün','6,75 kez – 53 gün','4,5 kez – 80 gün','9 kez – 80 gün','0,11 kez – 3.240 gün'],a:0,
+ e:'Alacak devir hızı = Net satışlar / Ticari alacaklar = <code>3.600.000 / 400.000 = 9</code>. Ortalama tahsilat süresi = <code>360 / 9 = 40 gün</code>. "6,75 kez – 53 gün" pay olarak SMM kullanılınca bulunur.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>özkaynak devir hızı</b> kaçtır?',
+ o:['2,4','1,8','1,2','0,42','3,6'],a:0,
+ e:'Özkaynak devir hızı = Net satışlar / Toplam özkaynaklar = <code>3.600.000 / 1.500.000 = 2,4</code>. 1,8 SMM ile, 3,6 ise yalnızca ödenmiş sermaye ile bulunur. İkisi de yanlıştır.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>ticari borç ödeme süresi</b> kaç gündür? (<i>SMM / Ticari borçlar</i> formülünü kullanınız.)',
+ o:['48 gün','36 gün','7,5 gün','40 gün','80 gün'],a:0,
+ e:'Ticari borç devir hızı = <code>2.700.000 / 360.000 = 7,5</code>. Ödeme süresi = <code>360 / 7,5 = 48 gün</code>. Tahtadaki formül (net satış / ticari borçlar) kullanılırsa devir hızı 10, süre 36 gün bulunur.'},
+{s:2,t:'hesap',tb:'t2',q:'Tablo 2\'ye göre <b>nakit döngüsü süresi</b> kaç gündür? (Borç ödeme süresini <i>SMM</i> ile hesaplayınız.)',
+ o:['72 gün','168 gün','84 gün','32 gün','120 gün'],a:0,
+ e:'Nakit döngüsü = (Stok tüketim süresi + Tahsilat süresi) − Borç ödeme süresi = <code>(80 + 40) − 48 = 72 gün</code>. Borç ödeme süresi eklenirse 168 gün bulunur. Net satış formülüyle (36 gün) hesaplanırsa 84 gün bulunur.'},
+{s:2,t:'yorum',tb:'t2',q:'Örnek Tekstil\'in cari oranı <b>2,00</b>, asit-test oranı <b>1,08</b>\'dir. Ders slaytındaki genel kabul görmüş değerlere göre hangisi doğrudur?',
+ o:['Her iki oran da genel kabul görmüş düzeydedir (cari ≈ 2, asit-test ≈ 1). İşletmenin kısa vadeli likiditesi yeterlidir.','Cari oran 1\'in üzerinde olduğu için işletme borçlarını ödeyemez.','Asit-test oranı 2\'nin altında olduğu için likidite yetersizdir.','Genel kabul görmüş cari oran 0,2\'dir, işletmenin oranı çok yüksektir.','Bu oranlar işletmenin kârlılığını gösterir.'],a:0,
+ e:'Slayttaki genel kabul gören değerler: cari oran <b>2</b>, asit-test <b>1</b>, nakit oranı <b>0,2</b>. Örnek Tekstil\'in oranları bu değerlere çok yakındır. Likidite oranları kârlılığı değil, borç ödeme gücünü gösterir.'},
+{s:2,t:'yorum',tb:'t2',q:'Örnek Tekstil\'in nakit oranı yaklaşık <b>0,31</b>\'dir. Bu değer nasıl yorumlanır?',
+ o:['Genel kabul gören 0,2\'nin üzerindedir. Stoklar satılamasa ve alacaklar tahsil edilemese bile KVB\'nin yaklaşık %31\'i hazır değerlerle karşılanabilir.','KVB\'nin yalnızca %3,1\'i karşılanabilir.','Nakit oranının 1\'den küçük olması işletmenin iflas ettiğini gösterir.','İşletme borçlarını ödemek için stoklarının tamamını satmak zorundadır.','Nakit oranı, alacakların kaç günde tahsil edildiğini gösterir.'],a:0,
+ e:'Nakit oranı, işletmenin yalnızca elindeki nakit ve nakit benzeri değerlerle KVB\'nin ne kadarını karşılayabileceğini gösterir. 0,31, borçların %31\'inin hemen ödenebileceği anlamına gelir. Genel kabul gören değer 0,2\'dir.'},
+{s:2,t:'yorum',tb:'t2',q:'Örnek Tekstil müşterilerinden ortalama <b>40 günde</b> tahsilat yapıyor, tedarikçilerine ise ortalama <b>48 günde</b> ödeme yapıyor. Bu durum için hangisi söylenebilir?',
+ o:['İşletme müşterilerinden parayı tedarikçilerine ödemeden önce topluyor. Bu nakit döngüsünü kısaltır, olumludur.','İşletme tedarikçilerine müşterilerinden önce ödeme yapıyor, bu olumsuzdur.','Tahsilat süresinin borç ödeme süresinden kısa olması nakit sıkıntısı yaratır.','Bu iki süre arasında hiçbir ilişki yoktur.','Borç ödeme süresinin uzun olması her zaman işletmenin battığını gösterir.'],a:0,
+ e:'Ticari borç devir hızının düşük, yani ödeme süresinin uzun olması olumludur. İşletme maliyetsiz bir kaynak olan ticari borcu daha uzun süre kullanır. Tahsilatın ödemeden önce yapılması da nakit döngüsünü kısaltır.'},
+{s:2,t:'yorum',tb:'t2',q:'Sektör ortalamasında stok devir hızı <b>6</b> (stok tüketim süresi 60 gün) ise Örnek Tekstil (stok devir hızı 4,5, süre 80 gün) için ne söylenebilir?',
+ o:['Stoklarını sektöre göre daha yavaş eritiyor, stoklar depoda sektör ortalamasından yaklaşık 20 gün daha fazla bekliyor.','Stoklarını sektöre göre daha hızlı satıyor.','Stok devir hızının sektörden düşük olması her zaman olumludur.','Stok devir hızı ile stok tüketim süresi arasında ilişki yoktur.','İşletmenin alacak tahsil süresi sektörden uzundur.'],a:0,
+ e:'Oranlar geçmiş yıllarla, rakip işletmelerle ve sektör ortalamasıyla karşılaştırılarak yorumlanır. Stok devir hızı düştükçe stok tüketim süresi uzar (360 / SDH). Sektöre göre daha düşük bir hız, stokların daha yavaş satıldığını gösterir.'},
+
+/* ===== BÖLÜM 3 · KAVRAM ===== */
+{s:3,t:'kavram',q:'İşletmenin <b>stoklarını satamaması durumunda dahi</b> kısa vadeli borçlarını ödeyebilme kapasitesini gösteren oran hangisidir?',
+ o:['Asit-test oranı','Cari oran','Stok devir hızı','Stok bağımlılık oranı','Özkaynak devir hızı'],a:0,
+ e:'Asit-test oranında (Dönen varlıklar − Stoklar) / KVB hesaplanır. Stoklar dönen varlıkların en az likit kalemi olduğu için hesaptan çıkarılır.'},
+{s:3,t:'kavram',q:'İşletmenin kısa vadeli borçlarını ödeyebilmesi için <b>stoklarının ne kadarlık kısmını satması gerektiğini</b> gösteren oran hangisidir?',
+ o:['Stok bağımlılık oranı','Stok devir hızı','Nakit oranı','Ortalama stok tüketim süresi','Cari oran'],a:0,
+ e:'Stok bağımlılık oranı = [KVB − (Nakit ve nakit benzerleri + Finansal yatırımlar)] / Stoklar. Yüksek olması likidite riskinin yüksek olduğunu gösterir.'},
+{s:3,t:'kavram',q:'<b>Ortakların koyduğu sermayenin şirkete sağladığı getiriyi</b> gösteren oran hangisidir?',
+ o:['Özkaynak kârlılığı (ROE)','Aktif kârlılığı (ROA)','Net kâr marjı','Özkaynak devir hızı','Cari oran'],a:0,
+ e:'ROE = Net kâr / Toplam özkaynaklar. Özkaynak devir hızı ise kârı değil, özkaynakla ne kadar <b>satış</b> yaratıldığını ölçer. İkisini karıştırma.'},
+{s:3,t:'kavram',q:'İşletmenin <b>varlıklarını ne kadar verimli kullanarak kâr elde ettiğini</b> ölçen oran hangisidir?',
+ o:['Aktif kârlılığı (ROA)','Özkaynak kârlılığı (ROE)','Alacak devir hızı','Asit-test oranı','Ticari borç devir hızı'],a:0,
+ e:'ROA = Net kâr / Toplam varlıklar. Ders slaytında "Yatırımlar Üzerinden Kâr Marjı" (Net kâr / Toplam aktif) olarak geçer.'},
+{s:3,t:'kavram',q:'Yapılan <b>toplam satışların ne kadarlık kısmının net kâra dönüştüğünü</b> gösteren oran hangisidir?',
+ o:['Net kâr marjı','Aktif kârlılığı','Brüt kâr marjı','Alacak devir hızı','Özkaynak devir hızı'],a:0,
+ e:'Net kâr marjı = Net kâr / Net satışlar. Brüt kâr marjında pay brüt kârdır (Net satışlar − SMM). Soruda <b>net</b> kâr dendiği için cevap net kâr marjıdır.'},
+{s:3,t:'kavram',q:'İşletmenin stok alımı için ödediği nakdin, satış ve tahsilat aşamalarından geçerek <b>işletmeye tekrar nakit olarak dönmesi için geçen süreye</b> ne ad verilir?',
+ o:['Nakit döngüsü süresi','Ortalama tahsilat süresi','Ortalama stok tüketim süresi','Ticari borç ödeme süresi','Stok devir hızı'],a:0,
+ e:'Nakit döngüsü = (Ort. stok tüketim süresi + Ort. tahsilat süresi) − Ticari borç ödeme süresi.'},
+{s:3,t:'kavram',q:'Aşağıdaki oranlardan hangisinin <b>düşük olması (yavaşlaması) olumlu</b> yorumlanır?',
+ o:['Ticari borç devir hızı','Stok devir hızı','Alacak devir hızı','Özkaynak devir hızı','Aktif kârlılığı'],a:0,
+ e:'Faaliyet oranlarının yüksek olması genelde olumludur. Ticari borç devir hızı bunun istisnasıdır: düşük olması, işletmenin maliyetsiz ticari borcu daha uzun süre kullandığını gösterir.'},
+{s:3,t:'kavram',q:'<b>Nakit oranının payında</b> aşağıdakilerden hangisi yer alır?',
+ o:['Nakit ve nakit benzerleri + Finansal yatırımlar (Hazır değerler + Menkul kıymetler)','Dönen varlıklar − Stoklar','Ticari alacaklar + Stoklar','Toplam dönen varlıklar','Net kâr'],a:0,
+ e:'Nakit oranı = (Nakit ve nakit benzerleri + Finansal yatırımlar) / KVB. "Dönen varlıklar − Stoklar" asit-test oranının payıdır.'},
+{s:3,t:'kavram',q:'Bir işletmenin <b>cari oranının 1\'den küçük</b> olması neyi ifade eder?',
+ o:['Kısa vadeli borçlar dönen varlıklarla karşılanamaz.','İşletme çok kârlıdır.','Stoklar çok hızlı satılmaktadır.','İşletmenin hiç kısa vadeli borcu yoktur.','Cari oran genel kabul gören düzeydedir.'],a:0,
+ e:'Slayta göre cari oranın 2\'den çok düşük olması fazla borçlanıldığını, 1\'den düşük olması ise KVB\'nin dönen varlıklarla karşılanamayacağını gösterir.'},
+{s:3,t:'yorum',q:'Cari oranın <b>çok yüksek</b> tutulması finansal yönetim açısından neden her zaman uygun görülmez?',
+ o:['Likidite arttıkça risk azalır, ancak atıl kalan fonlar nedeniyle kârlılık da düşer.','Cari oran yükseldikçe borçlar da mutlaka artar.','Cari oran yüksekse işletme vergi ödeyemez.','Cari oranın yüksek olması stokların bittiğini gösterir.','Cari oran yükseldikçe özkaynak kârlılığı her zaman artar.'],a:0,
+ e:'Slayta göre likidite arttıkça risk ve onunla birlikte kârlılık da düşer. İşletmeler kârlılık ile risk arasında denge kurmalıdır.'},
+{s:3,t:'kavram',q:'<b>Özkaynak devir hızı</b> neyi ifade eder?',
+ o:['Ortakların işletmeye yatırdığı sermayenin ne kadar verimli kullanılarak satış hasılatı yaratıldığını','Ortakların sermayesinin ne kadar net kâr getirdiğini','Stokların yılda kaç kez yenilendiğini','Alacakların yılda kaç kez tahsil edildiğini','Kısa vadeli borçların ödenme gücünü'],a:0,
+ e:'Özkaynak devir hızı = Net satışlar / Toplam özkaynaklar. Bu oran satış ilişkisini ölçer. Kâr ilişkisini ölçen oran ROE\'dir.'},
+{s:3,t:'kavram',q:'Alacak devir hızı hesaplanırken <b>kredili satış tutarına ulaşılamıyorsa</b> payda ne kullanılır?',
+ o:['Net satışlar','Satılan malın maliyeti','Net kâr','Toplam varlıklar','Stoklar'],a:0,
+ e:'Slayta göre "Hesaplanırken kredili satışlara ulaşılamıyorsa net satışlar alınır." Hesapta senetli ve senetsiz alacaklar dahil edilir, şüpheli ve değersiz alacaklar dahil edilmez.'},
+{s:3,t:'yorum',q:'Bir işletmenin <b>ortalama tahsilat süresinin kısalması</b> nasıl yorumlanır?',
+ o:['Olumludur, alacaklar daha hızlı nakde dönmektedir.','Olumsuzdur, müşteriler borçlarını ödemiyor demektir.','Stokların daha yavaş satıldığını gösterir.','İşletmenin tedarikçilere daha geç ödeme yaptığını gösterir.','Özkaynak kârlılığının düştüğünü gösterir.'],a:0,
+ e:'Tahsilat süresi = 360 / Alacak devir hızı. Süre kısalıyorsa alacak devir hızı artıyor demektir. Bu, alacakların daha kısa sürede tahsil edildiğini ve nakit akışının iyileştiğini gösterir.'},
+{s:3,t:'hesap',q:'Stok devir hızı (SDH) <b>6</b> olan bir işletmenin ortalama stok tüketim süresi kaç gündür?',
+ o:['60 gün','6 gün','36 gün','90 gün','2.160 gün'],a:0,
+ e:'Ortalama stok tüketim süresi = <code>360 / 6 = 60 gün</code>.'},
+{s:3,t:'hesap',q:'Bir işletmenin ortalama stok tüketim süresi <b>50 gün</b>, ortalama tahsilat süresi <b>30 gün</b>, ticari borç ödeme süresi <b>45 gün</b>dür. Nakit döngüsü süresi kaç gündür?',
+ o:['35 gün','125 gün','80 gün','65 gün','5 gün'],a:0,
+ e:'Nakit döngüsü = <code>(50 + 30) − 45 = 35 gün</code>. Borç ödeme süresi <b>çıkarılır</b>. Eklenirse 125 gün bulunur.'},
+{s:3,t:'hesap',q:'Dönen varlıkları <b>500.000 TL</b>, stokları <b>200.000 TL</b> ve kısa vadeli borçları <b>250.000 TL</b> olan bir işletmenin asit-test oranı kaçtır?',
+ o:['1,20','2,00','0,80','2,80','1,25'],a:0,
+ e:'Asit-test = <code>(500.000 − 200.000) / 250.000 = 1,20</code>. 2,00 cari orandır. 0,80 stokların KVB\'ye bölünmesiyle bulunur.'},
+{s:3,t:'hesap',q:'Net kârı <b>120.000 TL</b>, toplam varlıkları <b>1.500.000 TL</b>, toplam özkaynakları <b>600.000 TL</b> olan bir işletmenin ROA ve ROE değerleri sırasıyla hangisidir?',
+ o:['%8 – %20','%20 – %8','%8 – %8','%40 – %20','%12 – %20'],a:0,
+ e:'ROA = <code>120.000 / 1.500.000 = %8</code>, ROE = <code>120.000 / 600.000 = %20</code>. Özkaynak toplam varlıklardan küçük olduğu için ROE her zaman ROA\'dan büyük çıkar (kâr varsa).'},
+{s:3,t:'kavram',q:'<b>NKM</b> kısaltması hangi oranı ifade eder ve nasıl hesaplanır?',
+ o:['Net kâr marjı = Net kâr / Net satışlar','Net kâr marjı = Net kâr / Toplam varlıklar','Net kâr marjı = Brüt kâr / Net satışlar','Nakit karşılama marjı = Nakit / KVB','Net kaynak maliyeti = Finansman giderleri / Toplam borçlar'],a:0,
+ e:'NKM = Net kâr marjı = Net kâr / Net satışlar (hasılat). Net kâr / Toplam varlıklar ROA\'dır. Brüt kâr / Net satışlar ise brüt kâr marjıdır.'},
+{s:3,t:'kavram',q:'<b>SDH</b> ve <b>ADH</b> kısaltmaları sırasıyla hangi oranları ifade eder?',
+ o:['Stok devir hızı – Alacak devir hızı','Alacak devir hızı – Stok devir hızı','Satış devir hızı – Aktif devir hızı','Sermaye devir hızı – Alacak devir hızı','Stok dönem hasılatı – Alacak dönem hasılatı'],a:0,
+ e:'SDH = Stok devir hızı = SMM / Stoklar. ADH = Alacak devir hızı = Net satışlar / Ticari alacaklar. Süreleri: Ort. stok tüketim süresi = 360 / SDH, Ort. tahsilat süresi = 360 / ADH.'},
+{s:3,t:'kavram',q:'Oran formüllerinde geçen <b>KVB</b> ve <b>SMM</b> kısaltmaları sırasıyla neyi ifade eder?',
+ o:['Kısa vadeli borçlar – Satılan malın maliyeti','Kâr vergi bedeli – Sermaye maliyet marjı','Kısa vadeli birikim – Satış maliyet marjı','Kredi vade bakiyesi – Satılan malın miktarı','Kısa vadeli borçlar – Sermaye maliyeti'],a:0,
+ e:'KVB = Kısa vadeli borçlar (yükümlülükler), likidite oranlarının paydasıdır. SMM = Satılan malın maliyeti, gelir tablosunda "Satışların maliyeti" olarak geçer. Stok devir hızı ve ticari borç devir hızının payında kullanılır.'}
+];
+
+/* ---------- FORMÜL KARTI ---------- */
+const F = [
+ ['ROA (Aktif kârlılığı)','Net kâr / Toplam varlıklar','Varlıkların ne kadar verimli kullanılarak kâr elde edildiği'],
+ ['ROE (Özkaynak kârlılığı)','Net kâr / Toplam özkaynaklar','Ortakların koyduğu sermayenin getirisi'],
+ ['Net kâr marjı (NKM)','Net kâr / Net satışlar','Satışların ne kadarının net kâra dönüştüğü'],
+ ['Cari oran','Dönen varlıklar / KVB','1 yıl içinde nakde dönecek varlıklarla KVB ödeme gücü · ideal ≈ 2'],
+ ['Asit-test oranı','(Dönen varlıklar − Stoklar) / KVB','Stoklar satılamasa dahi KVB ödeme gücü · ideal ≈ 1'],
+ ['Nakit oranı','(Nakit ve nakit benzerleri + Finansal yatırımlar) / KVB','Yalnızca hazır değerlerle KVB\'nin ne kadarının karşılandığı · ideal ≈ 0,2'],
+ ['Stok bağımlılık oranı','[KVB − (Nakit + Fin. yatırımlar)] / Stoklar','KVB için stokların ne kadarının satılması gerektiği · düşük iyi'],
+ ['Stok devir hızı (SDH)','SMM / Stoklar','Stokların bir dönemde kaç kez yenilendiği · yüksek iyi'],
+ ['Ort. stok tüketim süresi','360 / SDH','Stokların depoda ortalama kaç gün beklediği'],
+ ['Alacak devir hızı (ADH)','Net satışlar / Ticari alacaklar','Alacakların yılda kaç kez tahsil edildiği · yüksek iyi'],
+ ['Ort. tahsilat süresi','360 / ADH','Alacakların ortalama kaç günde nakde döndüğü · kısa iyi'],
+ ['Özkaynak devir hızı','Net satışlar / Toplam özkaynaklar','Sermayenin ne kadar verimli kullanılarak satış yaratıldığı'],
+ ['Ticari borç devir hızı','SMM / Ticari borçlar (tahtada: Net satış / Ticari borçlar)','Ticari borçların yılda kaç kez ödendiği · düşük olumlu'],
+ ['Ticari borç ödeme süresi','360 / Ticari borç devir hızı','Tedarikçilere ortalama kaç günde ödeme yapıldığı'],
+ ['Nakit döngüsü süresi','(Stok tüketim + Tahsilat süresi) − Borç ödeme süresi','Nakdin tekrar işletmeye dönmesi için geçen süre · kısa iyi']
+];
+document.getElementById('formulas').innerHTML = F.map(f=>'<div class="f"><b>'+f[0]+'</b><span class="eq">'+f[1]+'</span><span class="mean">'+f[2]+'</span></div>').join('');
+
+/* ---------- MOTOR ---------- */
+const KEY='oran-deneme-v1';
+let state={};
+try{ state = JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ state={}; }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+function shuffle(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const LET='ABCDE';
+let filter='all';
+
+function render(){
+  document.querySelectorAll('.qs').forEach(el=>el.innerHTML='');
+  Q.forEach((q,i)=>{
+    const id='q'+i;
+    if(!state[id]) state[id]={ord:shuffle(q.o.length),pick:null};
+    const st=state[id];
+    const card=document.createElement('article');
+    card.className='q'; card.id=id; card.dataset.t=q.t;
+    const tagName={hesap:'Hesaplama',yorum:'Yorum',kavram:'Kavram'}[q.t];
+    let h='<div class="q-top"><span class="q-no">Soru '+(i+1)+'</span><span class="tag '+q.t+'">'+tagName+'</span></div>';
+    h+='<p class="q-text">'+q.q+'</p><ul class="opts">';
+    st.ord.forEach((oi,pos)=>{
+      h+='<li><button class="opt" data-oi="'+oi+'"><span class="L">'+LET[pos]+')</span><span>'+q.o[oi]+'</span></button></li>';
+    });
+    h+='</ul><div class="ex" hidden></div>';
+    if(q.tb) h+='<div class="q-tools"><button class="linkbtn" data-tb="'+q.tb+'">'+(q.tb==='t1'?'Tablo 1':'Tablo 2')+'\'i aç</button></div>';
+    card.innerHTML=h;
+    document.querySelector('.qs[data-sec="'+q.s+'"]').appendChild(card);
+    card.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>answer(i,+b.dataset.oi)));
+    if(st.pick!==null) paint(i);
+  });
+  save(); applyFilter(); updateScore();
+}
+function answer(i,oi){
+  const st=state['q'+i]; if(st.pick!==null) return;
+  st.pick=oi; save(); paint(i); updateScore();
+}
+function paint(i){
+  const q=Q[i], st=state['q'+i], card=document.getElementById('q'+i);
+  card.querySelectorAll('.opt').forEach(b=>{
+    const oi=+b.dataset.oi; b.disabled=true;
+    if(oi===q.a) b.classList.add('right');
+    else if(oi===st.pick) b.classList.add('wrong');
+  });
+  const ok=st.pick===q.a;
+  const rightLetter=LET[st.ord.indexOf(q.a)];
+  const ex=card.querySelector('.ex');
+  ex.innerHTML='<div class="verdict '+(ok?'ok':'no')+'">'+(ok?'Doğru.':'Yanlış. Doğru cevap '+rightLetter+' şıkkı.')+'</div>'+q.e;
+  ex.hidden=false;
+}
+function updateScore(){
+  let ok=0,no=0;
+  Q.forEach((q,i)=>{const p=state['q'+i]&&state['q'+i].pick; if(p===null||p===undefined) return; if(p===q.a) ok++; else no++;});
+  document.getElementById('sc-ok').textContent=ok;
+  document.getElementById('sc-no').textContent=no;
+  document.getElementById('sc-left').textContent=Q.length-ok-no;
+  const fin=document.getElementById('final');
+  if(ok+no===Q.length){
+    fin.hidden=false;
+    document.getElementById('final-score').textContent=ok+' / '+Q.length;
+    const pct=ok/Q.length;
+    document.getElementById('final-msg').textContent = pct>=.85 ? 'Çok iyi. Formülleri ve yorumları oturtmuşsun, yanlışların çözümlerine bir kez daha bak.'
+      : pct>=.6 ? 'Fena değil. Yanlış yaptığın soruların çözümlerini oku, sonra "Baştan başla" ile şıkları karıştırıp tekrar çöz.'
+      : 'Önce aşağıdaki formül kartını çalış, ardından Bölüm 2\'den (yuvarlak rakamlar) başlayarak tekrar dene.';
+  } else fin.hidden=true;
+}
+function applyFilter(){
+  document.querySelectorAll('.q').forEach(c=>{ c.hidden = !(filter==='all' || c.dataset.t===filter); });
+  document.querySelectorAll('section.part').forEach(sec=>{
+    const qs=sec.querySelectorAll('.q'); if(!qs.length) return;
+    const any=[...qs].some(c=>!c.hidden);
+    sec.hidden=!any;
+  });
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+  filter=c.dataset.f;
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed', x===c?'true':'false'));
+  applyFilter();
+}));
+const resetBtn=document.getElementById('reset');
+let armed=false;
+resetBtn.addEventListener('click',()=>{
+  if(!armed){ armed=true; resetBtn.textContent='Emin misin? Tekrar bas'; setTimeout(()=>{armed=false;resetBtn.textContent='Baştan başla';},3000); return; }
+  armed=false; resetBtn.textContent='Baştan başla';
+  state={}; save(); render(); window.scrollTo({top:0});
+});
+
+/* modal */
+const modal=document.getElementById('modal');
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-tb]'); if(!b) return;
+  document.getElementById('modal-title').textContent = b.dataset.tb==='t1' ? 'Tablo 1 · Ders slaytındaki şirket' : 'Tablo 2 · Örnek Tekstil A.Ş.';
+  document.getElementById('modal-body').innerHTML = b.dataset.tb==='t1'?T1:T2;
+  modal.hidden=false; document.getElementById('modal-close').focus();
+});
+function closeModal(){ modal.hidden=true; }
+document.getElementById('modal-close').addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !modal.hidden) closeModal(); });
+
+render();
+</script>
+
+</body>
+</html>

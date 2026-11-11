@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Katman 7 Vize Testi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: tek sütun soru kartları; üstte yapışkan ilerleme + filtre çubuğu. Alıntılar fosforlu kalem gibi işaretlenir. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #142033;
+  --muted: #5b6779;
+  --line: #d6dde8;
+  --accent: #1d4fc4;
+  --accent-soft: #e3eafb;
+  --mark: #fff0a8;
+  --mark-ink: #3b3000;
+  --ok: #157a46;
+  --ok-soft: #e1f4e9;
+  --bad: #b42318;
+  --bad-soft: #fde7e5;
+  --ftp: #1f66d1;
+  --smtp: #c2410c;
+  --snmp: #0f766e;
+  --http: #7a3ee0;
+  --genel: #5b6779;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+    --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+    --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+    --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --genel: #9aa7ba;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+  --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+  --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+  --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --genel: #9aa7ba;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.wrap {
+  max-width: 820px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.intro { padding-block: 32px 20px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1; margin: 6px 0 12px; text-wrap: balance; letter-spacing: -0.01em;
+}
+.intro p { margin: 0 0 10px; max-width: 65ch; color: var(--muted); }
+.intro p strong { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend mark { background: var(--mark); color: var(--mark-ink); padding: 0 4px; border-radius: 2px; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.bar .wrap { padding-block: 10px; display: grid; gap: 10px; }
+.score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 14px; }
+.score b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.score .ok b { color: var(--ok); }
+.score .bad b { color: var(--bad); }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+.progress .p-ok { background: var(--ok); }
+.progress .p-bad { background: var(--bad); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 500 13px/1 var(--font-body); padding: 7px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:focus-visible, .opt:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.btn {
+  font: 600 13px/1 var(--font-body); padding: 7px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+
+main { padding-block: 20px 60px; }
+.section-head {
+  display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+}
+.section-head small { font: 400 13px var(--font-mono); color: var(--muted); }
+.list { display: grid; gap: 14px; }
+
+.q {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 18px 16px; min-width: 0;
+  border-left: 4px solid var(--sec);
+}
+.q-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+.num { font: 600 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag {
+  font: 600 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sec); border: 1px solid currentColor; padding: 4px 6px; border-radius: 4px;
+}
+.src {
+  margin-left: auto; font: 500 12px/1 var(--font-mono); color: var(--accent);
+  background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; white-space: nowrap;
+}
+.q h3 { font: 600 17px/1.45 var(--font-body); margin: 0 0 12px; text-wrap: pretty; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; text-align: left;
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: 400 15px/1.45 var(--font-body); cursor: pointer;
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; }
+.opt .l {
+  font: 600 13px/22px var(--font-mono); text-align: center; border-radius: 50%;
+  width: 24px; height: 24px; border: 1px solid var(--line); color: var(--muted);
+}
+.opt.is-right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.is-right .l { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-wrong .l { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.opt.dim { opacity: .55; }
+
+.fb { margin-top: 14px; display: grid; gap: 10px; }
+.verdict { font: 600 14px var(--font-body); }
+.verdict.ok { color: var(--ok); }
+.verdict.bad { color: var(--bad); }
+.quote {
+  margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--bg);
+  border: 1px dashed var(--line); font-size: 15px;
+}
+.quote .where { display: block; font: 600 12px var(--font-mono); color: var(--accent); margin-bottom: 4px; }
+.quote mark { background: var(--mark); color: var(--mark-ink); padding: 1px 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.exp { margin: 0; font-size: 15px; color: var(--ink); }
+.exp b { font-weight: 600; }
+.exp code, .q h3 code, .opt code { font-family: var(--font-mono); font-size: .92em; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+@media (max-width: 520px) {
+  .src { margin-left: 0; }
+  .q { padding: 14px 14px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: .3; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<header class="wrap intro">
+  <div class="eyebrow">BSM 451 Ağ Programlama · Hafta 6 · Vize 09.11.2026</div>
+  <h1>Katman 7 Protokolleri Testi</h1>
+  <p>Sorular "Katman 7 Protokolleri ve Çalışma Yapıları" PDF'inin <strong>her slaytından</strong> sırayla çıkarıldı: FTP, SMTP, SNMP ve HTTP. Bir şıkkı seçtiğinde doğru cevap, sorunun geçtiği yer ve kısa bir açıklama açılır.</p>
+  <p>Klasik soru bu konudan gelmiyor, yani burası tamamen <strong>test (60p)</strong> kısmına hazırlık.</p>
+  <div class="legend">
+    <span><b style="font-family:var(--font-mono);color:var(--accent)">PDF s.X · Slayt Y</b> = sorunun geçtiği yer</span>
+    <span><mark>sarı vurgu</mark> = PDF'teki ifade</span>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="score">
+      <span>Cevaplanan <b id="s-done">0</b>/<b id="s-total">0</b></span>
+      <span class="ok">Doğru <b id="s-ok">0</b></span>
+      <span class="bad">Yanlış <b id="s-bad">0</b></span>
+      <span>Başarı <b id="s-pct">%0</b></span>
+    </div>
+    <div class="progress" aria-hidden="true"><i class="p-ok" id="p-ok"></i><i class="p-bad" id="p-bad"></i></div>
+    <div class="filters" role="toolbar" aria-label="Filtreler">
+      <button class="chip" id="f-all" data-sec="all" aria-pressed="true">Tümü</button>
+      <button class="chip" id="f-ftp" data-sec="FTP" aria-pressed="false">FTP</button>
+      <button class="chip" id="f-smtp" data-sec="SMTP" aria-pressed="false">SMTP</button>
+      <button class="chip" id="f-snmp" data-sec="SNMP" aria-pressed="false">SNMP</button>
+      <button class="chip" id="f-http" data-sec="HTTP" aria-pressed="false">HTTP</button>
+      <span class="sep"></span>
+      <button class="chip" id="f-wrong" data-only="wrong" aria-pressed="false">Yanlışlarım</button>
+      <button class="chip" id="f-blank" data-only="blank" aria-pressed="false">Boşlar</button>
+      <span class="sep"></span>
+      <button class="btn" id="b-reveal">Tüm cevapları göster</button>
+      <button class="btn" id="b-reset">Sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<script>
+// o[0] her zaman doğru cevaptır; şıklar soru id'sine göre sabit karıştırılır.
+const Q = [
+// ───────────── GENEL ─────────────
+{sec:"GENEL",p:1,s:2,q:"Hafta 6 \"Konu İçeriği\" slaytında listelenen protokollerden biri DEĞİLDİR?",
+ o:["DNS","FTP","SMTP","SNMP","HTTP"],
+ quote:"Konu İçeriği: FTP · SMTP · SNMP · HTTP",
+ exp:"Bu haftanın konusu sadece dört protokol: <b>FTP, SMTP, SNMP, HTTP</b>. DNS bu PDF'te ayrı bir başlık olarak işlenmiyor, sadece HTTP'nin RFC alıntısında adı geçiyor."},
+
+// ───────────── FTP ─────────────
+{sec:"FTP",p:2,s:3,q:"TCP/IP tarafından bir dosyayı bir ana bilgisayardan diğerine kopyalamak için sağlanan standart mekanizma hangisidir?",
+ o:["FTP","SMTP","SNMP","HTTP","IMAP"],
+ quote:"bir dosyayı bir ana bilgisayardan diğerine kopyalamak için sağlanan standart mekanizmadır",
+ exp:"FTP (File Transfer Protocol), Türkçesiyle Dosya Aktarım Protokolü. Tanımdaki anahtar kelime <b>dosya kopyalama</b>."},
+{sec:"FTP",p:2,s:3,q:"Slayta göre bir sistemden diğerine dosya aktarımında oluşabilecek sorunlardan biri DEĞİLDİR?",
+ o:["Kaynak ve hedefin aynı IP adresini kullanması","Kaynak ve hedef sistemlerin verileri farklı yollarla tutması","Kaynak ve hedef sistemlerin farklı klasör yapılarına sahip olması","Bağlantı esnasında kurulum parametrelerine ihtiyaç duyulması","Veri transferinde kontrol gerekmesi"],
+ quote:"Kaynak ve hedef sistemler farklı klasör yapılarına sahip olabilirler.",
+ exp:"Slayttaki üç sorun şunlar: <b>farklı veri tutma/temsil</b>, <b>farklı klasör yapısı</b>, <b>kurulum parametreleri ve veri transferinde kontrol</b>. IP adresiyle ilgili bir madde yok."},
+{sec:"FTP",p:2,s:3,q:"FTP'yi diğer istemci-sunucu uygulamalarından ayıran temel özellik nedir?",
+ o:["Ana bilgisayarlar arasında iki ayrı bağlantı kurması","UDP üzerinde çalışması","Durumsuz (stateless) bir protokol olması","Tek bir port üzerinden hem komut hem veri taşıması","Tüm veriyi şifreleyerek göndermesi"],
+ quote:"FTP, ana bilgisayarlar arasında iki bağlantı kurması bakımından diğer istemci-sunucu uygulamalarından farklıdır.",
+ exp:"Bağlantılardan biri <b>veri aktarımı</b>, diğeri <b>kontrol bilgileri (komutlar ve yanıtlar)</b> için kullanılır. FTP, TCP kullanır."},
+{sec:"FTP",p:2,s:4,q:"FTP'de kontrol bağlantısı ve veri aktarımı için kullanılan iyi bilinen TCP portları sırasıyla hangileridir?",
+ o:["21 ve 20","20 ve 21","25 ve 110","80 ve 443","161 ve 162"],
+ quote:"Kontrol bağlantıları için Port 21 · Veri aktarımı için ise Port 20",
+ exp:"Çok sık sorulan bir soru. <b>Kontrol = 21, veri = 20.</b> Sırayı karıştırmamak için \"önce konuşulur (21), sonra veri gider (20)\" diye düşünebilirsin."},
+{sec:"FTP",p:2,s:4,q:"FTP'de veri bağlantısının, kontrol bağlantısına göre daha karmaşık kurallara ihtiyaç duymasının sebebi nedir?",
+ o:["Aktarılan veri türlerinin çeşitliliği","Veri bağlantısının UDP kullanması","Veri bağlantısının şifreli olması","Veri bağlantısının sürekli açık kalması","Kontrol bağlantısının 7 bitlik ASCII kullanmaması"],
+ quote:"aktarılan veri türlerinin çeşitliliği nedeniyle daha karmaşık kurallara ihtiyaç duyar",
+ exp:"Kontrol bağlantısı <b>çok basit iletişim kuralları</b> kullanır, çünkü bir seferde tek bir komut veya yanıt satırı gider. Veri bağlantısında ise çok farklı türde dosyalar taşındığı için kurallar daha karmaşıktır."},
+{sec:"FTP",p:3,s:5,q:"FTP kontrol bağlantısının kurulumuyla ilgili hangisi doğrudur?",
+ o:["Sunucu 21. portta pasif açık yapıp bekler, istemci geçici portla etkin açık yapar","İstemci 21. portta pasif açık yapar, sunucu etkin açık yapar","Sunucu 20. portta pasif açık yapar","İstemci ve sunucu aynı anda 21. portta etkin açık yapar","Kontrol bağlantısı her dosya için yeniden kurulur"],
+ quote:"Sunucu, iyi bilinen bağlantı noktası 21'de pasif bir açık açar ve bir müşteri bekler.",
+ exp:"İki aşaması var: (1) <b>sunucu pasif açık</b> (port 21), (2) <b>istemci geçici (ephemeral) port ile etkin açık</b>. Kontrol bağlantısı <b>tüm süreç boyunca açık kalır</b>."},
+{sec:"FTP",p:3,s:5,q:"FTP kontrol bağlantısında IP'nin kullandığı hizmet türü neyi en aza indirir ve neden?",
+ o:["Gecikmeyi; çünkü kullanıcı (insan) ile sunucu arasında etkileşimli bir bağlantıdır","Bant genişliğini; çünkü büyük dosyalar taşınır","Hata oranını; çünkü UDP kullanılır","Maliyeti; çünkü bağlantı kısa sürer","Paket boyutunu; çünkü EBCDIC kullanılır"],
+ quote:"hizmet türü gecikmeyi en aza indirir, çünkü bu bir kullanıcı (insan) ile sunucu arasında etkileşimli bir bağlantıdır",
+ exp:"Kullanıcı komut yazar ve <b>önemli bir gecikme olmadan yanıt almayı</b> bekler. Bu yüzden kontrol bağlantısında öncelik düşük gecikmedir."},
+{sec:"FTP",p:3,s:6,q:"FTP veri bağlantısı kurulurken pasif açığı kim, hangi portla yapar?",
+ o:["İstemci, geçici bir portla","Sunucu, 20. portla","Sunucu, 21. portla","İstemci, 21. portla","Sunucu, geçici bir portla"],
+ quote:"Sunucu değil, istemci geçici bir bağlantı noktası kullanarak pasif bir açık yayınlar.",
+ exp:"Kontrol bağlantısının <b>tersi</b> bir durum: veri bağlantısında pasif açığı <b>istemci</b> yapar. Ardından sunucu, <b>20. port</b> üzerinden etkin açık yapar."},
+{sec:"FTP",p:3,s:6,q:"FTP veri bağlantısında istemci, geçici port numarasını sunucuya hangi komutla bildirir?",
+ o:["PORT","PASV","LIST","STOR","USER"],
+ quote:"İstemci, bu bağlantı noktası numarasını PORT komutunu kullanarak sunucuya gönderir.",
+ exp:"Sıra şöyle: istemci pasif açık yapar → <b>PORT</b> komutuyla port numarasını (kontrol bağlantısı üzerinden) gönderir → sunucu 20. port ve bu geçici port ile etkin açık yapar."},
+{sec:"FTP",p:3,s:6,q:"FTP veri bağlantısının açılıp kapanmasıyla ilgili hangisi doğrudur?",
+ o:["Aktarılan her dosya için açılır ve kapatılır","Oturum boyunca sürekli açık kalır","Yalnızca oturum sonunda kapanır","Sadece PASV komutuyla kapanır","Kontrol bağlantısıyla aynı anda kapanmak zorundadır"],
+ quote:"Veri bağlantısı açılır ve aktarılan her dosya için kapatılır.",
+ exp:"Kontrol bağlantısı açıkken birkaç dosya aktarılırsa <b>veri bağlantısı birkaç kez açılıp kapatılabilir</b>. Sürekli açık kalan bağlantı ise kontrol bağlantısıdır."},
+{sec:"FTP",p:4,s:7,q:"FTP istemcisi ve sunucusu arasındaki heterojenlik kaynakları arasında slaytta sayılmayan hangisidir?",
+ o:["Farklı IP sürümleri","Farklı işletim sistemleri","Farklı karakter kümeleri","Farklı dosya yapıları","Farklı dosya formatları"],
+ quote:"FTP bu heterojenliği uyumlu hale getirmelidir.",
+ exp:"Slayttaki dört fark şunlar: <b>işletim sistemi, karakter kümesi, dosya yapısı, dosya formatı</b>. FTP'nin bu farkları uyumlu hale getirmesi gerekir."},
+{sec:"FTP",p:4,s:8,q:"FTP, kontrol bağlantısı üzerinden iletişim kurarken hangi protokolle aynı yaklaşımı ve hangi karakter kümesini kullanır?",
+ o:["SMTP ile aynı yaklaşım, 7 bitlik ASCII","HTTP ile aynı yaklaşım, 8 bitlik ASCII","SNMP ile aynı yaklaşım, EBCDIC","SMTP ile aynı yaklaşım, Unicode","Telnet ile aynı yaklaşım, Base64"],
+ quote:"FTP, kontrol bağlantısı üzerinden iletişim kurmak için SMTP ile aynı yaklaşımı kullanır.",
+ exp:"Kontrol bağlantısı <b>7 bitlik ASCII</b> (şekilde NVT ASCII) kullanır ve iletişim <b>komutlar ve yanıtlar</b> aracılığıyla sağlanır."},
+{sec:"FTP",p:4,s:8,q:"FTP kontrol bağlantısında her komut veya yanıt satırı neyle sonlandırılır?",
+ o:["İki karakterli satır sonu jetonu (satır başı + satır besleme)","Tek bir nokta (.)","EOF karakteri","EOR karakteri","Boş satır"],
+ quote:"Her satır iki karakterli (satır başı ve satır besleme) satır sonu jetonu ile sonlandırılır.",
+ exp:"Satır başı ve satır besleme, yani <code>CR LF</code> (<code>\\r\\n</code>). Her komut ya da yanıt <b>tek bir kısa satır</b> olduğu için dosya biçimiyle ilgilenmek gerekmez."},
+{sec:"FTP",p:5,s:9,q:"FTP'de heterojenlik sorunu, dosya veri bağlantısından gönderilmeden önce hangi üç iletişim niteliği tanımlanarak çözülür?",
+ o:["Dosya tipi, veri yapısı, iletim modu","Port, IP, MAC adresi","Kullanıcı adı, şifre, hesap","Karakter kümesi, şifreleme, sıkıştırma","Başlık, gövde, zarf"],
+ quote:"üç iletişim niteliği tanımlanarak çözülür: Dosya tipi · Veri yapısı · İletim modu",
+ exp:"Şekilde bu üç niteliğin <b>istemci tarafından</b> tanımlandığı belirtiliyor (\"defined by the client\"). Dosya aktarımı da kontrol bağlantısındaki komutların denetiminde gerçekleşir."},
+{sec:"FTP",p:5,s:10,q:"FTP'de metin dosyalarını aktarmak için varsayılan dosya tipi hangisidir?",
+ o:["ASCII dosyası","EBCDIC dosyası","Görüntü (image) dosyası","Sıkıştırılmış dosya","Kayıt dosyası"],
+ quote:"ASCII dosyası, metin dosyalarını aktarmak için varsayılan biçimdir.",
+ exp:"Her karakter <b>7 bitlik ASCII</b> ile kodlanır. Gönderen kendi gösteriminden ASCII'ye, alıcı da ASCII'den kendi gösterimine dönüştürür."},
+{sec:"FTP",p:5,s:10,q:"FTP'de EBCDIC dosya tipi ne zaman kullanılır?",
+ o:["Bağlantının bir veya iki tarafı da EBCDIC kodlamasını (IBM formatı) kullanıyorsa","İkili dosyalar aktarılırken","Metin dosyaları için varsayılan olarak","Dosya çok büyük olduğunda","Sadece sayfa yapısında"],
+ quote:"EBCDIC kodlama türünü (IBM tarafından kullanılan dosya formatı) kullanılırsa, kullanılır",
+ exp:"EBCDIC, <b>IBM'in</b> karakter kodlamasıdır. FTP'nin üç dosya tipi şunlar: <b>ASCII, EBCDIC, Görüntü</b>."},
+{sec:"FTP",p:5,s:10,q:"Derlenmiş programlar gibi ikili (binary) dosyaları aktarmak için varsayılan FTP dosya tipi hangisidir?",
+ o:["Görüntü (image) dosyası","ASCII dosyası","EBCDIC dosyası","Kayıt yapısı","Blok modu"],
+ quote:"Görüntü dosyası, ikili dosyaları aktarmak için varsayılan biçimdir.",
+ exp:"Görüntü dosyası tipinde dosya <b>herhangi bir yorum veya kodlama yapılmadan sürekli bit akışı</b> olarak gönderilir. TYPE komutundaki karşılığı <code>I</code> (Image)."},
+{sec:"FTP",p:6,s:11,q:"FTP veri yapılarından hangisi yalnızca metin dosyalarıyla kullanılabilir?",
+ o:["Kayıt yapısı","Dosya yapısı","Sayfa yapısı","Akış yapısı","Blok yapısı"],
+ quote:"kayıt yapısı: dosya kayıtlara ayrılmıştır. Bu yalnızca metin dosyalarıyla kullanılabilir.",
+ exp:"Üç veri yapısı var: <b>dosya yapısı</b> (sürekli bayt akışı), <b>kayıt yapısı</b> (kayıtlara ayrılmış, sadece metin), <b>sayfa yapısı</b> (sayfa numarası ve başlık)."},
+{sec:"FTP",p:6,s:11,q:"Dosyanın sayfalara bölündüğü ve her sayfada bir sayfa numarası ile sayfa başlığı bulunan FTP veri yapısı hangisidir?",
+ o:["Sayfa yapısı","Dosya yapısı","Kayıt yapısı","Blok modu","Sıkıştırılmış mod"],
+ quote:"sayfa yapısı: dosya sayfalara bölünür ve her sayfada bir sayfa numarası ve bir sayfa başlığı bulunur",
+ exp:"Sayfalar <b>rastgele veya sıralı</b> olarak saklanabilir ve erişilebilir. STRU komutundaki karşılığı <code>P</code> (Page)."},
+{sec:"FTP",p:6,s:12,q:"FTP'nin varsayılan iletim modu hangisidir?",
+ o:["Akış (stream) modu","Blok modu","Sıkıştırılmış mod","Sayfa modu","Kayıt modu"],
+ quote:"Bu varsayılan moddur. Veriler sürekli bayt akışı olarak FTP'den TCP'ye gönderilir.",
+ exp:"Üç iletim modu var: <b>Stream, Block, Compressed</b>. Stream modunda veriyi uygun boyuttaki bölümlere ayırmak <b>TCP'nin sorumluluğundadır</b>."},
+{sec:"FTP",p:6,s:12,q:"Stream modunda veri sadece bir bayt akışıysa (dosya yapısı) dosya sonu nasıl anlaşılır?",
+ o:["Gönderenin veri bağlantısını kapatmasıyla","1 baytlık EOF karakteriyle","1 baytlık EOR karakteriyle","3 baytlık blok başlığıyla","QUIT komutuyla"],
+ quote:"Bu durumda dosya sonu, gönderen tarafından veri bağlantısının kapatılmasıdır.",
+ exp:"Dosya yapısında ayrıca bir dosya sonu işaretine <b>gerek yoktur</b>. EOR ve EOF karakterleri ise <b>kayıt yapısında</b> kullanılır."},
+{sec:"FTP",p:6,s:12,q:"Stream modunda veri kayıtlara ayrılmışsa (kayıt yapısı) kayıt sonu ve dosya sonu nasıl belirtilir?",
+ o:["Her kayıtta 1 baytlık EOR, dosya sonunda 1 baytlık EOF","Her kayıtta 2 baytlık EOR, sonda 2 baytlık EOF","Her kayıtta 3 baytlık başlık","Bağlantının kapatılmasıyla","CR LF ile"],
+ quote:"her kaydın 1 bayt kayıt sonu (EOR) karakteri olur ve dosyanın sonu 1 bayt dosya sonu (EOF) karakteri içerir",
+ exp:"<b>EOR</b> = End of Record, <b>EOF</b> = End of File. İkisi de <b>1 bayt</b>."},
+{sec:"FTP",p:7,s:13,q:"FTP blok modunda her bloktan önce gelen başlık kaç bayttır ve nasıl yapılandırılır?",
+ o:["3 bayt: ilk bayt blok tanımlayıcı, sonraki 2 bayt blok boyutu","2 bayt: ilk bayt boyut, ikinci bayt tanımlayıcı","3 bayt: hepsi blok boyutu","4 bayt: 2 bayt tanımlayıcı, 2 bayt boyut","1 bayt: sadece blok tanımlayıcı"],
+ quote:"Her bloktan önce 3 baytlık bir başlık gelir. İlk bayta blok tanımlayıcı denir",
+ exp:"Sonraki <b>iki bayt</b>, bloğun boyutunu bayt olarak tanımlar. Formül: <b>1 (tanımlayıcı) + 2 (boyut) = 3 bayt</b>."},
+{sec:"FTP",p:7,s:13,q:"FTP sıkıştırılmış modunda normalde kullanılan sıkıştırma yöntemi hangisidir?",
+ o:["Çalışma uzunluğu kodlaması (run-length encoding)","Huffman kodlaması","Base64","LZW","Quoted-printable"],
+ quote:"Normalde kullanılan sıkıştırma yöntemi çalışma uzunluğu kodlamasıdır.",
+ exp:"Bir veri biriminin ardışık tekrarları, <b>bir oluşum + tekrar sayısı</b> ile değiştirilir. Metin dosyalarında genelde <b>boşluklar</b>, ikili dosyalarda <b>boş (null) karakterler</b> sıkıştırılır."},
+{sec:"FTP",p:7,s:14,q:"FTP komut işlemede komutlar ve yanıtlar hangi yönde, hangi bağlantı üzerinden gider?",
+ o:["Komutlar istemciden sunucuya, yanıtlar sunucudan istemciye; kontrol bağlantısı üzerinden","Komutlar sunucudan istemciye; veri bağlantısı üzerinden","Her ikisi de veri bağlantısı üzerinden","Komutlar kontrol, yanıtlar veri bağlantısı üzerinden","Yanıtlar istemciden sunucuya"],
+ quote:"komutlar istemciden sunucuya gönderilir ve yanıtlar sunucudan istemciye gönderilir",
+ exp:"İletişim, <b>istemci kontrol işlemi</b> ile <b>sunucu kontrol işlemi</b> arasında kontrol bağlantısı üzerinden kurulur."},
+{sec:"FTP",p:8,s:15,q:"FTP komutlarıyla ilgili hangisi doğrudur?",
+ o:["ASCII büyük harf biçimindedir ve altı gruba ayrılır","Küçük harf biçimindedir ve dört gruba ayrılır","Sunucu kontrol işleminden gönderilir","İkili (binary) formatta gönderilir","Her komut mutlaka bir argüman alır"],
+ quote:"ASCII büyük harf biçimindedir, bunu bir argüman izleyebilir veya izlemeyebilir.",
+ exp:"Altı grup şunlar: <b>Erişim, Dosya yönetim, Veri biçimlendirme, Port tanımlama, Dosya transfer, Çeşitli</b>. Komutlar <b>istemci</b> kontrol işleminden gönderilir."},
+{sec:"FTP",p:8,s:16,q:"Aşağıdakilerden hangisi FTP erişim komutlarından biridir ve \"önceki komutu iptal et\" anlamına gelir?",
+ o:["ABOR","DELE","RMD","QUIT","NOOP"],
+ quote:"Erişim komutları: Bu komutlar kullanıcının uzak sisteme erişmesini sağlar.",
+ exp:"Erişim komutları: <code>USER</code> (kullanıcı adı), <code>PASS</code> (şifre), <code>ACCT</code> (hesap), <code>REIN</code> (yeniden başlat), <code>QUIT</code> (sistemden çık), <code>ABOR</code> (önceki komutu iptal et)."},
+{sec:"FTP",p:8,s:16,q:"Uzak bilgisayarda yeni bir dizin oluşturmak için kullanılan FTP dosya yönetim komutu hangisidir?",
+ o:["MKD","RMD","CWD","PWD","CDUP"],
+ quote:"Kullanıcının dizin yapılarında gezinmesine (yeni dizi yapıları oluşturması, dosya silmesi vb.) izin verir.",
+ exp:"Dosya yönetim komutları: <code>CWD</code> dizin değiştir, <code>CDUP</code> üst dizin, <code>DELE</code> dosya sil, <code>LIST</code>/<code>NLIST</code> listele, <code>MKD</code> dizin oluştur, <code>PWD</code> mevcut dizin, <code>RMD</code> dizin sil, <code>RNFR</code>/<code>RNTO</code> yeniden adlandır, <code>SMNT</code> dosya sistemi bağla."},
+{sec:"FTP",p:8,s:16,q:"FTP'de bir dosyayı yeniden adlandırmak için hangi komut çifti kullanılır?",
+ o:["RNFR ve RNTO","RETR ve STOR","USER ve PASS","PORT ve PASV","MKD ve RMD"],
+ quote:"Dosya yönetim komutları: Bu komutlar, kullanıcının uzak bilgisayardaki dosya sistemine erişmesini sağlar.",
+ exp:"<code>RNFR</code> (rename from) yeniden adlandırılacak dosyayı belirtir, <code>RNTO</code> (rename to) yeni adı verir. İkisi de dosya yönetim komutudur."},
+{sec:"FTP",p:9,s:17,q:"FTP'de iletim modunu (Stream, Block, Compressed) tanımlayan veri biçimlendirme komutu hangisidir?",
+ o:["MODE","TYPE","STRU","PORT","STAT"],
+ quote:"Bu komutlar kullanıcının veri yapısını, dosya türünü ve iletim modunu tanımlamasını sağlar.",
+ exp:"Veri biçimlendirme komutları: <code>TYPE</code> dosya tipi (A, E, I, N, T), <code>STRU</code> veri yapısı (F, R, P), <code>MODE</code> iletim modu (S, B, C)."},
+{sec:"FTP",p:9,s:17,q:"FTP TYPE komutunda \"I\" argümanı hangi dosya tipini ifade eder?",
+ o:["Image (görüntü/ikili)","Internet","Index","Interactive","IBM EBCDIC"],
+ quote:"Veri biçimlendirme komutları … Tanımlanan format daha sonra dosya aktarım komutları tarafından kullanılır.",
+ exp:"TYPE argümanları: <b>A</b> ASCII, <b>E</b> EBCDIC, <b>I</b> Image, <b>N</b> Nonprint, <b>T</b> TELNET. EBCDIC'in harfi <b>E</b>, I değil."},
+{sec:"FTP",p:9,s:17,q:"Port tanımlama komutlarından PASV ile PORT arasındaki fark nedir?",
+ o:["PASV'de portu sunucu seçer, PORT'ta istemci seçer","PASV'de portu istemci seçer, PORT'ta sunucu seçer","İkisinde de portu sunucu seçer","PASV veri aktarımını başlatır, PORT bitirir","PORT yalnızca 21. portu kullanır"],
+ quote:"Port tanımlama komutları: Bu komutlar, istemci tarafındaki veri bağlantısı için bağlantı noktası numarasını tanımlar.",
+ exp:"Tabloya göre <code>PORT</code> (6 haneli tanımlayıcı) için \"Client chooses a port\", <code>PASV</code> için \"Server chooses a port\" yazıyor. 227 yanıt kodu da pasif moda girildiğini bildirir."},
+{sec:"FTP",p:9,s:18,q:"Bir dosya sunucuda zaten varsa, gönderilen verinin dosyanın sonuna eklenmesini sağlayan FTP dosya transfer komutu hangisidir?",
+ o:["APPE","STOR","STOU","RETR","ALLO"],
+ quote:"Dosya transfer komutları: Bu komutlar aslında kullanıcının dosyaları aktarmasına izin verir.",
+ exp:"<code>RETR</code> sunucudan istemciye al, <code>STOR</code> istemciden sunucuya depola, <code>APPE</code> STOR gibi ama sona ekle, <code>STOU</code> STOR gibi ama benzersiz isim, <code>ALLO</code> yer ayır, <code>REST</code> belirli noktaya konumlan, <code>STAT</code> durum."},
+{sec:"FTP",p:9,s:18,q:"Sunucunun hayatta (çalışır durumda) olup olmadığını kontrol etmek için kullanılan FTP çeşitli komutu hangisidir?",
+ o:["NOOP","HELP","SITE","SYST","STAT"],
+ quote:"Çeşitli komutlar: Bu komutlar istemci sitesindeki FTP kullanıcısına bilgi verir.",
+ exp:"Çeşitli komutlar: <code>HELP</code> sunucu hakkında bilgi, <code>NOOP</code> sunucu canlı mı, <code>SITE</code> siteye özgü komutlar, <code>SYST</code> sunucunun işletim sistemi."},
+{sec:"FTP",p:10,s:19,q:"FTP yanıtlarının yapısıyla ilgili hangisi doğrudur?",
+ o:["Üç basamaklı bir sayı ve ardından metinden oluşur","İki basamaklı bir sayıdan oluşur","Sadece metinden oluşur","Dört basamaklı bir koddan oluşur","Her komut yanıt üretmek zorunda değildir"],
+ quote:"Yanıt iki bölümden oluşur: üç basamaklı bir sayı ve ardından metin.",
+ exp:"<b>Her FTP komutu en az bir yanıt oluşturur.</b> İlk hane komutun durumunu tanımlar, ikinci basamak durumu ayrıca tanımlar, üçüncü basamak ek bilgi sağlar. Metin kısmı parametreleri veya açıklamaları içerir."},
+{sec:"FTP",p:10,s:20,q:"FTP'de \"331\" yanıt kodu ne anlama gelir?",
+ o:["Kullanıcı adı doğru, şifre gerekiyor","Kullanıcı girişi başarılı","Servis hazır","Veri bağlantısı açılamıyor","Kullanıcı giriş yapmamış"],
+ quote:"331 User name OK; password is needed",
+ exp:"3xx kodları <b>Positive Intermediate Reply</b> (olumlu ara yanıt) grubudur, yani işlem devam ediyor ve ek bilgi gerekiyor. Sık sorulanlar: <b>220</b> servis hazır, <b>230</b> giriş başarılı, <b>530</b> giriş yapılmamış."},
+{sec:"FTP",p:10,s:20,q:"FTP'de sunucunun pasif moda girdiğini ve IP adresi ile port numarasını gönderdiğini bildiren kod hangisidir?",
+ o:["227","225","226","425","150"],
+ quote:"227 Entering passive mode; server sends its IP address and port number",
+ exp:"<b>225</b> veri bağlantısı açık, <b>226</b> veri bağlantısı kapatılıyor, <b>425</b> veri bağlantısı açılamıyor, <b>150</b> dosya durumu tamam, veri bağlantısı birazdan açılacak."},
+{sec:"FTP",p:10,s:20,q:"FTP'de 4xx ile başlayan yanıt kodları hangi gruba girer?",
+ o:["Geçici olumsuz tamamlanma (Transient Negative Completion)","Kalıcı olumsuz tamamlanma (Permanent Negative Completion)","Olumlu ön yanıt (Positive Preliminary)","Olumlu tamamlanma (Positive Completion)","Olumlu ara yanıt (Positive Intermediate)"],
+ quote:"Transient Negative Completion Reply: 425 Cannot open data connection",
+ exp:"Gruplar: <b>1xx</b> olumlu ön yanıt, <b>2xx</b> olumlu tamamlanma, <b>3xx</b> olumlu ara yanıt, <b>4xx</b> geçici olumsuz, <b>5xx</b> kalıcı olumsuz (ör. 500 syntax error, 530 not logged in)."},
+{sec:"FTP",p:11,s:21,q:"FTP'de bir dosyanın sunucudan istemciye kopyalanması (alma) hangi komutun denetimi altında yapılır?",
+ o:["RETR","STOR","LIST","APPE","PUT"],
+ quote:"Alınıyor: Bir dosya sunucudan istemciye kopyalanacaktır. RETR komutunun denetimi altında yapılır.",
+ exp:"FTP'de dosya aktarımı üç şeyden birini ifade eder: <b>alma (RETR)</b>, <b>depolama (STOR)</b>, <b>listeleme (LIST)</b>."},
+{sec:"FTP",p:11,s:21,q:"FTP, LIST komutuyla gönderilen dizin veya dosya adları listesini nasıl değerlendirir?",
+ o:["Bir dosya olarak (veri bağlantısı üzerinden gönderilir)","Bir kontrol mesajı olarak","Bir hata yanıtı olarak","Bir komut olarak","EBCDIC kaydı olarak"],
+ quote:"FTP, dizin veya dosya adlarının listesini dosya olarak değerlendirir.",
+ exp:"Bu yüzden listeleme, kontrol bağlantısından değil <b>veri bağlantısı</b> üzerinden ve sunucudan istemciye doğru gönderilir."},
+{sec:"FTP",p:11,s:22,q:"\"Bir dizindeki öğelerin listesini almak\" örneğinde PASS komutundan sonra sunucu hangi yanıtı döner?",
+ o:["230 (User login OK)","331 (User name OK. Password?)","150 (Data connection opens shortly)","220 (Service ready)","226 (Closing data connection)"],
+ quote:"230 (User login OK)",
+ exp:"Örnekteki akış: <b>220</b> → USER → <b>331</b> → PASS → <b>230</b> → PORT 8888 → <b>150</b> → LIST → <b>125</b> → veri aktarımı → <b>226</b> → QUIT → <b>221</b>."},
+{sec:"FTP",p:11,s:22,q:"Aynı örnekte veri aktarımı bittikten sonra sunucunun gönderdiği yanıt ve QUIT komutuna verdiği yanıt sırasıyla hangisidir?",
+ o:["226 ve 221","221 ve 226","250 ve 221","226 ve 230","125 ve 221"],
+ quote:"226 (Closing data connection) · QUIT · 221 (Service closing)",
+ exp:"<b>226</b> veri bağlantısının kapatıldığını, <b>221</b> servisin kapandığını bildirir. Örnekteki istemci veri portu <b>8888</b>."},
+
+// ───────────── SMTP ─────────────
+{sec:"SMTP",p:12,s:23,q:"SMTP hangi RFC standardıyla tanımlanmıştır ve SMTP sunucusu hangi portu kullanır?",
+ o:["RFC 821, port 25","RFC 2616, port 80","RFC 3501, port 143","RFC 821, port 110","RFC 822, port 21"],
+ quote:"SMTP bir RFC 821 standardıdır.",
+ exp:"SMTP istemcisi uzak SMTP sunucusuna bir <b>TCP</b> bağlantısı kurar ve sunucu <b>25 numaralı portu</b> kullanır. Bağlantı kurulduktan sonra basit bir istek-cevap mekanizması çalışır."},
+{sec:"SMTP",p:12,s:23,q:"SMTP ile sunucuya iletilen e-postalar, e-posta istemcisi tarafından sunucudan hangi protokollerle alınabilir?",
+ o:["POP veya IMAP","FTP veya HTTP","SNMP veya SMTP","DNS veya DHCP","Telnet veya SSH"],
+ quote:"Mesajlar daha sonra POP (post office protocol) veya IMAP (Internet message Access protocol) kullanan bir e-mail istemcisi ile sunucudan alınabilir.",
+ exp:"SMTP <b>göndermek</b> (push) içindir. Alıcı tarafta postayı <b>çekmek</b> için POP3 veya IMAP4 kullanılır."},
+{sec:"SMTP",p:12,s:23,q:"SMTP RFC 821'e göre gönderilen iletide bulunması zorunlu olan kısımlar hangileridir?",
+ o:["Mesaj başlığı ve içeriği","Sadece mesaj içeriği","Sadece zarf","Ek dosya ve imza","MIME başlığı ve Base64 gövde"],
+ quote:"SMTP-RFC 821'e göre gönderilen iletide; Mesaj başlığı ve içeriği olmak zorundadır.",
+ exp:"Bunu \"başlık (header) + gövde (body) = mesaj\" diye aklında tut. Zarf (envelope) ise ayrıca MAIL FROM ve RCPT TO bilgisini taşır."},
+{sec:"SMTP",p:12,s:24,q:"SMTP modelinde SMTP komutları, cevapları ve postalar hangi iki bileşen arasında TCP port 25 üzerinden taşınır?",
+ o:["İstemci MTA ile sunucu MTA","Kullanıcı ajanı ile posta kutusu","Gönderen kullanıcı ile alıcı kullanıcı","MAA istemcisi ile MAA sunucusu","Kullanıcı ajanı ile gönderim kuyruğu"],
+ quote:"SMTP commands, replies and mail · TCP Port 25",
+ exp:"Akış: kullanıcı → <b>User Agent</b> → gönderilecek posta kuyruğu → <b>Message Transfer Agent (client)</b> ⇄ TCP 25 ⇄ <b>MTA (server)</b> → kullanıcı posta kutuları → User Agent → alıcı."},
+{sec:"SMTP",p:13,s:25,q:"E-postanın göndericisi ve alıcısı aynı sistem içindeyse (1. senaryo) ne gerekir?",
+ o:["Sadece iki adet kullanıcı ajanı (UA)","İki UA ve iki MTA çifti","İki UA, iki MTA çifti ve bir MAA çifti","Sadece bir MTA","Bir MAA çifti"],
+ quote:"E-mailin gönderici ve alıcısı aynı sistem içerisinde bulunuyorlarsa, sadece iki adet kullanıcı ajanı yeterlidir.",
+ exp:"Aynı sistemde posta transferine gerek kalmaz, bu yüzden <b>2 UA</b> yeterlidir. Günümüzde kullanılan yapı ise 2. senaryodur."},
+{sec:"SMTP",p:13,s:25,q:"Günümüzde kullanılan yapı olan 2. senaryoda (gönderici ve alıcı mail sunucusuna LAN/WAN ile bağlı) hangi bileşenler gerekir?",
+ o:["İki UA, iki MTA çifti ve bir MAA çifti","Sadece iki UA","İki UA ve bir MTA çifti","Bir UA ve bir MAA","Üç MTA çifti"],
+ quote:"iki adet UA ve iki adet MTA çiftine ve de bir adet MAA çiftine ihtiyaç vardır. Günümüzde kullanılan yapı bu şekildedir.",
+ exp:"<b>UA</b> = User Agent, <b>MTA</b> = Message Transfer Agent, <b>MAA</b> = Message Access Agent. MAA, alıcının postayı sunucudan çektiği kısımdır (POP3/IMAP)."},
+{sec:"SMTP",p:13,s:26,q:"Kullanıcı ajanının (User Agent) slaytta sayılan görevlerinden biri DEĞİLDİR?",
+ o:["Mesajı MTA'lar arasında taşıma","Mesaj oluşturma","Mesaj okuma","Mesajlara cevap verme","Mesajları iletme / posta kutusuna taşıma"],
+ quote:"Kullanıcı ajanı bir mesajı daha kolay almak veya göndermek için kullanıcılara servis sağlamaktadır.",
+ exp:"UA'nın görevleri: <b>mesaj oluşturma, okuma, cevap verme, iletme, posta kutusuna taşıma</b>. MTA'lar arası taşıma ise SMTP/MTA'nın işidir. En çok kullanılan UA örnekleri <b>mail, pine ve elm</b>."},
+{sec:"SMTP",p:13,s:26,q:"Slayta göre kullanıcı ajanı olarak en çok kullanılan örnekler hangileridir?",
+ o:["mail, pine ve elm","Apache, IIS ve Nginx","POP3, IMAP4 ve SMTP","sendmail, postfix ve qmail","Get, Set ve Trap"],
+ quote:"Kullanıcı ajanı olarak en çok kullanılan örnekler mail, pine ve elm'dir.",
+ exp:"Ezber sorusu: <b>mail, pine, elm</b>. Sendmail ve postfix gerçek hayatta MTA örnekleridir, UA değildir."},
+{sec:"SMTP",p:14,s:27,q:"Mail taslağında \"zarf\" (envelope) kısmı hangi bilgileri içerir?",
+ o:["MAIL FROM (gönderen) ve RCPT TO (alıcı) adresleri","From, To, Date, Subject","Mesaj gövdesi","MIME içerik türü","Kullanıcı adı ve şifre"],
+ quote:"Mail From: mbalta@sakarya.edu.tr · RCPT To: forouzan@deanza.edu",
+ exp:"Zarf = <b>MAIL FROM + RCPT TO</b>. Mesaj = <b>Header</b> (From, To, Date, Subject) + <b>Body</b>. Adresteki <b>local part</b> mail sunucusundaki posta kutusunun adresi, @'den sonrası ise <b>domain name</b>, yani mail sunucusunun alan adıdır."},
+{sec:"SMTP",p:14,s:28,q:"MIME'ın (Multipurpose Internet Mail Extensions) amacı nedir?",
+ o:["SMTP'yi metin olmayan içerikler de eklenebilecek şekilde genişletmek","E-postayı şifrelemek","E-postayı sunucudan indirmek","Posta sunucularının adreslerini çözmek","Ağ cihazlarını yönetmek"],
+ quote:"MIME Basit Posta Aktarım Protokolü'nü hem metin hem de metin içerikli olmayan birden çok içerik eklenebilecek şekilde genişletir.",
+ exp:"Şekilde UA'dan gelen <b>Non-ASCII</b> veri, MIME ile <b>7-bit NVT ASCII</b>'ye çevrilip MTA'lar arasında taşınıyor, karşı tarafta da geri çevriliyor."},
+{sec:"SMTP",p:15,s:29,q:"MIME veri tiplerinden \"Parçalar aynı mesajın farklı sürümleridir\" açıklamasına sahip olan hangisidir?",
+ o:["Multipart / Alternative","Multipart / Mixed","Multipart / Parallel","Message / Partial","Multipart / Digest"],
+ quote:"Alternative — Parts are different versions of the same message",
+ exp:"Multipart alt tipleri: <b>Mixed</b> farklı türlerde sıralı parçalar, <b>Parallel</b> aynısı ama sırasız, <b>Digest</b> Mixed gibi ama varsayılan message/RFC822, <b>Alternative</b> aynı mesajın farklı sürümleri."},
+{sec:"SMTP",p:15,s:29,q:"Genel ikili verileri (8 bitlik baytlar) ifade eden MIME tipi/alt tipi hangisidir?",
+ o:["Application / Octet-stream","Application / PostScript","Text / Plain","Image / GIF","Message / External-Body"],
+ quote:"Octet-stream — General binary data (eight-bit bytes)",
+ exp:"Diğer tipler: Text (Plain, HTML), Image (JPEG, GIF), Video (MPEG), Audio (Basic, 8 KHz tek kanal ses), Application (PostScript, Octet-stream), Message (RFC822, Partial, External-Body)."},
+{sec:"SMTP",p:15,s:30,q:"6 bitlik veri bloklarını 8 bitlik ASCII karakterlere kodlayan MIME içerik transfer kodlaması hangisidir?",
+ o:["Base64","Quoted-printable","7bit","8bit","Binary"],
+ quote:"Base64 — 6-bit blocks of data are encoded into 8-bit ASCII characters",
+ exp:"<b>Quoted-printable</b>, ASCII olmayan karakteri <b>eşittir işareti + ASCII kod</b> olarak yazar. <b>7bit</b> NVT ASCII ve kısa satırlar, <b>8bit</b> ASCII olmayan karakterler ve kısa satırlar, <b>Binary</b> sınırsız uzunlukta satırlar demektir."},
+{sec:"SMTP",p:16,s:31,q:"İnternette MTA istemcisini ve sunucusunu tanımlayan protokol hangisidir?",
+ o:["SMTP","POP3","IMAP","MIME","HTTP"],
+ quote:"MTA istemcisi ve sunucusunu tanımlayan protokole Basit Posta Aktarım Protokolü (SMTP) denir.",
+ exp:"Gerçek posta aktarımı için <b>MTA</b>'lar (Mesaj Transfer Ajanı) gerekir. MTA client komut gönderir, MTA server yanıt döner."},
+{sec:"SMTP",p:16,s:32,q:"SMTP'de argüman olarak \"doğrulama için alıcı ismi\" alan komut hangisidir?",
+ o:["VRFY","EXPN","RCPT TO","HELO","TURN"],
+ quote:"VRFY — Doğrulama İçin Alıcı İsmi",
+ exp:"Argümanlar: <code>HELO</code> gönderen adı, <code>MAIL FROM</code> gönderen, <code>RCPT TO</code> alıcı, <code>DATA</code> mail gövdesi, <code>VRFY</code> doğrulanacak alıcı, <code>EXPN</code> genişletilecek posta listesi, <code>HELP</code> komut ismi. QUIT, RSET, NOOP ve TURN argüman almaz."},
+{sec:"SMTP",p:16,s:32,q:"SMTP'de \"221\" yanıt kodu ne anlama gelir?",
+ o:["İletişim kanalı sonlandırılıyor","Servis hazır","İstek komutu tamamlandı","Kullanıcı yerel değil, mesaj iletilecek","Servis çalışmıyor"],
+ quote:"221 — İletişim kanalı sonlandırılıyor",
+ exp:"SMTP olumlu kodlar: <b>211</b> sistem durumu, <b>214</b> yardım, <b>220</b> servis hazır, <b>221</b> kanal kapanıyor, <b>250</b> istek tamamlandı, <b>251</b> kullanıcı yerel değil. Olumsuz: <b>421</b> servis çalışmıyor, <b>450</b> mail kutusu çalışmıyor. Kalıcı olumsuz: <b>500</b> syntax hatası, <b>550</b> mail kutusu servis dışı."},
+{sec:"SMTP",p:17,s:33,q:"SMTP bağlantı kurulumunda doğru sıra hangisidir?",
+ o:["Sunucu 220 service ready → İstemci HELO → Sunucu 250 OK","İstemci HELO → Sunucu 220 → İstemci DATA","Sunucu 250 OK → İstemci HELO → Sunucu 220","İstemci QUIT → Sunucu 221","İstemci MAIL FROM → Sunucu 354"],
+ quote:"220 service ready · HELO: deanza.edu · 250 OK",
+ exp:"Bağlantı kurulumunu sunucu <b>220</b> ile başlatır. Bağlantı sonlandırma ise <b>QUIT → 221 service closed</b> şeklindedir."},
+{sec:"SMTP",p:17,s:33,q:"SMTP mesaj transferinde istemci DATA komutunu gönderdiğinde sunucu hangi kodla cevap verir?",
+ o:["354 start mail input","250 OK","220 service ready","221 service closed","550"],
+ quote:"DATA · 354 start mail input",
+ exp:"Mesaj transferi: MAIL FROM → 250 → RCPT TO → 250 → DATA → <b>354</b> → başlık satırları → <b>boş satır</b> → gövde → <b>tek başına nokta (.)</b> → 250 OK."},
+{sec:"SMTP",p:17,s:34,q:"MAA (Message Access Agent) aşamasında alıcı (Bob), posta sunucusundan e-postalarını hangi protokollerle alır?",
+ o:["POP3 veya IMAP4","SMTP","FTP","SNMP","HTTP"],
+ quote:"MAA: POP ve IMAP — POP3 / IMAP4",
+ exp:"Gönderen → sunucu: <b>SMTP</b>, sunucu → sunucu: <b>SMTP</b>, sunucu → alıcı: <b>POP3/IMAP4</b>. Yani SMTP bir push, POP/IMAP ise pull protokolüdür."},
+{sec:"SMTP",p:18,s:35,q:"POP3 ile ilgili hangisi doğrudur?",
+ o:["İletiler kişisel bilgisayara indirildikten sonra e-posta sunucusundan silinir","İletiler sunucuda kalır, sadece tıklanan indirilir","1986'da Stanford'da geliştirilmiştir","RFC 3501'de tanımlanmıştır","SMTP sunucusuna posta göndermek için kullanılır"],
+ quote:"Kişisel bilgisayarınıza indirildikten sonra e-posta hizmetinden silinir.",
+ exp:"POP, e-posta istemcilerinin sunucudan posta <b>almak</b> için kullandığı uygulama katmanı protokolü; yaygın sürüm <b>POP3</b>. Gönderilmiş posta sunucuda değil, <b>yerel olarak</b> PC'de depolanır. Şekildeki akış: user-name → OK → password → OK → list → retrieve 1..N."},
+{sec:"SMTP",p:18,s:36,q:"IMAP ile ilgili hangisi YANLIŞTIR?",
+ o:["Tüm iletileri ve ekleri otomatik olarak bilgisayara indirir","1986 yılında Stanford Üniversitesi'nde geliştirilmiştir","En son sürümü IMAP4 Revizyon 1'dir ve RFC 3501'de tanımlıdır","Yalnızca üzerine tıklanan iletiyi indirir","POP yöntemine göre iletileri daha hızlı denetlemeyi sağlar"],
+ quote:"IMAP yalnızca üzerine tıkladığınız iletiyi indirir ve ekler otomatik olarak indirilmez.",
+ exp:"IMAP (IMAP4), yerel kullanıcıların <b>uzaktaki</b> sunucuya erişmesini sağlar. Okurken iletiyi gerçekten indirmez veya depolamaz. <b>1986 Stanford</b> ve <b>RFC 3501</b> bilgileri ezberlenecek."},
+
+// ───────────── SNMP ─────────────
+{sec:"SNMP",p:19,s:37,q:"Slayta göre ağ yönetiminin 3 ana amacından biri DEĞİLDİR?",
+ o:["Ağ trafiğini şifrelemek","Ağın devamlılığı (çalışır halde tutmak)","Ağın performansını yönetmek","Maliyeti düşürmek","Hiçbiri, hepsi amaçtır"],
+ quote:"Ağ yönetiminin 3 ana amacı vardır: Ağın devamlılığı · performansını yönetmek · Maliyeti düşürme",
+ exp:"Üç amaç: <b>devamlılık, performans, maliyet</b>. Büyük ağlar; maliyet, zaman, performans, güvenilirlik ve güvenlik açısından kurumları için çok önemlidir."},
+{sec:"SNMP",p:19,s:38,q:"SNMP'nin dezavantajı olarak slaytta belirtilen durum hangisidir?",
+ o:["UDP kullandığı için güvenilirliğinin düşük olması (son sürüm hariç)","Standart olmaması","Güncellemenin zor olması","Sadece merkezi yönetimi desteklemesi","Taşınabilir olmaması"],
+ quote:"UDP'yi kullandığından güvenilirlik düşük (son sürüm hariç)",
+ exp:"Diğer dezavantajı <b>çok fazla ağ trafiği yaratması</b>. Avantajları: basit dizayn, geniş kullanım alanı, kolay güncelleme, kolay adaptasyon, <b>standart olması</b>, genişletilebilir/taşınabilir olması, <b>dağıtık ve merkezi</b> yönetimi desteklemesi."},
+{sec:"SNMP",p:20,s:39,q:"SNMP'nin taşıma katmanında kullandığı protokol ve mimarisindeki bileşenler hangileridir?",
+ o:["UDP; ağ yönetim sistemi, yönetici ve ajan","TCP; istemci ve sunucu","UDP; UA, MTA ve MAA","TCP; yönetici ve MIB","ICMP; ajan ve trap"],
+ quote:"bunun için taşıma katmanında kullandığı protokol UDP'dir. 3 Bileşenden oluşur",
+ exp:"SNMP'nin çalışma mekanizması <b>istek gönderme ve isteğe cevap alma</b> şeklindedir. Üç bileşeni: <b>ağ yönetim sistemi, yönetici, ajan</b>."},
+{sec:"SNMP",p:20,s:39,q:"Slayta göre ağ yönetim sistemi istekleri ajanın hangi portuna gönderir, ajan cevaplarını hangi porttan gönderir?",
+ o:["İstekler 161'e, cevaplar 162'den","İstekler 162'ye, cevaplar 161'den","İstekler 25'e, cevaplar 110'dan","İstekler 20'ye, cevaplar 21'den","İkisi de 80"],
+ quote:"istekleri herhangi bir portundan, ajanın 161. portuna gönderir. Ajan … 162. portundan gönderdiği cevaplarla sağlar.",
+ exp:"Sınavda <b>slayttaki ifadeye göre</b> cevap ver: <b>161 istek</b>, <b>162 cevap</b>. (Not: gerçek hayatta 162, ajanın kendiliğinden gönderdiği trap mesajları için kullanılır.)"},
+{sec:"SNMP",p:20,s:39,q:"SNMP ajan yazılımı iletişimi hangi durumda kendisi başlatır?",
+ o:["Cihazda fiziksel bir sorun oluştuğunda (eşik değer aşımı) veya periyodik gönderime ayarlandığında","Sadece Get isteği geldiğinde","Sadece Set isteği geldiğinde","Hiçbir zaman, sadece cevap verir","Yalnızca SNMPv3'te"],
+ quote:"cihazda herhangi fiziksel bir sorun oluştuğunda … iletişimini kendi başlatır",
+ exp:"Ajan normalde sadece cevap verir. Ancak fiziksel değerler atanan eşiklerin üzerine çıkarsa ya da periyodik veri gönderimine ayarlanmışsa <b>iletişimi kendisi başlatır</b>. Bu, Trap mantığıdır."},
+{sec:"SNMP",p:20,s:40,q:"SNMPv1 ile ilgili hangisi doğrudur?",
+ o:["UDP, IP ve IPX üzerinde çalışabilir; Get, GetNext, Set ve Trap komutlarını kullanır","Sadece TCP üzerinde çalışır","GetBulk ve Inform işlemlerini içerir","Güvenlik düzeyleri (authPriv vb.) tanımlar","Ajan istenen verilerin bir kısmını cevaplayabilir"],
+ quote:"İlk SNMP sürümüdür. UDP, IP ve IPX protokolleri üzerinde çalışabilir.",
+ exp:"SNMPv1'de <b>Get</b> ile ajan istenen verilerin hepsini cevaplayamıyorsa <b>hiç cevap yollamaz</b>. GetBulk ve Inform <b>v2c</b> ile gelir, güvenlik düzeyleri ise <b>v3</b> ile."},
+{sec:"SNMP",p:20,s:40,q:"Yönetilen aygıtın MIB içerisindeki değerlerini değiştirmek için kullanılan SNMP işlemi hangisidir?",
+ o:["Set","Get","GetNext","Trap","Inform"],
+ quote:"Set işlemi ile yönetilen aygıtın MIB içerisindeki değerleri değiştirilebilir.",
+ exp:"<b>Get</b> bir ya da daha fazla nesne bilgisi alır, <b>GetNext</b> tablodaki bir sonraki değeri alır, <b>Set</b> değeri değiştirir, <b>Trap</b> aygıttaki değişiklikleri ağ yönetim sistemine bildirir."},
+{sec:"SNMP",p:20,s:40,q:"Yönetilen aygıtta oluşan değişiklikleri ağ yönetim sistemine bildirmek için kullanılan SNMP işlemi hangisidir?",
+ o:["Trap","Get","Set","GetNext","GetBulk"],
+ quote:"Trap işlemi ise ağ yönetim sistemine, yönetilen aygıt tarafından oluşan değişiklikleri bildirmek için kullanılır.",
+ exp:"Trap, <b>ajandan yöneticiye</b> doğru giden ve ajanın kendiliğinden başlattığı bir bildirimdir."},
+{sec:"SNMP",p:21,s:41,q:"SNMPv2c'de, v1'e göre eklenen iki yeni protokol işlemi hangileridir?",
+ o:["GetBulk ve Inform","Get ve Set","GetNext ve Trap","Set ve Trap","authNoPriv ve authPriv"],
+ quote:"SNMPv2, v1'e göre iki yeni protokol işlemi daha içermektedir.",
+ exp:"<b>GetBulk</b> büyük miktarda veri yollar (bir paketten fazlaysa ard arda birkaç paket gider). <b>Inform</b> ise bir ağ yönetim sisteminin trap mesajlarını başka bir ağ yönetim sistemine yollamasını sağlar."},
+{sec:"SNMP",p:21,s:41,q:"Bir ağ yönetim sisteminin trap mesajlarını ağdaki başka bir ağ yönetim sistemine yollayabilmesi için kullanılan işlem hangisidir?",
+ o:["Inform","GetBulk","Trap","Set","GetNext"],
+ quote:"Inform işlemi ise bir ağ yönetim sisteminin trap mesajlarını ağdaki başka bir ağ yönetim sistemine yollayabilmesi için kullanılır.",
+ exp:"Inform, <b>yöneticiden yöneticiye</b> iletim yapar. v2c'nin v1'den bir farkı daha var: ajan istenen değerlerin hepsini karşılayamıyorsa, cevapsız bırakmak yerine <b>sağlayabildiklerini gönderir</b>."},
+{sec:"SNMP",p:21,s:42,q:"SNMPv3'te kimlik denetimini kullanıcı adı ve şifre ile yapan, MD5 veya SHA ile veri bütünlüğü sağlayan ancak şifreleme yapmayan güvenlik düzeyi hangisidir?",
+ o:["authNoPriv","noAuthNoPriv","authPriv","noAuthPriv","community"],
+ quote:"authNoPriv (Kimlik denetimi var, şifreleme yok)",
+ exp:"<b>noAuthNoPriv</b>: denetim ve şifreleme yok, v1/v2c'ye karşılık gelir, güvenli değildir. <b>authNoPriv</b>: MD5/SHA ile bütünlük. <b>authPriv</b>: <b>DES, 3DES veya AES</b> ile şifreleme."},
+{sec:"SNMP",p:21,s:42,q:"SNMPv3'te veriyi DES, 3DES ya da AES algoritmasıyla şifreleyen güvenlik düzeyi hangisidir?",
+ o:["authPriv","authNoPriv","noAuthNoPriv","privNoAuth","SNMPv2c"],
+ quote:"authPriv (Kimlik denetimi ve şifreleme var); DES, 3DES ya da AES algoritmasını kullanarak",
+ exp:"Bu düzeyde veriyi sadece <b>aynı anahtara sahip alıcılar</b> çözebilir. SNMPv3, önceki sürümlere göre güvenlik açısından en gelişmiş sürümdür ve <b>güvenlik düzeyi</b> kavramı v3'te ortaya çıkmıştır."},
+{sec:"SNMP",p:22,s:43,q:"SNMP mesaj başlığı hangi iki alanı içerir?",
+ o:["Sürüm numarası ve topluluk (community) ismi","İstek ID ve hata durumu","OID ve değer","Kaynak port ve hedef port","PDU tipi ve değişken listesi"],
+ quote:"SNMP mesaj başlığı da 2 alan içerir: Sürüm numarası ve topluluk (community) ismi",
+ exp:"SNMP paketi genel olarak <b>mesaj başlığı + PDU</b>'dan oluşur. <b>Topluluk ismi</b>, ağ yönetim sistemleri için erişim alanı tanımlar ve <b>doğrulama (authentication) mekanizması gibi</b> çalışır."},
+{sec:"SNMP",p:22,s:44,q:"SNMP \"Hata Durumu\" alanında 0x02 değeri ne anlama gelir?",
+ o:["İstenen nesne bulunamadı","Hata yok","Dönen cevap aktarım için büyük","Genel hata","Yönetici sadece okuma parametresi atadı"],
+ quote:"0x02—İstenen nesne bulunamadı.",
+ exp:"<b>0x00</b> hata yok, <b>0x01</b> cevap aktarım için büyük, <b>0x02</b> nesne bulunamadı, <b>0x03</b> veri tipi eşleşmiyor, <b>0x04</b> sadece okuma, <b>0x05</b> genel hata. Yöneticiden giden istekte bu alan <b>0x00</b>'dır."},
+{sec:"SNMP",p:22,s:44,q:"SNMP paket yapısı tablosuna göre GetRequestPDU'da \"Değer\" alanı nasıldır?",
+ o:["Boştur, dönen verinin izi gibi davranır","Ajana atanacak değeri taşır","Ajandan dönen değeri taşır","Hata kodunu taşır","Topluluk ismini taşır"],
+ quote:"GetRequestPDU – Değeri boştur, dönen verinin izi gibi davranır.",
+ exp:"<b>SetRequest</b>'te değer ajandaki OID'ye atanır. <b>GetResponse</b>'ta değer, ajandan OID için dönen değerdir. Tablodaki boyutlar da sorulabilir: topluluk ismi <b>8 byte</b>, OID <b>12 byte</b>."},
+{sec:"SNMP",p:23,s:45,q:"MIB yapısında ulaşılmak istenen değeri tutan değişkene ne ad verilir?",
+ o:["OID (Object IDentifier – Nesne Tanımlayıcısı)","PDU","Community","Trap","Agent"],
+ quote:"Ulaşılmak istenen değeri tutan değişkene OID (Object IDentifier, Nesne Tanımlayıcısı) adı verilir.",
+ exp:"MIB bir <b>ağaç yapısına</b> benzetilir. Hiyerarşi, birbirinden <b>nokta ile ayrılmış sayı dizileri</b> ile ifade edilir. Kuruluşlara değerleri <b>IETF</b> atar; ağacın belirli bir noktaya kadarki kısmı evrenseldir."},
+{sec:"SNMP",p:23,s:45,q:"MIB ağacında her kuruluşa değer atayan kurum hangisidir?",
+ o:["IETF (Internet Engineering Task Force)","IEEE","ISO","ICANN","IANA"],
+ quote:"Her kuruluşun, \"Internet Engineering Task Force (IETF)\" tarafından atanan bir değeri vardır",
+ exp:"Ağaç belirli bir yere kadar evrenseldir. Sonrasında kurumlar kendi yönetim nesneleri için kodlarını <b>kendileri tanımlar</b>."},
+{sec:"SNMP",p:23,s:46,q:"\"sysName\" değişkeninin OID değeri ve kısaltması hangisidir?",
+ o:["1.3.6.1.2.1.1.5 — sysName.0","1.3.6.1.2.1.1.1 — sysDescr.0","1.3.6.1.4.1.5 — sysName.0","1.3.6.1.2.1.2.5 — sysName.0","1.3.6.1.2.1.1.3 — sysUptime.0"],
+ quote:"OID değeri \"1.3.6.1.2.1.1.5\" olan \"sysName\" değeri",
+ exp:"Komutta <code>1.3.6.1.2.1.1.5.0</code> yerine <code>sysName.0</code> yazılabilir. Ağaçta yol şöyle: iso(1) → identified organization(3) → dod(6) → internet(1) → mgmt(2) → MIB-II(1) → system(1) → sysName(5)."},
+{sec:"SNMP",p:23,s:46,q:"OID değerlerinin başındaki standart olan ilk dört sayı hangisidir?",
+ o:["1.3.6.1","1.3.6.2","1.2.1.1","0.1.3.6","1.3.6.1.2"],
+ quote:"Değişkenin başındaki ilk dört sayı, yani 1.3.6.1 standarttır.",
+ exp:"<b>1.3.6.1</b> = iso.org.dod.internet. Ayrıca <b>1.3.6.1.2.1.1</b> dalı sistemle ilgili değerleri tutar: sistem adı, sistem tanımı, ayakta kalma süresi (sysUptime) gibi."},
+
+// ───────────── HTTP ─────────────
+{sec:"HTTP",p:24,s:47,q:"HTTP taşıma katmanında hangi protokolü ve hangi port numarasını kullanır?",
+ o:["TCP, port 80","UDP, port 80","TCP, port 25","UDP, port 161","TCP, port 21"],
+ quote:"HTTP taşıma katmanında TCP protokolünü kullanır ve port numarası 80'dir.",
+ exp:"HTTP, web üzerinde veriye erişmek ve onu yönetmek için kullanılan bir <b>uygulama katmanı</b> protokolüdür. <b>Asimetrik bir istek-yanıt istemci-sunucu</b> protokolüdür."},
+{sec:"HTTP",p:24,s:48,q:"HTTP'nin \"çekme (pull) protokolü\" olması ne anlama gelir?",
+ o:["İstemci bilgileri sunucudan alır; sunucu bilgiyi kendiliğinden istemciye iletmez","Sunucu bilgileri istemciye kendiliğinden iter","İstemci ve sunucu aynı anda veri gönderir","Veriler UDP ile çekilir","Bağlantı sürekli açık kalır"],
+ quote:"HTTP bir çekme protokolüdür, istemci bilgileri sunucudan alır",
+ exp:"İstemci <b>istek</b> gönderir, sunucu <b>yanıt</b> döner. SMTP'yi bir itme (push) protokolü olarak düşünüp HTTP ile karşılaştırabilirsin."},
+{sec:"HTTP",p:24,s:48,q:"\"Mevcut istek önceki isteklerde ne yapıldığını bilmiyor\" ifadesi HTTP'nin hangi özelliğini tanımlar?",
+ o:["Durum bilgisi olmayan (stateless) olması","Asimetrik olması","Çekme protokolü olması","TCP kullanması","Veri türü görüşmesine izin vermesi"],
+ quote:"HTTP durum bilgisi olmayan bir protokoldür.",
+ exp:"Durumsuz (stateless): her istek <b>bağımsızdır</b>. HTTP ayrıca veri türü ve temsilinin görüşülmesine izin verir, böylece sistemler aktarılan veriden bağımsız oluşturulabilir. Alıntı <b>RFC 2616</b>'dan yapılmıştır."},
+{sec:"HTTP",p:25,s:49,q:"Tarayıcıya bir URL girildiğinde sunucu tarafında ne yapılır?",
+ o:["Sunucu URL'yi doküman dizinindeki bir dosya veya programla eşler ve yanıt mesajı döndürür","Sunucu URL'yi IP adresine çevirir","Sunucu URL'yi istemciye geri gönderir","Sunucu FTP bağlantısı açar","Sunucu e-posta gönderir"],
+ quote:"tarayıcı URL'yi bir istek iletisine dönüştürür ve HTTP sunucusuna gönderir",
+ exp:"Adımlar: (1) kullanıcı URL girer, (2) tarayıcı <code>GET URL HTTP/1.1</code> + <code>Host</code> isteği yollar, (3) sunucu URL'yi dosya/programa eşler, (4) <code>HTTP/1.1 200 OK</code> yanıtı döner, (5) tarayıcı yanıtı biçimlendirip gösterir."},
+{sec:"HTTP",p:25,s:50,q:"HTTP istek mesajının yapısı sırasıyla hangisidir?",
+ o:["İstek satırı, başlık yapısı, boş satır, mesaj metni","Durum satırı, başlık, boş satır, mesaj metni","Başlık, istek satırı, mesaj metni, boş satır","Zarf, başlık, gövde","İstek satırı, mesaj metni, başlık"],
+ quote:"İstek Satırı · Başlık Yapısı · Boş Satır · Mesaj Metni",
+ exp:"Cevap mesajının ilk satırı ise <b>durum satırıdır</b> (ör. <code>HTTP/1.1 200 OK</code>). İki mesajda da başlık ile gövdeyi <b>ayırıcı boş satır</b> ayırır."},
+{sec:"HTTP",p:25,s:50,q:"HTTP cevap mesajının ilk satırına ne ad verilir?",
+ o:["Durum satırı","İstek satırı","Başlık satırı","Ayırıcı satır","Zarf satırı"],
+ quote:"HTTP/1.1 200 OK → Durum Satırı",
+ exp:"Durum satırı <b>HTTP sürümü + durum kodu + ifade</b>'den oluşur. Örnekteki cevap başlıkları şunlar: Date, Server, Last-Modified, ETag, Accept-Ranges, Content-Length, Connection, Content-Type."},
+{sec:"HTTP",p:26,s:51,q:"Slayttaki tabloya göre \"Döküman hakkında bilgi istemek (kendisini değil)\" açıklaması hangi HTTP metoduna aittir?",
+ o:["HEAD","GET","OPTION","TRACE","POST"],
+ quote:"HEAD — Döküman hakkında bilgi istemek (kendisi değil)",
+ exp:"Tablo şöyle: <b>GET</b> sunucudan doküman ister, <b>HEAD</b> doküman hakkında bilgi ister, <b>POST</b> istemciden sunucuya bilgi gönderir, <b>PUT</b> (slayttaki ifadeyle) \"sunucudan istemciye bilgi/döküman göndermek\", <b>TRACE</b> gelen istekleri okur, <b>CONNECT</b> saklı, <b>OPTION</b> mevcut seçenekler hakkında bilgi verir."},
+{sec:"HTTP",p:26,s:51,q:"Slayttaki tabloya göre \"Saklı\" olarak açıklanan HTTP metodu hangisidir?",
+ o:["CONNECT","TRACE","PUT","OPTION","HEAD"],
+ quote:"CONNECT — Saklı",
+ exp:"CONNECT ileride kullanılmak üzere <b>ayrılmış (reserved)</b> bir metottur. Not: slaytta PUT için \"sunucudan istemciye\" yazıyor; gerçekte PUT istemciden sunucuya doküman yükler. Sınavda slayttaki ifadeyi bilmen yeterli."},
+{sec:"HTTP",p:26,s:51,q:"HTTP'de istenen URL'nin sunucu tarafından artık kullanılmadığını (kalıcı taşındığını) bildiren durum kodu hangisidir?",
+ o:["301","302","304","404","410"],
+ quote:"301 Moved permanently — The requested URL is no longer used by the server.",
+ exp:"<b>1xx</b> bilgi (100 Continue, 101 Switching), <b>2xx</b> başarı (200 OK, 201 Created, 202 Accepted, 204 No content), <b>3xx</b> yönlendirme (301 kalıcı, 302 geçici, 304 değişmedi), <b>4xx</b> istemci hatası, <b>5xx</b> sunucu hatası."},
+{sec:"HTTP",p:26,s:51,q:"\"Service is denied\" (servis reddedildi) açıklamasına sahip HTTP durum kodu hangisidir?",
+ o:["403 Forbidden","401 Unauthorized","404 Not found","405 Method not allowed","503 Service unavailable"],
+ quote:"403 Forbidden — Service is denied.",
+ exp:"<b>400</b> syntax hatası, <b>401</b> yetki eksik, <b>403</b> servis reddedildi, <b>404</b> doküman bulunamadı, <b>405</b> metot desteklenmiyor, <b>406</b> format kabul edilmiyor, <b>500</b> sunucuda hata, <b>501</b> uygulanmamış, <b>503</b> servis geçici olarak kullanılamıyor."},
+{sec:"HTTP",p:26,s:52,q:"Aşağıdakilerden hangisi slayttaki tabloya göre bir HTTP CEVAP başlığıdır?",
+ o:["Retry-after","Host","User-agent","Accept-language","If-modified-since"],
+ quote:"Cevap Başlıkları: Accept-range · Age · Public · Retry-after · Server",
+ exp:"Cevap başlıkları: <b>Accept-range, Age, Public, Retry-after, Server</b>. Diğerleri istek başlığıdır: <b>Host</b> sunucunun host ve port numarası, <b>User-agent</b> istemci programı, <b>Referrer</b> bağlantılı dokümanın URL'si, <b>From</b> kullanıcının e-posta adresi."},
+{sec:"HTTP",p:26,s:52,q:"Sunucunun host adını ve port numarasını gösteren HTTP istek başlığı hangisidir?",
+ o:["Host","Server","From","Referrer","Accept"],
+ quote:"Host — Shows the host and port number of the server",
+ exp:"<b>Server</b> başlığı bir cevap başlığıdır ve sunucunun adını ve sürümünü gösterir. Bu ikisi sık karıştırılır."},
+{sec:"HTTP",p:27,s:53,q:"HTTP Örnek-1'de (GET /usr/bin/image1) hangisi doğrudur?",
+ o:["İsteğin gövdesi yoktur; istemci GIF veya JPEG kabul ettiğini başlıkta belirtir","İstek gövdesi girdi bilgilerini içerir","POST metodu kullanılmıştır","Yanıt iletisinde başlık satırı yoktur","HTTP/1.0 sürümü kullanılmıştır"],
+ quote:"İsteğin bir gövdesi yoktur.",
+ exp:"İstek satırı <b>metot (GET), URL ve HTTP sürümünü (1.1)</b> gösterir. Yanıtta durum satırı ve <b>dört başlık satırı</b> vardır: Date, Server, MIME-version, Content-length (2048)."},
+{sec:"HTTP",p:27,s:54,q:"HTTP Örnek-2'de istemci sunucuya veri göndermek istediğinde hangisi doğrudur?",
+ o:["POST metodu kullanılır ve istek gövdesi girdi bilgilerini içerir","GET metodu kullanılır ve gövde boştur","HEAD metodu kullanılır","Yanıt gövdesi boştur","Dört değil iki başlık satırı vardır"],
+ quote:"İstek gövdesi girdi bilgilerini içerir.",
+ exp:"İstek: <code>POST /cgi-bin/doc.pl HTTP/1.1</code> ve dört başlık satırı (Accept */*, image/gif, image/jpeg, Content-length: 50). Yanıtta oluşturulan <b>CGI belgesi</b> gövde olarak eklenir."}
+];
+
+const SEC_COLOR = {GENEL:"var(--genel)",FTP:"var(--ftp)",SMTP:"var(--smtp)",SNMP:"var(--snmp)",HTTP:"var(--http)"};
+const SEC_NAME = {GENEL:"Genel",FTP:"FTP · Dosya Transfer Protokolü",SMTP:"SMTP · Basit Mail Transfer Protokolü",SNMP:"SNMP · Basit Ağ Yönetim Protokolü",HTTP:"HTTP · Hypertext Transfer Protocol"};
+const LETTERS = "ABCDE";
+const KEY = "k7-test-v1";
+
+// Sabit karıştırma: her soru her açılışta aynı şık sırasıyla gelir.
+function seeded(n){ let x = (n + 1) * 2654435761 % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+Q.forEach((q, i) => {
+  q.id = i;
+  const r = seeded(i * 7 + 3);
+  const idx = q.o.map((_, k) => k);
+  for (let k = idx.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+  q.order = idx; // order[görünen konum] = orijinal indeks
+});
+
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { answers = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) {} }
+
+let fSec = "all", fOnly = null, revealAll = false;
+const main = document.getElementById("main");
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(){
+  main.innerHTML = "";
+  let lastSec = null, list = null, shown = 0;
+  Q.forEach(q => {
+    if (fSec !== "all" && q.sec !== fSec) return;
+    const a = answers[q.id];
+    if (fOnly === "wrong" && !(a !== undefined && a !== 0)) return;
+    if (fOnly === "blank" && a !== undefined) return;
+    if (q.sec !== lastSec) {
+      lastSec = q.sec;
+      const h = document.createElement("h2");
+      h.className = "section-head";
+      h.style.color = SEC_COLOR[q.sec];
+      const cnt = Q.filter(x => x.sec === q.sec).length;
+      h.innerHTML = `<span>${SEC_NAME[q.sec]}</span><small>${cnt} soru</small>`;
+      main.appendChild(h);
+      list = document.createElement("div"); list.className = "list"; main.appendChild(list);
+    }
+    list.appendChild(card(q)); shown++;
+  });
+  if (!shown) main.innerHTML = `<p class="empty">Bu filtrede gösterilecek soru yok.</p>`;
+  stats();
+}
+
+function card(q){
+  const el = document.createElement("article");
+  el.className = "q"; el.style.setProperty("--sec", SEC_COLOR[q.sec]); el.id = "q" + q.id;
+  const a = answers[q.id];
+  const answered = a !== undefined;
+  const open = answered || revealAll;
+  el.innerHTML = `
+    <div class="q-top">
+      <span class="num">Soru ${q.id + 1}</span>
+      <span class="tag">${q.sec}</span>
+      <span class="src">PDF s.${q.p} · Slayt ${q.s}</span>
+    </div>
+    <h3>${esc(q.q)}</h3>
+    <div class="opts"></div>`;
+  const opts = el.querySelector(".opts");
+  q.order.forEach((orig, pos) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button"; b.id = `q${q.id}o${pos}`;
+    b.innerHTML = `<span class="l">${LETTERS[pos]}</span><span></span>`;
+    b.lastChild.textContent = q.o[orig];
+    if (open) {
+      b.disabled = true;
+      if (orig === 0) b.classList.add("is-right");
+      else if (answered && orig === a) b.classList.add("is-wrong");
+      else b.classList.add("dim");
+    } else {
+      b.addEventListener("click", () => { answers[q.id] = orig; save(); el.replaceWith(card(q)); stats(); });
+    }
+    opts.appendChild(b);
+  });
+  if (open) {
+    const rightPos = q.order.indexOf(0);
+    const fb = document.createElement("div"); fb.className = "fb";
+    let verdict = "";
+    if (answered) verdict = a === 0
+      ? `<div class="verdict ok">Doğru. Cevap ${LETTERS[rightPos]}.</div>`
+      : `<div class="verdict bad">Yanlış. Doğru cevap ${LETTERS[rightPos]}.</div>`;
+    fb.innerHTML = `${verdict}
+      <blockquote class="quote"><span class="where">PDF sayfa ${q.p}, slayt ${q.s}'te şu ifadeyle geçiyor:</span><mark>${esc(q.quote)}</mark></blockquote>
+      <p class="exp">${q.exp}</p>`;
+    el.appendChild(fb);
+  }
+  return el;
+}
+
+function stats(){
+  const total = Q.length;
+  const done = Object.keys(answers).length;
+  const ok = Object.values(answers).filter(v => v === 0).length;
+  const bad = done - ok;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-done").textContent = done;
+  document.getElementById("s-ok").textContent = ok;
+  document.getElementById("s-bad").textContent = bad;
+  document.getElementById("s-pct").textContent = "%" + (done ? Math.round(ok / done * 100) : 0);
+  document.getElementById("p-ok").style.width = (ok / total * 100) + "%";
+  document.getElementById("p-bad").style.width = (bad / total * 100) + "%";
+}
+
+document.querySelectorAll("[data-sec]").forEach(b => b.addEventListener("click", () => {
+  fSec = b.dataset.sec;
+  document.querySelectorAll("[data-sec]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+document.querySelectorAll("[data-only]").forEach(b => b.addEventListener("click", () => {
+  fOnly = fOnly === b.dataset.only ? null : b.dataset.only;
+  document.querySelectorAll("[data-only]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.only === fOnly)));
+  render();
+}));
+const reveal = document.getElementById("b-reveal");
+reveal.addEventListener("click", () => {
+  revealAll = !revealAll;
+  reveal.textContent = revealAll ? "Cevapları gizle" : "Tüm cevapları göster";
+  render();
+});
+const reset = document.getElementById("b-reset");
+let armed = false;
+reset.addEventListener("click", () => {
+  if (!armed) { armed = true; reset.textContent = "Emin misin? Tekrar bas"; setTimeout(() => { armed = false; reset.textContent = "Sıfırla"; }, 3000); return; }
+  armed = false; reset.textContent = "Sıfırla";
+  answers = {}; save(); revealAll = false; reveal.textContent = "Tüm cevapları göster"; render();
+});
+
+render();
+</script>
+
+</body>
+</html>

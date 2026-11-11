@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Katman 3 Protokolleri Testi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: tek sütun soru kartları; üstte yapışkan ilerleme + filtre çubuğu. Alıntılar fosforlu kalem gibi işaretlenir. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #142033;
+  --muted: #5b6779;
+  --line: #d6dde8;
+  --accent: #1d4fc4;
+  --accent-soft: #e3eafb;
+  --mark: #fff0a8;
+  --mark-ink: #3b3000;
+  --ok: #157a46;
+  --ok-soft: #e1f4e9;
+  --bad: #b42318;
+  --bad-soft: #fde7e5;
+  --ftp: #1f66d1;
+  --smtp: #c2410c;
+  --snmp: #0f766e;
+  --http: #7a3ee0;
+  --java: #a15c07;
+  --mesaj: #be185d;
+  --genel: #5b6779;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+    --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+    --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+    --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+  --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+  --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+  --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.wrap {
+  max-width: 820px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.intro { padding-block: 32px 20px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1; margin: 6px 0 12px; text-wrap: balance; letter-spacing: -0.01em;
+}
+.intro p { margin: 0 0 10px; max-width: 65ch; color: var(--muted); }
+.intro p strong { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend mark { background: var(--mark); color: var(--mark-ink); padding: 0 4px; border-radius: 2px; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.bar .wrap { padding-block: 10px; display: grid; gap: 10px; }
+.score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 14px; }
+.score b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.score .ok b { color: var(--ok); }
+.score .bad b { color: var(--bad); }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+.progress .p-ok { background: var(--ok); }
+.progress .p-bad { background: var(--bad); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 500 13px/1 var(--font-body); padding: 7px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:focus-visible, .opt:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.btn {
+  font: 600 13px/1 var(--font-body); padding: 7px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+
+main { padding-block: 20px 60px; }
+.section-head {
+  display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+}
+.section-head small { font: 400 13px var(--font-mono); color: var(--muted); }
+.list { display: grid; gap: 14px; }
+
+.q {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 18px 16px; min-width: 0;
+  border-left: 4px solid var(--sec);
+}
+.q-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+.num { font: 600 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag {
+  font: 600 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sec); border: 1px solid currentColor; padding: 4px 6px; border-radius: 4px;
+}
+.src {
+  margin-left: auto; font: 500 12px/1 var(--font-mono); color: var(--accent);
+  background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; white-space: nowrap;
+}
+.kl {
+  font: 600 11px/1 var(--font-body); color: var(--mark-ink); background: var(--mark);
+  padding: 5px 7px; border-radius: 4px; white-space: nowrap;
+}
+.q h3 { font: 600 17px/1.45 var(--font-body); margin: 0 0 12px; text-wrap: pretty; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; text-align: left;
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: 400 15px/1.45 var(--font-body); cursor: pointer;
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; }
+.opt .l {
+  font: 600 13px/22px var(--font-mono); text-align: center; border-radius: 50%;
+  width: 24px; height: 24px; border: 1px solid var(--line); color: var(--muted);
+}
+.opt.is-right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.is-right .l { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-wrong .l { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.opt.dim { opacity: .55; }
+
+.fb { margin-top: 14px; display: grid; gap: 10px; }
+.verdict { font: 600 14px var(--font-body); }
+.verdict.ok { color: var(--ok); }
+.verdict.bad { color: var(--bad); }
+.quote {
+  margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--bg);
+  border: 1px dashed var(--line); font-size: 15px;
+}
+.quote .where { display: block; font: 600 12px var(--font-mono); color: var(--accent); margin-bottom: 4px; }
+.quote mark { background: var(--mark); color: var(--mark-ink); padding: 1px 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.exp { margin: 0; font-size: 15px; color: var(--ink); }
+.exp b { font-weight: 600; }
+.exp code, .q h3 code, .opt code { font-family: var(--font-mono); font-size: .92em; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+@media (max-width: 520px) {
+  .src { margin-left: 0; }
+  .q { padding: 14px 14px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: .3; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<header class="wrap intro">
+  <div class="eyebrow">BSM 451 Ağ Programlama · Hafta 3 · Vize 09.11.2026</div>
+  <h1>Katman 3 Protokolleri Testi</h1>
+  <p>Sorular "Katman 3 Protokolleri ve Çalışma Yapıları" PDF'inin <strong>her slaytından</strong> sırayla çıkarıldı: IP başlığı, fragmantasyon, IP opsiyonları, kontrol toplamı, IP işletimi, IPv6 ve ICMP. Bir şıkkı seçtiğinde doğru cevap, sorunun geçtiği yer ve kısa bir açıklama açılır.</p>
+  <p>Bu konu <strong>test (60p)</strong> kısmında çıkar, ama klasikteki <strong>icmpgonder.c</strong> ve ping kodlarıyla doğrudan bağlantılı. <span class="kl">Klasiğe de yarar</span> etiketli sorularda, başlık alanlarının koddaki <code>packet[...]</code> baytlarıyla nasıl eşleştiğini açıkladım.</p>
+  <div class="legend">
+    <span><b style="font-family:var(--font-mono);color:var(--accent)">PDF s.X · Slayt Y</b> = sorunun geçtiği yer</span>
+    <span><mark>sarı vurgu</mark> = PDF'teki ifade</span>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="score">
+      <span>Cevaplanan <b id="s-done">0</b>/<b id="s-total">0</b></span>
+      <span class="ok">Doğru <b id="s-ok">0</b></span>
+      <span class="bad">Yanlış <b id="s-bad">0</b></span>
+      <span>Başarı <b id="s-pct">%0</b></span>
+    </div>
+    <div class="progress" aria-hidden="true"><i class="p-ok" id="p-ok"></i><i class="p-bad" id="p-bad"></i></div>
+    <div class="filters" role="toolbar" aria-label="Filtreler">
+      <button class="chip" id="f-all" data-sec="all" aria-pressed="true">Tümü</button>
+      <button class="chip" id="f-ip" data-sec="IP" aria-pressed="false">IP</button>
+      <button class="chip" id="f-frag" data-sec="FRAG" aria-pressed="false">Fragmantasyon</button>
+      <button class="chip" id="f-ops" data-sec="OPS" aria-pressed="false">Opsiyonlar</button>
+      <button class="chip" id="f-islem" data-sec="ISLEM" aria-pressed="false">Checksum · IPv6</button>
+      <button class="chip" id="f-icmp" data-sec="ICMP" aria-pressed="false">ICMP Hata</button>
+      <button class="chip" id="f-sorgu" data-sec="SORGU" aria-pressed="false">ICMP Sorgu</button>
+      <span class="sep"></span>
+      <button class="chip" id="f-wrong" data-only="wrong" aria-pressed="false">Yanlışlarım</button>
+      <button class="chip" id="f-blank" data-only="blank" aria-pressed="false">Boşlar</button>
+      <span class="sep"></span>
+      <button class="btn" id="b-reveal">Tüm cevapları göster</button>
+      <button class="btn" id="b-reset">Sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<script>
+// o[0] her zaman doğru cevaptır; şıklar soru id'sine göre sabit karıştırılır.
+const Q = [
+// ───────────── IP GENEL ─────────────
+{sec:"IP",p:1,s:2,q:"Hafta 3 \"Konu İçeriği\" slaytında yer almayan alt konu hangisidir?",
+ o:["ARP önbelleği","IP başlık yapısı","Fragmantasyon kavramı","IPv6","ICMP sorgu mesajları"],
+ quote:"IP: Başlık yapısı · Fragmantasyon kavramı · Kontrol toplamı · IPv6 · ICMP: Başlık yapısı · Hata mesajları · Sorgu mesajları",
+ exp:"IP altında 4 başlık var: <b>başlık yapısı, fragmantasyon, kontrol toplamı, IPv6</b>. ICMP altında 3 başlık var: <b>başlık yapısı, hata mesajları, sorgu mesajları</b>. ARP Hafta 2'nin (Katman 2) konusudur."},
+{sec:"IP",p:2,s:3,q:"IP protokolü TCP/IP modelinde hangi katmanda yer alan bir iletim mekanizmasıdır?",
+ o:["Ağ (network) katmanı","Taşıma katmanı","Veri bağlantı katmanı","Uygulama katmanı","Fiziksel katman"],
+ quote:"Internet Protokolü (IP) ağ katmanında TCP/IP protokolleri tarafından kullanılan bir iletim mekanizmasıdır.",
+ exp:"Şekilde ağ katmanında <b>IP</b> ile birlikte <b>ICMP, IGMP ve ARP</b> de gösteriliyor. Taşıma katmanında SCTP, TCP ve UDP var."},
+{sec:"IP",p:2,s:4,q:"IP protokolünün slaytta sayılan özelliklerinden biri DEĞİLDİR?",
+ o:["Bağlantı yönelimli olması","Bağlantısız olması","En iyi teslim (best effort) yapması","Ortam bağımsız olması","Kapsülleme yapması"],
+ quote:"Bağlantısız · En iyi teslim · Ortam bağımsız · Kapsülleme var.",
+ exp:"IP'de paketlere <b>datagram</b> denir. Datagram <b>yönlendirme ve teslimle ilgili bilgi</b> saklar. IP bağlantısızdır ve teslimi garanti etmez (en iyi çaba). Güvenilirliği üst katmanda TCP sağlar."},
+{sec:"IP",p:2,s:4,q:"IP datagram başlığının boyutu ve datagramın toplam boyutu hangi aralıklardadır?",
+ o:["Başlık 20–60 bayt, datagram 20–65.535 bayt","Başlık 8 bayt, datagram 8–65.535 bayt","Başlık 20 bayt sabit, datagram 1500 bayt","Başlık 40–80 bayt, datagram 64–1518 bayt","Başlık 14 bayt, datagram 64–1500 bayt"],
+ quote:"Datagram başlığı 20-60 bayt aralığındadır.",
+ exp:"Toplam uzunluk (Total length) alanı <b>16 bit</b> olduğu için en fazla <b>65.535</b> bayt olabilir. Opsiyonlar + dolgu kısmı <b>0–40 bayt</b> arasındadır."},
+{sec:"IP",p:2,s:4,q:"IP başlığında Flags ve Fragmentation offset alanları kaç bittir?",
+ o:["Flags 3 bit, Fragmentation offset 13 bit","Flags 4 bit, Fragmentation offset 12 bit","Flags 8 bit, Fragmentation offset 8 bit","Flags 3 bit, Fragmentation offset 16 bit","Flags 2 bit, Fragmentation offset 14 bit"],
+ quote:"Flags 3 bits · Fragmentation offset 13 bits",
+ exp:"IPv4 başlığı: VER <b>4</b>, HLEN <b>4</b>, Service type <b>8</b>, Total length <b>16</b>, Identification <b>16</b>, Flags <b>3</b>, Frag. offset <b>13</b>, TTL <b>8</b>, Protocol <b>8</b>, Header checksum <b>16</b> bit. Ardından Source IP ve Destination IP (32'şer bit) gelir. icmpgonder.c'de flags ve offset birlikte <code>packet[20..21] = 0x00 0x00</code> olarak yazılmış.", k:true},
+{sec:"IP",p:2,s:4,q:"icmpgonder.c kodunda IP başlığının ilk baytı packet[14] = 0x45 yazılmıştır. Bu bayt hangi iki alanı, hangi değerlerle taşır?",
+ o:["VER = 4 (IPv4) ve HLEN = 5 (5 × 4 = 20 bayt başlık)","VER = 4 ve TTL = 5","Service type = 0x45","Protocol = 4 ve HLEN = 5","VER = 5 ve HLEN = 4"],
+ quote:"VER 4 bits · HLEN 4 bits",
+ exp:"İlk bayt iki adet 4 bitlik alandır: üst 4 bit <b>VER = 4</b>, alt 4 bit <b>HLEN = 5</b>. HLEN 4 baytlık kelime cinsindendir, yani 5 × 4 = <b>20 bayt</b> (opsiyonsuz sabit başlık). Klasikte bu bayt boş bırakılırsa cevap <code>0x45</code>.", k:true},
+{sec:"IP",p:3,s:5,q:"IP datagramının Protocol alanındaki değerlere göre ICMP, TCP ve UDP hangi numaralarla gösterilir?",
+ o:["ICMP 1, TCP 6, UDP 17","ICMP 2, TCP 6, UDP 17","ICMP 1, TCP 17, UDP 6","ICMP 6, TCP 1, UDP 89","ICMP 1, TCP 4, UDP 16"],
+ quote:"1 ICMP · 2 IGMP · 6 TCP · 17 UDP · 89 OSPF",
+ exp:"Bu tablo IP yükünün hangi protokole ait olduğunu söyler. icmpgonder.c'de <code>packet[23]=0x01</code> (protokol bilgisi) satırı tam olarak budur: <b>1 = ICMP</b>. Ayrıca <b>2 = IGMP</b>, <b>89 = OSPF</b>.", k:true},
+
+// ───────────── FRAGMANTASYON ─────────────
+{sec:"FRAG",p:3,s:6,q:"Bir IP datagramı farklı ağlardan geçerken her yönlendirici ne yapar?",
+ o:["Datagramı aldığı çerçeveden çıkarır, işler ve başka bir çerçeveye sarar","Datagramı olduğu gibi, aynı çerçeveyle iletir","Datagramın IP başlığını tamamen siler","Datagramı her zaman fragmentlere böler","Datagramı kaynağa geri gönderir"],
+ quote:"Her yönlendirici IP datagramını aldığı çerçeveden keser, işler ve daha sonra başka bir çerçeveye sarar.",
+ exp:"Alınan ve gönderilen çerçevenin <b>biçimi ve boyutu</b>, geçilen fiziksel ağın protokolüne bağlıdır. Bu yüzden datagram, bir sonraki ağın taşıyabileceği boyuttan (MTU) büyükse <b>fragmantasyon</b> gerekir."},
+{sec:"FRAG",p:4,s:7,q:"Detaylı fragmantasyon örneğinde orijinal datagram (Identification = 14.567, bayt 0–3999) üç parçaya bölünüyor. 2. fragmentin (bayt 1400–2799) offset değeri nedir?",
+ o:["175","1400","140","350","000"],
+ quote:"Bytes 1400–2799 · Fragment 2 · offset 175",
+ exp:"Offset <b>8 baytlık birimler</b> cinsinden yazılır: 1400 / 8 = <b>175</b>. 3. fragment (bayt 2800–3999) için 2800 / 8 = <b>350</b>. 1. fragmentin offset'i <b>000</b>."},
+{sec:"FRAG",p:4,s:7,q:"Fragmantasyon örneğinde hangi fragmentin M (More fragments) biti 0'dır?",
+ o:["Fragment 3 (bayt 2800–3999), çünkü son parçadır","Fragment 1","Fragment 2","Fragment 2.1","Hepsinin M biti 1'dir"],
+ quote:"D: Do not fragment · M: More fragments",
+ exp:"<b>M = 1</b> \"arkadan başka parça var\", <b>M = 0</b> \"son parça\" demektir. Fragment 2 kendi içinde 2.1 (offset 175) ve 2.2 (offset 275) olarak tekrar bölünse bile 2.2'nin M biti <b>1</b> kalır, çünkü orijinal datagramın sonu değildir. <b>D = 1</b> ise datagram bölünemez."},
+{sec:"FRAG",p:4,s:7,q:"Fragmantasyon örneğinde orijinal datagramın Total length değeri 4020'dir. Bayt 0–1399'u taşıyan Fragment 1'in Total length değeri nedir?",
+ o:["1420","1400","4020","1399","820"],
+ quote:"Fragment 1 · 1420 · Bytes 0000–1399",
+ exp:"Total length = <b>veri + 20 bayt başlık</b>: 1400 + 20 = <b>1420</b>. Orijinal: 4000 + 20 = 4020. Fragment 3: 1200 + 20 = 1220. Bütün fragmentlerde <b>Identification aynıdır (14.567)</b>, alıcı parçaları bu numarayla eşleştirir."},
+
+// ───────────── OPSİYONLAR ─────────────
+{sec:"OPS",p:4,s:8,q:"IP datagram başlığının sabit ve değişken kısımlarıyla ilgili hangisi doğrudur?",
+ o:["Sabit kısım 20 bayttır; değişken kısım maksimum 40 bayt olabilen seçenekleri içerir","Sabit kısım 40, değişken kısım 20 bayttır","Sabit kısım 8 bayttır","Seçenekler her datagram için zorunludur","IP yazılımının seçenekleri işlemesi gerekmez"],
+ quote:"Sabit kısım, 20 bayt uzunluğundadır. · Değişken kısım, maksimum 40 bayt olabilen seçenekleri içerir.",
+ exp:"Seçenekler bir datagram için <b>gerekli değildir</b> ve ağ testi ile hata ayıklama için kullanılabilir. Ama IP başlığının zorunlu parçası olmasalar da <b>IP yazılımının seçenekleri işleyebilmesi gerekir</b>."},
+{sec:"OPS",p:5,s:9,q:"IP opsiyon formatında Type alanı (8 bit) hangi alt alanlardan oluşur?",
+ o:["Copy (1 bit), Class (2 bit), Number (5 bit)","Copy (2 bit), Class (2 bit), Number (4 bit)","Length (8 bit)","Class (3 bit), Number (5 bit)","Copy (1 bit), Number (7 bit)"],
+ quote:"Type 8 bits · Length 8 bits · Value Variable length · 1 | 2 | 5 bits",
+ exp:"Opsiyon formatı: <b>Type (8) + Length (8) + Value (değişken)</b>. Type içinde: <b>Copy 1</b>, <b>Class 2</b>, <b>Number 5</b> bit."},
+{sec:"OPS",p:5,s:9,q:"IP opsiyonunun Type alanındaki Copy biti 1 ise ne anlama gelir?",
+ o:["Opsiyon tüm fragmentlere kopyalanır","Opsiyon sadece ilk fragmente kopyalanır","Opsiyon hiç kopyalanmaz","Datagram bölünemez","Opsiyon hata ayıklama içindir"],
+ quote:"0 Copy only in first fragment · 1 Copy into all fragments",
+ exp:"Class alanı: <b>00</b> Datagram control, <b>10</b> Debugging and management, <b>01 / 11</b> Reserved. Number alanı: <b>00000</b> End of option, <b>00001</b> No operation, <b>00011</b> Loose source route, <b>00100</b> Timestamp, <b>00111</b> Record route, <b>01001</b> Strict source route."},
+{sec:"OPS",p:5,s:10,q:"IP opsiyonlarından hangileri tek baytlık (single-byte) opsiyonlardır?",
+ o:["No operation ve End of option","Record route ve Timestamp","Strict ve Loose source route","Timestamp ve No operation","Record route ve End of option"],
+ quote:"Single-byte: No operation · End of option",
+ exp:"Çok baytlık (multiple-byte) opsiyonlar: <b>Record route, Strict source route, Loose source route, Timestamp</b>. TCP opsiyonlarında da tek baytlık olanlar aynıydı: End of option list ve No operation."},
+{sec:"OPS",p:6,s:11,q:"No operation (NO-OP) ve End of option opsiyonları ne için kullanılır?",
+ o:["NO-OP opsiyonlar arasında hizalama için, End of option dolgu (padding) için","İkisi de rota kaydı için","NO-OP zaman damgası, End of option yönlendirme için","İkisi de hata ayıklama için","NO-OP datagramı sonlandırır, End of option hizalar"],
+ quote:"No operation option (Type: 1) · Used to align … · End of option (Type: 0) · Used for padding",
+ exp:"<b>NO-OP = Type 1</b>: bir opsiyonun başlangıcını ya da sonraki opsiyonu hizalamak için. <b>End of option = Type 0</b>: opsiyon alanının sonunda dolgu olarak."},
+{sec:"OPS",p:6,s:11,q:"Record route opsiyonunun Type değeri nedir ve en fazla kaç IP adresi listelenebilir?",
+ o:["Type 7; en fazla 9 adres","Type 137; en fazla 10 adres","Type 131; en fazla 8 adres","Type 68; en fazla 9 adres","Type 7; en fazla 40 adres"],
+ quote:"Type: 7 · 00000111 · Only 9 addresses can be listed.",
+ exp:"Neden 9: opsiyon alanı en fazla 40 bayt. Type + Length + Pointer 3 bayt tutar, kalan 37 bayta 4 baytlık IP adresinden <b>9 tane</b> sığar. Record route'ta adresler başlangıçta <b>boştur</b> (empty when started) ve yönlendiriciler yol boyunca doldurur."},
+{sec:"OPS",p:6,s:12,q:"Record route örneğinde Length = 15 iken, her yönlendirici bir adres ekledikçe Pointer alanı nasıl değişir?",
+ o:["4 → 8 → 12 → 16 (her adreste 4 artar)","1 → 2 → 3 → 4","0 → 15 → 30","5 → 13 → 21 → 29","Hiç değişmez"],
+ quote:"7 15 · 7 15 12 · 7 15 16",
+ exp:"Pointer, bir sonraki boş adres yerinin konumunu gösterir. IPv4 adresi 4 bayt olduğu için her adreste <b>4 artar</b>. Örnekte eklenen adresler sırasıyla 140.10.6.3, 200.14.7.9 ve 138.6.22.26."},
+{sec:"OPS",p:7,s:13,q:"Strict source route opsiyonunun Type değeri ve adreslerin durumu nedir?",
+ o:["Type 137 (10001001); adresler başlangıçta doldurulur (filled when started)","Type 7; adresler başlangıçta boştur","Type 131; adresler yönlendiricilerce doldurulur","Type 68; zaman damgası içerir","Type 1; hizalama içindir"],
+ quote:"Type: 137 · 10001001 · First IP address (Filled when started)",
+ exp:"137 = 1 | 00 | 01001: <b>Copy = 1</b> (tüm fragmentlere kopyala), <b>Class = 00</b>, <b>Number = 01001</b> (strict source route). Kaynak, uğranacak yönlendiricileri baştan yazar. Burada da en fazla 9 adres listelenebilir."},
+{sec:"OPS",p:7,s:14,q:"Strict source route örneğinde (kaynak 67.34.30.6, son hedef 138.6.25.40) datagram ilk yönlendiriciden çıkarken Destination alanında ne yazar?",
+ o:["Listedeki bir sonraki adres (140.10.5.4); her yönlendirici hedefi listeden günceller","Her zaman son hedef 138.6.25.40","Kaynak adres 67.34.30.6","Boş (0.0.0.0)","Yönlendiricinin MAC adresi"],
+ quote:"Source: 67.34.30.6 Destination: 67.14.10.22 → Destination: 140.10.5.4 → … → 138.6.25.40",
+ exp:"Kaynak her adımda aynı kalır. <b>Destination</b> listeden sıradaki adresle değiştirilir: 67.14.10.22 → 140.10.5.4 → 200.14.7.14 → 138.6.25.40. Pointer da 4 → 8 → 12 → 16 olarak ilerler. <b>Strict</b>'te sadece listedeki yönlendiricilerden geçilebilir."},
+{sec:"OPS",p:8,s:15,q:"Loose source route opsiyonunun Type değeri nedir?",
+ o:["131 (10000011)","137 (10001001)","7 (00000111)","68 (01000100)","1 (00000001)"],
+ quote:"Type: 131 · 10000011",
+ exp:"131 = 1 | 00 | 00011 → Number 00011 = loose source route. Strict'ten farkı: listedeki yönlendiricilerden geçilmesi gerekir, ama <b>aralarda başka yönlendiricilere de uğranabilir</b>. Adresler başlangıçta doldurulur, en fazla 9 adres."},
+{sec:"OPS",p:8,s:16,q:"Time-stamp (zaman damgası) opsiyonunun kodu nedir ve O-Flow ile Flags alanları kaç bittir?",
+ o:["Code 68 (01000100); O-Flow 4 bit, Flags 4 bit","Code 7; O-Flow 8 bit, Flags 8 bit","Code 131; O-Flow 4 bit, Flags 4 bit","Code 137; O-Flow 2 bit, Flags 6 bit","Code 4; O-Flow 4 bit, Flags 4 bit"],
+ quote:"Code: 68 · 01000100 · O-Flow 4 bits · Flags 4 bits",
+ exp:"68 = 0 | 10 | 00100: <b>Copy = 0</b> (sadece ilk fragmente), <b>Class = 10</b> (debugging and management), <b>Number = 00100</b> (timestamp). Format: Code, Length, Pointer, O-Flow, Flags ve ardından IP adresi + zaman damgası çiftleri."},
+{sec:"OPS",p:9,s:17,q:"Time-stamp örneğinde (Length 28, Flags 1) her yönlendirici kayıt ekledikçe Pointer nasıl değişir?",
+ o:["5 → 13 → 21 → 29 (her kayıtta 8 artar)","4 → 8 → 12 → 16","1 → 2 → 3 → 4","5 → 9 → 13 → 17","Hiç değişmez"],
+ quote:"68 28 5 0 1 · 68 28 13 0 1 · 68 28 21 0 1 · 68 28 29 0 1",
+ exp:"Flags = 1 olduğunda her yönlendirici <b>IP adresi (4 bayt) + zaman damgası (4 bayt) = 8 bayt</b> ekler. Örnekteki kayıtlar: 140.10.6.3 / 36000000, 200.14.7.9 / 36000012, 138.6.22.26 / 36000020."},
+
+// ───────────── KONTROL TOPLAMI, İŞLETİM, IPv6 ─────────────
+{sec:"ISLEM",p:9,s:18,q:"IP kontrol toplamı (checksum) örneğinde alıcı taraf, checksum dahil tüm 16 bitlik kelimeleri topladığında sonuç 1111 1111 1111 1111 çıkıyor. Bu ne anlama gelir?",
+ o:["Tümleyeni 0 olduğu için başlık hatasızdır, datagram kabul edilir","Başlıkta hata vardır, datagram atılır","Checksum yeniden hesaplanmalıdır","TTL sıfırlanmıştır","Datagram fragmente edilmelidir"],
+ quote:"Sum → 1111 1111 1111 1111 · Checksum → 0000 0000 0000 0000",
+ exp:"Gönderen: checksum alanı <b>0</b> kabul edilir, 16 bitlik kelimeler toplanır ve toplamın <b>tümleyeni</b> checksum olur (örnekte 10001011 10110001 = <b>35761</b>). Alıcı: aynı toplamayı checksum dahil yapar. Sonuç tümü 1, tümleyeni tümü 0 ise hata yoktur. icmpgonder.c'de checksum alanları <code>0x00 0x00</code> olarak bırakılmış.", k:true},
+{sec:"ISLEM",p:9,s:18,q:"Kontrol toplamı örneğinde gönderen taraf checksum'ı hesaplarken checksum alanına başlangıçta hangi değeri koyar?",
+ o:["0","35761","Tümü 1 (0xFFFF)","TTL değeri","Toplam uzunluk"],
+ quote:"Gönderen Taraf · 4 and 17 · 0 → 00000000 00000000",
+ exp:"Hesaplamaya dahil alanlar: 4,5,0 / 28 / 1 / 0 ve 0 / 4 ve 17 (TTL = 4, protokol = 17 UDP) / <b>0 (checksum)</b> / 10.12 / 14.5 / 12.6 / 7.9. Hesaplanan değer (35761) sonra bu alana yazılır."},
+{sec:"ISLEM",p:10,s:19,q:"IP datagramının işletiminde Processing Module, makine bir yönlendirici ise ve TTL ≤ 0 olursa ne yapar?",
+ o:["Datagramı eler ve ICMP hata mesajı gönderir","Datagramı reassembly modülüne gönderir","TTL'i yeniden 64 yapar","Datagramı fragmentlere böler","Datagramı kaynağa geri iletir"],
+ quote:"Eğer TTL<=0 · Datagramı ele · ICMP hata mesajı gönder.",
+ exp:"Yönlendirici önce <b>TTL'i azaltır</b>. Sıfıra inerse datagram atılır ve kaynağa <b>ICMP Time exceeded (type 11, code 0)</b> gönderilir. Hedef adres yerel ise datagram reassembly modülüne gider. icmpgonder.c'de TTL <code>packet[22]=0x40</code> (64) olarak ayarlanmış.", k:true},
+{sec:"ISLEM",p:10,s:19,q:"Fragmantasyon modülünde datagramın boyutu MTU'dan büyük ve D (Do not fragment) biti set edilmişse ne olur?",
+ o:["Datagram elenir ve ICMP hata mesajı yollanır","Datagram fragmentlere bölünür","Datagram olduğu gibi gönderilir","D biti otomatik sıfırlanır","MTU büyütülür"],
+ quote:"Eğer D biti set edilyse · Datagramı ele · ICMP hata mesajı yolla",
+ exp:"D biti set değilse: maksimum boyut hesaplanır, datagram fragmentlere bölünür, her fragmente başlık ve ilgili opsiyon eklenir, sonra gönderilir. ICMP tablosunda bu durumun karşılığı <b>Type 3, Code 4: Frag needed and DF set</b>."},
+{sec:"ISLEM",p:10,s:19,q:"Reassembly modülünde zaman aşımı olursa (tüm fragmentler gelmeden) ne yapılır?",
+ o:["Tüm fragmentler düşürülür ve ICMP hata mesajı gönderilir","Gelen fragmentler birleştirilip üst katmana iletilir","Eksik fragmentler kaynaktan tekrar istenir","Zaman aşımı süresi uzatılır","Sadece son fragment düşürülür"],
+ quote:"Eğer zaman aşımı olduysa · Tüm fragmentleri düşür · ICMP hata mesajı gönder",
+ exp:"<b>Offset = 0 ve M = 0</b> ise datagram bölünmemiştir ve doğrudan uygun kuyruğa gider. Aksi halde fragmentler bağlantılı listede birikir ve hepsi gelince birleştirilir. Zaman aşımı olursa <b>ICMP Time exceeded, code 1</b> gönderilir. IP işletimindeki tablolar: <b>Routing, MTU, Reassembly</b>."},
+{sec:"ISLEM",p:10,s:20,q:"IPv6 için slaytta sayılan özelliklerden biri DEĞİLDİR?",
+ o:["64 bit adresleme","128 bit adresleme","NAT ihtiyacını ortadan kaldırır","Entegre güvenlik","Geliştirilmiş paket işleme"],
+ quote:"128 bit adresleme · Artırılmış adres alanı · Geliştirilmiş paket işleme · NAT ihtiyacını ortadan kaldırır. · Entegre güvenlik",
+ exp:"Not: IPv4 yaklaşık <b>4 milyar</b> adres sağlar, IPv6 ise <b>340 undesilyon</b> adres sağlar."},
+{sec:"ISLEM",p:10,s:20,q:"IPv4 ve IPv6 başlık karşılaştırmasında IPv6'da yeni eklenen alan hangisidir?",
+ o:["Flow Label","Hop Limit","Header Checksum","Identification","Traffic Class"],
+ quote:"New field in IPv6 · Flow Label",
+ exp:"Lejanta göre: <b>korunan</b> alanlar Version, Source ve Destination Address. <b>Kaldırılan</b> alanlar IHL, Identification, Flags, Fragment Offset, Header Checksum, Options/Padding. <b>Adı ve yeri değişen</b> alanlar Traffic Class (ToS), Payload Length (Total length), Next Header (Protocol), Hop Limit (TTL). <b>Yeni</b> alan: <b>Flow Label</b>."},
+{sec:"ISLEM",p:10,s:20,q:"IPv6 başlığında IPv4'teki TTL ve Protocol alanlarının karşılıkları hangileridir?",
+ o:["TTL → Hop Limit, Protocol → Next Header","TTL → Flow Label, Protocol → Traffic Class","TTL → Payload Length, Protocol → Version","TTL kaldırılmıştır, Protocol aynı kalmıştır","TTL → Next Header, Protocol → Hop Limit"],
+ quote:"Name & position changed in IPv6 · Next Header · Hop Limit",
+ exp:"IPv6'da <b>Header Checksum kaldırıldı</b>, çünkü kontrolü alt ve üst katmanlar yapıyor. Fragmantasyon alanları (Identification, Flags, Fragment Offset) da kaldırıldı."},
+
+// ───────────── ICMP (HATA) ─────────────
+{sec:"ICMP",p:11,s:21,q:"ICMP hangi iki amaçla kullanılır?",
+ o:["Hata raporlama iletileri ve sorgu iletileri","Adres çözümleme ve yönlendirme","Dosya transferi ve e-posta","Bağlantı kurma ve sonlandırma","Şifreleme ve kimlik doğrulama"],
+ quote:"ICMP iki amaçla kullanılır: Hata raporlama iletileri · Sorgu iletileri",
+ exp:"<b>Hata bildirim</b> iletileri, bir yönlendiricinin veya hedefin IP paketini işlerken karşılaştığı sorunları bildirir. <b>Sorgu</b> iletileri <b>çiftler halinde</b> oluşur ve belirli bilgilerin alınmasına yardımcı olur. ICMP mesajı, IP datagramının <b>veri</b> kısmında taşınır."},
+{sec:"ICMP",p:11,s:21,q:"ICMP mesajı kapsülleme sırasında nereye yerleştirilir?",
+ o:["IP datagramının veri (IP data) kısmına","Doğrudan Ethernet çerçevesine, IP olmadan","TCP segmentinin içine","UDP datagramının içine","IP başlığının opsiyon alanına"],
+ quote:"ICMP message · IP header · IP data · Frame header · Frame data · Trailer",
+ exp:"ICMP bir ağ katmanı protokolü olsa da mesajları <b>IP içinde</b> taşınır, bu yüzden IP başlığındaki protokol alanı <b>1</b> olur. icmpgonder.c'de paket sırası: Ethernet başlığı (0–13) → IP başlığı (14–33) → ICMP (34–).", k:true},
+{sec:"ICMP",p:11,s:22,q:"ICMP başlığının ilk 4 baytı hangi alanlardan oluşur?",
+ o:["Type (8 bit), Code (8 bit), Checksum (16 bit)","Type (16 bit), Checksum (16 bit)","Code (8 bit), Identifier (8 bit), Checksum (16 bit)","Version (4), HLEN (4), Type (8), Checksum (16)","Type (8), Code (8), Sequence (16)"],
+ quote:"Type 8 bits · Code 8 bits · Checksum 8+8 bits · Rest of the header · Data section",
+ exp:"icmpgonder.c'de: <code>packet[34]=0x08</code> (tip), <code>packet[35]=0x00</code> (kod), <code>packet[36..37]=0x00 0x00</code> (checksum), ardından <code>packet[38..41]</code> rest of header (identifier + sequence).", k:true},
+{sec:"ICMP",p:11,s:22,q:"ICMP mesaj tablosuna göre aşağıdakilerden hangisi bir SORGU (query) mesajıdır?",
+ o:["Echo request or reply (8 veya 0)","Destination unreachable (3)","Source quench (4)","Time exceeded (11)","Redirection (5)"],
+ quote:"Query messages: 8 or 0 Echo request or reply · 13 or 14 Timestamp request or reply",
+ exp:"<b>Hata raporlama</b> mesajları: <b>3</b> Destination unreachable, <b>4</b> Source quench, <b>11</b> Time exceeded, <b>12</b> Parameter problem, <b>5</b> Redirection. <b>Sorgu</b> mesajları: <b>8/0</b> Echo, <b>13/14</b> Timestamp."},
+{sec:"ICMP",p:12,s:23,q:"Detaylı ICMP tablosuna göre Type 3, Code 3 hangi durumu ifade eder?",
+ o:["Port Unreachable","Net Unreachable","Host Unreachable","Protocol Unreachable","Frag needed and DF set"],
+ quote:"3 · 0 Net Unreachable · 1 Host Unreachable · 2 Protocol Unreachable · 3 Port Unreachable · 4 Frag needed and DF set",
+ exp:"Type 3 kodlarından sık sorulanlar: <b>0</b> ağ, <b>1</b> host, <b>2</b> protokol, <b>3</b> port ulaşılamaz, <b>4</b> fragment gerekli ama DF set. Diğer tipler: <b>9</b> Router advertisement, <b>10</b> Router selection, <b>17/18</b> Address mask, <b>30</b> Traceroute."},
+{sec:"ICMP",p:12,s:23,q:"Detaylı ICMP tablosuna göre Type 11 için Code 0 ve Code 1 ne anlama gelir?",
+ o:["Code 0: TTL transit sırasında aşıldı; Code 1: Fragment birleştirme süresi aşıldı","Code 0: Port ulaşılamaz; Code 1: Host ulaşılamaz","Code 0: Echo; Code 1: Echo reply","Code 0: Ağ için yönlendir; Code 1: Host için yönlendir","Code 0: Parametre hatası; Code 1: Eksik opsiyon"],
+ quote:"11 · 0 Time To Live exceeded in transit · 1 Fragment reassemble time exceeded",
+ exp:"Bu iki kod, IP işletim modülündeki iki durumla doğrudan eşleşir: yönlendiricide <b>TTL ≤ 0</b> olması ve reassembly'de <b>zaman aşımı</b>. Traceroute, TTL'i 1'den başlatıp her adımda bu Type 11 mesajlarını toplayarak yolu çıkarır."},
+{sec:"ICMP",p:12,s:24,q:"Hedef ulaşılamaz (Destination unreachable) mesajlarıyla ilgili hangisi doğrudur?",
+ o:["Code 2 veya 3'lü mesajlar yalnızca hedef ana bilgisayar tarafından oluşturulabilir","Tüm kodlar yalnızca yönlendiriciler tarafından oluşturulur","Type değeri 11'dir","Code değeri 0–3 arasındadır","Bir yönlendirici teslimi engelleyen tüm sorunları algılayabilir"],
+ quote:"2 veya 3 kodlu hedefe ulaşılamayan mesajlar yalnızca hedef ana bilgisayar tarafından oluşturulabilir.",
+ exp:"Format: <b>Type 3, Code 0–15</b>, Unused (tümü 0), alınan IP başlığı + <b>datagram verisinin ilk 8 baytı</b>. Code 2 (protokol) ve 3 (port) sadece hedefte bilinebilir. Diğer kodları yalnızca yönlendiriciler üretir. Ayrıca <b>bir yönlendirici tüm sorunları algılayamaz</b>, ve <b>IP'de akış veya tıkanıklık kontrolü yoktur</b>."},
+{sec:"ICMP",p:13,s:25,q:"Kaynak söndürme (source quench) mesajı ne bildirir ve kaynağın ne yapması beklenir?",
+ o:["Tıkanıklık nedeniyle bir datagramın atıldığını; kaynak tıkanıklık giderilene kadar gönderimi yavaşlatmalı","Hedefin ulaşılamaz olduğunu; kaynak bağlantıyı kesmeli","TTL'in sıfırlandığını; kaynak TTL'i artırmalı","Yeni bir rota olduğunu; kaynak tabloyu güncellemeli","Parametre hatasını; kaynak başlığı düzeltmeli"],
+ quote:"Kaynak tıkanıklık giderilene kadar datagramların gönderilmesini yavaşlatmalıdır.",
+ exp:"Format: <b>Type 4, Code 0</b>. Tıkanıklık nedeniyle atılan <b>her datagram için bir</b> kaynak söndürme mesajı gönderilir. Aynı slayt, TTL'i sıfıra inen datagramın atıldığını ve kaynağa <b>zaman aşımı</b> mesajı gönderildiğini de hatırlatıyor."},
+{sec:"ICMP",p:13,s:26,q:"Zaman aşımı (Time exceeded) mesajında Code 1 kim tarafından ve ne için kullanılır?",
+ o:["Yalnızca hedef ana bilgisayar tarafından; tüm parçaların belirli sürede gelmediğini göstermek için","Yalnızca yönlendiriciler tarafından; TTL'in sıfırlandığını göstermek için","Kaynak tarafından; yavaşlamak için","Yönlendirici tarafından; yeni rota bildirmek için","Hedef tarafından; port kapalı olduğunu göstermek için"],
+ quote:"Kod 1, yalnızca hedef ana bilgisayar tarafından tüm parçaların gelmediğini göstermek için kullanılır",
+ exp:"Format: <b>Type 11, Code 0 veya 1</b>. <b>Code 0</b>: yalnızca <b>yönlendiriciler</b>, TTL alanının sıfır olduğunu göstermek için kullanır. <b>Code 1</b>: yalnızca <b>hedef</b>, fragmentler zamanında gelmediğinde kullanır."},
+{sec:"ICMP",p:14,s:27,q:"Parametre problemi (parameter problem) mesajının Type değeri ve onu kimin oluşturabileceği nedir?",
+ o:["Type 12; yönlendirici veya hedef ana bilgisayar","Type 5; sadece yönlendirici","Type 3; sadece hedef","Type 11; sadece kaynak","Type 4; sadece yönlendirici"],
+ quote:"Bir parametre sorunu mesajı bir yönlendirici veya hedef ana bilgisayar tarafından oluşturulabilir.",
+ exp:"Format: <b>Type 12, Code 0 veya 1</b>. Hatalı baytı gösteren bir <b>Pointer</b> alanı vardır. Detaylı tabloda <b>code 0</b> pointer hatayı gösteriyor, <b>code 1</b> gerekli bir opsiyon eksik, <b>code 2</b> uzunluk hatalı."},
+{sec:"ICMP",p:14,s:28,q:"Yeniden yönlendirme (redirection) mesajıyla ilgili hangisi doğrudur?",
+ o:["Type 5'tir; yönlendiriciden aynı yerel ağdaki bir ana bilgisayara gönderilir ve hedef yönlendiricinin IP adresini taşır","Type 3'tür; hedeften kaynağa gönderilir","Type 11'dir; TTL sıfırlanınca gönderilir","Ana bilgisayardan yönlendiriciye gönderilir","Farklı ağdaki ana bilgisayarlara gönderilir"],
+ quote:"Yönlendiriciden aynı yerel ağdaki bir ana bilgisayara bir yönlendirme mesajı gönderilir.",
+ exp:"Format: <b>Type 5, Code 0–3</b>, ardından <b>IP address of the target router</b>. Ana bilgisayar genellikle küçük bir yönlendirme tablosuyla başlar ve bu mesajlarla tabloyu kademeli olarak günceller. Şekilde A'nın paketi R1'e gider, R1 onu R2'ye iletir ve A'ya \"bundan sonra R2'yi kullan\" der."},
+
+// ───────────── ICMP SORGU + PAKET ─────────────
+{sec:"SORGU",p:15,s:29,q:"ICMP Echo request ve Echo reply mesajlarının Type değerleri nedir?",
+ o:["Echo request = 8, Echo reply = 0","Echo request = 0, Echo reply = 8","Echo request = 13, Echo reply = 14","Echo request = 3, Echo reply = 4","Echo request = 8, Echo reply = 9"],
+ quote:"Type 8: Echo request · Type 0: Echo reply",
+ exp:"İkisinde de <b>Code 0</b>. Format: Type, Code, Checksum, <b>Identifier</b>, <b>Sequence number</b>, Optional data. İstek mesajındaki veri, cevapta <b>aynen tekrar edilir</b>. icmpgonder.c'deki <code>packet[34]=0x08</code> echo request demektir. Ping sunucusu cevap verirken tipi <b>0</b> yapar.", k:true},
+{sec:"SORGU",p:15,s:29,q:"Echo istek ve echo yanıt mesajları ne için kullanılabilir?",
+ o:["IP protokolünün çalışmasını kontrol etmek ve ana bilgisayarın ulaşılabilirliğini test etmek için (ping, traceroute)","Dosya aktarmak için","Yönlendirme tablosunu güncellemek için","Saatleri senkronize etmek için","Tıkanıklığı bildirmek için"],
+ quote:"Ana bilgisayarın ulaşılabilirliğini test edebilir (ping , traceroute)",
+ exp:"Echo isteğini bir <b>ana bilgisayar veya yönlendirici</b> gönderebilir. İsteği alan cihaz echo-cevap döner. Not: slaytın başlığı \"Hata raporlama mesajları\" olsa da echo, tabloda <b>sorgu</b> mesajı olarak geçiyor. Klasikteki ping_client/ping_server kodları bu mesajlarla çalışır.", k:true},
+{sec:"SORGU",p:15,s:30,q:"ICMP Zaman damgası (timestamp) istek ve cevap mesajlarının Type değerleri ve içerdikleri zaman damgası alanları nelerdir?",
+ o:["13 istek, 14 cevap; Original, Receive ve Transmit timestamp","8 istek, 0 cevap; tek bir zaman damgası","14 istek, 13 cevap; Original ve Receive timestamp","17 istek, 18 cevap; Address mask","15 istek, 16 cevap; Information"],
+ quote:"Type 13: request · Type 14: reply · Original timestamp · Receive timestamp · Transmit timestamp",
+ exp:"Kullanım alanları: kaynak ile hedef arasındaki <b>gidiş-dönüş süresini hesaplamak</b> (saatler senkronize olmasa bile) ve iki makinedeki <b>saatleri eşitlemek</b>. Bunlar da Code 0, Identifier ve Sequence number içerir."},
+{sec:"SORGU",p:16,s:31,q:"Slayttaki ICMP paketi hangi iki modülden oluşur?",
+ o:["Giriş modülü ve çıkış modülü","Yönlendirme ve fragmantasyon modülü","Reassembly ve processing modülü","Header-adding ve forwarding modülü","Kontrol ve veri modülü"],
+ quote:"iki modülden oluşan bir ICMP paketi versiyonumuzu sunulmaktadır; Giriş modülü · Çıkış modülü",
+ exp:"<b>Giriş modülü</b> IP'den gelen her türlü ICMP paketini işler. <b>Çıkış modülü</b> uygulamalardan gelen sorgu isteklerini, UDP/TCP ya da IP'den gelen hata mesajı isteklerini alır ve ICMP paketi üretir."},
+{sec:"SORGU",p:16,s:31,q:"ICMP giriş modülüne yeniden yönlendirme (redirection) tipinde bir paket gelirse ne yapılır?",
+ o:["Yönlendirme tablosu modifiye edilir","Yeni bir cevap oluşturulup gönderilir","Uygun kaynak protokol bilgilendirilir","Paket atılır","Echo reply gönderilir"],
+ quote:"Eğer (tip yeniden yönlendirmeyi tanımlarsa) · Yönlendirme tablosunu modifiye et",
+ exp:"Giriş modülünün mantığı: <b>istek ise</b> yeni bir cevap oluştur ve gönder (ör. echo request'e echo reply). <b>Yeniden yönlendirme ise</b> yönlendirme tablosunu değiştir. <b>Diğer hata mesajları ise</b> uygun kaynak protokolü bilgilendir. Ping sunucusunun yaptığı iş tam olarak ilk adım."}
+];
+
+const SEC_COLOR = {IP:"var(--ftp)",FRAG:"var(--smtp)",OPS:"var(--snmp)",ISLEM:"var(--http)",ICMP:"var(--java)",SORGU:"var(--mesaj)"};
+const SEC_NAME = {IP:"IP Protokolü ve Başlık Yapısı",FRAG:"Fragmantasyon",OPS:"IP Opsiyonları",ISLEM:"Kontrol Toplamı, IP İşletimi ve IPv6",ICMP:"ICMP ve Hata Raporlama Mesajları",SORGU:"ICMP Sorgu Mesajları ve ICMP Paketi"};
+const LETTERS = "ABCDE";
+const KEY = "k3-test-v1";
+
+// Sabit karıştırma: her soru her açılışta aynı şık sırasıyla gelir.
+function seeded(n){ let x = (n + 1) * 2654435761 % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+Q.forEach((q, i) => {
+  q.id = i;
+  const r = seeded(i * 7 + 3);
+  const idx = q.o.map((_, k) => k);
+  for (let k = idx.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+  q.order = idx; // order[görünen konum] = orijinal indeks
+});
+
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { answers = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) {} }
+
+let fSec = "all", fOnly = null, revealAll = false;
+const main = document.getElementById("main");
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(){
+  main.innerHTML = "";
+  let lastSec = null, list = null, shown = 0;
+  Q.forEach(q => {
+    if (fSec !== "all" && q.sec !== fSec) return;
+    const a = answers[q.id];
+    if (fOnly === "wrong" && !(a !== undefined && a !== 0)) return;
+    if (fOnly === "blank" && a !== undefined) return;
+    if (q.sec !== lastSec) {
+      lastSec = q.sec;
+      const h = document.createElement("h2");
+      h.className = "section-head";
+      h.style.color = SEC_COLOR[q.sec];
+      const cnt = Q.filter(x => x.sec === q.sec).length;
+      h.innerHTML = `<span>${SEC_NAME[q.sec]}</span><small>${cnt} soru</small>`;
+      main.appendChild(h);
+      list = document.createElement("div"); list.className = "list"; main.appendChild(list);
+    }
+    list.appendChild(card(q)); shown++;
+  });
+  if (!shown) main.innerHTML = `<p class="empty">Bu filtrede gösterilecek soru yok.</p>`;
+  stats();
+}
+
+function card(q){
+  const el = document.createElement("article");
+  el.className = "q"; el.style.setProperty("--sec", SEC_COLOR[q.sec]); el.id = "q" + q.id;
+  const a = answers[q.id];
+  const answered = a !== undefined;
+  const open = answered || revealAll;
+  el.innerHTML = `
+    <div class="q-top">
+      <span class="num">Soru ${q.id + 1}</span>
+      <span class="tag">${q.sec}</span>
+      <span class="src">PDF s.${q.p} · Slayt ${q.s}</span>${q.k ? '<span class="kl">Klasiğe de yarar</span>' : ''}
+    </div>
+    <h3>${esc(q.q)}</h3>
+    <div class="opts"></div>`;
+  const opts = el.querySelector(".opts");
+  q.order.forEach((orig, pos) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button"; b.id = `q${q.id}o${pos}`;
+    b.innerHTML = `<span class="l">${LETTERS[pos]}</span><span></span>`;
+    b.lastChild.textContent = q.o[orig];
+    if (open) {
+      b.disabled = true;
+      if (orig === 0) b.classList.add("is-right");
+      else if (answered && orig === a) b.classList.add("is-wrong");
+      else b.classList.add("dim");
+    } else {
+      b.addEventListener("click", () => { answers[q.id] = orig; save(); el.replaceWith(card(q)); stats(); });
+    }
+    opts.appendChild(b);
+  });
+  if (open) {
+    const rightPos = q.order.indexOf(0);
+    const fb = document.createElement("div"); fb.className = "fb";
+    let verdict = "";
+    if (answered) verdict = a === 0
+      ? `<div class="verdict ok">Doğru. Cevap ${LETTERS[rightPos]}.</div>`
+      : `<div class="verdict bad">Yanlış. Doğru cevap ${LETTERS[rightPos]}.</div>`;
+    fb.innerHTML = `${verdict}
+      <blockquote class="quote"><span class="where">PDF sayfa ${q.p}, slayt ${q.s}'te şu ifadeyle geçiyor:</span><mark>${esc(q.quote)}</mark></blockquote>
+      <p class="exp">${q.exp}</p>`;
+    el.appendChild(fb);
+  }
+  return el;
+}
+
+function stats(){
+  const total = Q.length;
+  const done = Object.keys(answers).length;
+  const ok = Object.values(answers).filter(v => v === 0).length;
+  const bad = done - ok;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-done").textContent = done;
+  document.getElementById("s-ok").textContent = ok;
+  document.getElementById("s-bad").textContent = bad;
+  document.getElementById("s-pct").textContent = "%" + (done ? Math.round(ok / done * 100) : 0);
+  document.getElementById("p-ok").style.width = (ok / total * 100) + "%";
+  document.getElementById("p-bad").style.width = (bad / total * 100) + "%";
+}
+
+document.querySelectorAll("[data-sec]").forEach(b => b.addEventListener("click", () => {
+  fSec = b.dataset.sec;
+  document.querySelectorAll("[data-sec]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+document.querySelectorAll("[data-only]").forEach(b => b.addEventListener("click", () => {
+  fOnly = fOnly === b.dataset.only ? null : b.dataset.only;
+  document.querySelectorAll("[data-only]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.only === fOnly)));
+  render();
+}));
+const reveal = document.getElementById("b-reveal");
+reveal.addEventListener("click", () => {
+  revealAll = !revealAll;
+  reveal.textContent = revealAll ? "Cevapları gizle" : "Tüm cevapları göster";
+  render();
+});
+const reset = document.getElementById("b-reset");
+let armed = false;
+reset.addEventListener("click", () => {
+  if (!armed) { armed = true; reset.textContent = "Emin misin? Tekrar bas"; setTimeout(() => { armed = false; reset.textContent = "Sıfırla"; }, 3000); return; }
+  armed = false; reset.textContent = "Sıfırla";
+  answers = {}; save(); revealAll = false; reveal.textContent = "Tüm cevapları göster"; render();
+});
+
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Soket Programlama Testi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: tek sütun soru kartları; üstte yapışkan ilerleme + filtre çubuğu. Alıntılar fosforlu kalem gibi işaretlenir. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #142033;
+  --muted: #5b6779;
+  --line: #d6dde8;
+  --accent: #1d4fc4;
+  --accent-soft: #e3eafb;
+  --mark: #fff0a8;
+  --mark-ink: #3b3000;
+  --ok: #157a46;
+  --ok-soft: #e1f4e9;
+  --bad: #b42318;
+  --bad-soft: #fde7e5;
+  --ftp: #1f66d1;
+  --smtp: #c2410c;
+  --snmp: #0f766e;
+  --http: #7a3ee0;
+  --java: #a15c07;
+  --mesaj: #be185d;
+  --genel: #5b6779;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+    --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+    --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+    --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #172030; --ink: #e6ecf5; --muted: #9aa7ba; --line: #2a3546;
+  --accent: #7ea2ff; --accent-soft: #1d2a47; --mark: #4a3f10; --mark-ink: #fff3c4;
+  --ok: #5fd394; --ok-soft: #143325; --bad: #ff8a80; --bad-soft: #3a1a1a;
+  --ftp: #6aa4ff; --smtp: #ff9a62; --snmp: #4fd1c2; --http: #b896ff; --java: #e8b04f; --mesaj: #f472b6; --genel: #9aa7ba;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.wrap {
+  max-width: 820px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.intro { padding-block: 32px 20px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1; margin: 6px 0 12px; text-wrap: balance; letter-spacing: -0.01em;
+}
+.intro p { margin: 0 0 10px; max-width: 65ch; color: var(--muted); }
+.intro p strong { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend mark { background: var(--mark); color: var(--mark-ink); padding: 0 4px; border-radius: 2px; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.bar .wrap { padding-block: 10px; display: grid; gap: 10px; }
+.score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 14px; }
+.score b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.score .ok b { color: var(--ok); }
+.score .bad b { color: var(--bad); }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+.progress .p-ok { background: var(--ok); }
+.progress .p-bad { background: var(--bad); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 500 13px/1 var(--font-body); padding: 7px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:focus-visible, .opt:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.btn {
+  font: 600 13px/1 var(--font-body); padding: 7px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+
+main { padding-block: 20px 60px; }
+.section-head {
+  display: flex; align-items: baseline; gap: 10px; margin: 28px 0 12px;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+}
+.section-head small { font: 400 13px var(--font-mono); color: var(--muted); }
+.list { display: grid; gap: 14px; }
+
+.q {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 18px 16px; min-width: 0;
+  border-left: 4px solid var(--sec);
+}
+.q-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+.num { font: 600 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag {
+  font: 600 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sec); border: 1px solid currentColor; padding: 4px 6px; border-radius: 4px;
+}
+.src {
+  margin-left: auto; font: 500 12px/1 var(--font-mono); color: var(--accent);
+  background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; white-space: nowrap;
+}
+.kl {
+  font: 600 11px/1 var(--font-body); color: var(--mark-ink); background: var(--mark);
+  padding: 5px 7px; border-radius: 4px; white-space: nowrap;
+}
+.q h3 { font: 600 17px/1.45 var(--font-body); margin: 0 0 12px; text-wrap: pretty; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; text-align: left;
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: 400 15px/1.45 var(--font-body); cursor: pointer;
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; }
+.opt .l {
+  font: 600 13px/22px var(--font-mono); text-align: center; border-radius: 50%;
+  width: 24px; height: 24px; border: 1px solid var(--line); color: var(--muted);
+}
+.opt.is-right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.is-right .l { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-wrong .l { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.opt.dim { opacity: .55; }
+
+.fb { margin-top: 14px; display: grid; gap: 10px; }
+.verdict { font: 600 14px var(--font-body); }
+.verdict.ok { color: var(--ok); }
+.verdict.bad { color: var(--bad); }
+.quote {
+  margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--bg);
+  border: 1px dashed var(--line); font-size: 15px;
+}
+.quote .where { display: block; font: 600 12px var(--font-mono); color: var(--accent); margin-bottom: 4px; }
+.quote mark { background: var(--mark); color: var(--mark-ink); padding: 1px 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.exp { margin: 0; font-size: 15px; color: var(--ink); }
+.exp b { font-weight: 600; }
+.exp code, .q h3 code, .opt code { font-family: var(--font-mono); font-size: .92em; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+@media (max-width: 520px) {
+  .src { margin-left: 0; }
+  .q { padding: 14px 14px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: .3; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<header class="wrap intro">
+  <div class="eyebrow">BSM 451 Ağ Programlama · Hafta 5 · Vize 09.11.2026</div>
+  <h1>Soket Programlama Testi</h1>
+  <p>Sorular "Soket Kavramı ve Soket Programlama" PDF'inin <strong>her slaytından</strong> sırayla çıkarıldı: soket kavramı, soket API'si, TCP ve UDP örnekleri, Java soket sınıfları, mesaj oluşturma ve byte dizilimi. Bir şıkkı seçtiğinde doğru cevap, sorunun geçtiği yer ve kısa bir açıklama açılır.</p>
+  <p>Bu konu <strong>test (60p)</strong> kısmında çıkar ama klasik sorudaki TCP istemci-sunucu koduyla da doğrudan bağlantılı. <span class="kl">Klasiğe de yarar</span> etiketli sorular, boşluk doldurmada işine yarayacak satırları içeriyor.</p>
+  <div class="legend">
+    <span><b style="font-family:var(--font-mono);color:var(--accent)">PDF s.X · Slayt Y</b> = sorunun geçtiği yer</span>
+    <span><mark>sarı vurgu</mark> = PDF'teki ifade</span>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="score">
+      <span>Cevaplanan <b id="s-done">0</b>/<b id="s-total">0</b></span>
+      <span class="ok">Doğru <b id="s-ok">0</b></span>
+      <span class="bad">Yanlış <b id="s-bad">0</b></span>
+      <span>Başarı <b id="s-pct">%0</b></span>
+    </div>
+    <div class="progress" aria-hidden="true"><i class="p-ok" id="p-ok"></i><i class="p-bad" id="p-bad"></i></div>
+    <div class="filters" role="toolbar" aria-label="Filtreler">
+      <button class="chip" id="f-all" data-sec="all" aria-pressed="true">Tümü</button>
+      <button class="chip" id="f-kavram" data-sec="KAVRAM" aria-pressed="false">Kavram</button>
+      <button class="chip" id="f-api" data-sec="API" aria-pressed="false">API</button>
+      <button class="chip" id="f-tcp" data-sec="TCP" aria-pressed="false">TCP</button>
+      <button class="chip" id="f-udp" data-sec="UDP" aria-pressed="false">UDP</button>
+      <button class="chip" id="f-java" data-sec="JAVA" aria-pressed="false">Java</button>
+      <button class="chip" id="f-mesaj" data-sec="MESAJ" aria-pressed="false">Mesaj</button>
+      <span class="sep"></span>
+      <button class="chip" id="f-wrong" data-only="wrong" aria-pressed="false">Yanlışlarım</button>
+      <button class="chip" id="f-blank" data-only="blank" aria-pressed="false">Boşlar</button>
+      <span class="sep"></span>
+      <button class="btn" id="b-reveal">Tüm cevapları göster</button>
+      <button class="btn" id="b-reset">Sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<script>
+// o[0] her zaman doğru cevaptır; şıklar soru id'sine göre sabit karıştırılır.
+const Q = [
+// ───────────── SOKET KAVRAMI ─────────────
+{sec:"KAVRAM",p:1,s:2,q:"Hafta 5 \"Haftalık İçerik\" slaytında yer almayan konu hangisidir?",
+ o:["DNS isim çözümleme","Soket Kavramı ve Türleri","İstemci-Sunucu Mimarisi","Soket Prosedürleri","Mesaj Oluşturma"],
+ quote:"Soket Kavramı ve Türleri · İstemci-Sunucu Mimarisi · Soket Prosedürleri · … · Mesaj Oluşturma",
+ exp:"İçerikte altı başlık var: <b>Soket kavramı ve türleri, İstemci-sunucu mimarisi, Soket prosedürleri, İstemci-sunucu iletişimi, TCP ve UDP için örnek kod yapıları, Mesaj oluşturma</b>."},
+{sec:"KAVRAM",p:2,s:3,q:"Soketler ile ilgili slaytta verilen tanım hangisidir?",
+ o:["TCP ve UDP kullanan iki bilgisayar arasındaki genel iletişim mekanizmasını sağlar","Sadece UDP kullanan bilgisayarlar arasında iletişim sağlar","Fiziksel katmanda çalışan bir donanım bileşenidir","Sadece aynı bilgisayardaki süreçler arasında kullanılır","IP adreslerini MAC adreslerine çevirir"],
+ quote:"Soketler, TCP ve UDP kullanan iki bilgisayar arasındaki genel iletişim mekanizmasını sağlar.",
+ exp:"Soketler aynı zamanda <b>ağ programlama için standart API'lerdir</b>. Şekilde soket katmanı <b>uygulama (Application) ile TCP arasında</b> duruyor."},
+{sec:"KAVRAM",p:2,s:3,q:"Slayta göre soket kavramını oluşturan üç öğeden biri DEĞİLDİR?",
+ o:["MAC adresi","IP adresi","Taşıma katman protokolü","Port numarası","Hepsi soket kavramına dahildir"],
+ quote:"Soket kavramı; IP adresi · Taşıma katman protokolü · Port Numarası",
+ exp:"Bir soketi <b>IP + protokol (TCP/UDP) + port</b> üçlüsü tanımlar. MAC adresi Katman 2'ye aittir ve soket kavramına dahil değildir."},
+{sec:"KAVRAM",p:2,s:4,q:"Soket türlerinden \"Datagram Soketler\" hangi temele dayanır?",
+ o:["UDP temelli","TCP temelli","Ham paket yapısı","ICMP temelli","ARP temelli"],
+ quote:"Datagram Soketler — UDP temelli",
+ exp:"Üç soket türü var: <b>Akış soketleri = TCP</b>, <b>Datagram soketler = UDP</b>, <b>Raw soketler = ham paket yapısı</b>. Üçü de TCP/IP mimarisi altında."},
+{sec:"KAVRAM",p:2,s:4,q:"Ham (raw) paket yapısıyla çalışan soket türü hangisidir?",
+ o:["Raw soketler","Akış soketleri","Datagram soketler","Pasif soketler","Dinleme soketleri"],
+ quote:"Raw Soketler — Ham paket yapısı",
+ exp:"Raw soketlerle taşıma katmanını atlayıp paketi kendin oluşturursun. Klasik sorudaki <b>arpgonder.c</b> ve <b>icmpgonder.c</b> kodları da bu tür soketlerle çalışıyor."},
+{sec:"KAVRAM",p:3,s:5,q:"Soket kavramının katmanlı gösteriminde, soket tanımlayıcı tablosundaki (descriptor table) bir soket kaydında bulunmayan alan hangisidir?",
+ o:["MAC adresi","Family (PF_INET)","Service (SOCK_STREAM)","Local_IP / Remote_IP","Local_Port / Remote_Port"],
+ quote:"Family: PF_INET · Service: SOCK_STREAM · Local_IP · Remote_IP · Local_Port · Remote_Port",
+ exp:"Şekilde TCP ve UDP portları <b>1'den 65535'e</b> kadar ayrı ayrı gösteriliyor ve soketler portlara bağlanıyor (\"Sockets bound to ports\"). Tablodaki alanlar: <b>Family, Service, Local/Remote IP, Local/Remote Port</b>."},
+{sec:"KAVRAM",p:3,s:6,q:"İstemci-sunucu mimarisinde sunucu için hangisi doğrudur?",
+ o:["Pasif bir şekilde bağlantı isteklerini bekler; pasif soket yapısındadır","Bağlantıyı başlatır; aktif soket yapısındadır","İstemcinin port ve IP adresini önceden bilmek zorundadır","Sadece tek bir istemciye hizmet verebilir","Bağlantı için connect() çağırır"],
+ quote:"Pasif bir şekilde bağlantı isteklerini bekler. · Pasif soket yapısı",
+ exp:"<b>Sunucu = pasif</b> (bekler, cevap verir). <b>İstemci = aktif</b> (bağlantıyı başlatır, sunucunun IP ve portunu bilmesi gerekir)."},
+{sec:"KAVRAM",p:3,s:6,q:"İstemci-sunucu mimarisinde istemcinin bağlantı kurabilmesi için neyi bilmesi gerekir?",
+ o:["Sunucunun port ve IP adresini","Sunucunun MAC adresini","Sunucunun işletim sistemini","Diğer istemcilerin adreslerini","Sunucunun dinleme kuyruğu uzunluğunu"],
+ quote:"Bağlantıyı başlatır. · Sunucunun port ve IP adresini bilmesi gerekir. · Aktif soket yapısı",
+ exp:"Bu yüzden TCP istemci kodunda <code>inet_addr(\"127.0.0.1\")</code> ve <code>htons(PORT)</code> ile sunucunun adresi elle yazılıyor. Klasik soruda topolojideki sunucu IP'si buraya gelir.", k:true},
+
+// ───────────── SOKET API ─────────────
+{sec:"API",p:4,s:7,q:"Bir lokal IP ve portu bir sokete bağlayan (ilişkilendiren) soket prosedürü hangisidir?",
+ o:["bind()","listen()","connect()","accept()","socket()"],
+ quote:"bind() — Bir lokal IP ve portu bir sokete bağlar/ilişkilendirir.",
+ exp:"Tablo: <b>socket()</b> soket oluşturur, <b>bind()</b> IP ve port bağlar, <b>listen()</b> pasif dinler, <b>connect()</b> bağlantı başlatır, <b>accept()</b> bağlantıyı kabul eder, <b>write()/read()</b> yazar/okur, <b>sendto()/recvfrom()</b> UDP datagram gönderir/okur, <b>close()</b> bağlantıyı sonlandırır.", k:true},
+{sec:"API",p:4,s:7,q:"Bir başka UDP soketine datagram gönderen soket prosedürü hangisidir?",
+ o:["sendto()","write()","send()","connect()","recvfrom()"],
+ quote:"sendto() — Bir başka UDP soketine datagram gönderir.",
+ exp:"UDP bağlantısız olduğu için her gönderimde hedef adres verilir, bu yüzden <b>sendto()</b> kullanılır. Karşılığı <b>recvfrom()</b>: başka bir UDP soketinden datagram okur."},
+{sec:"API",p:4,s:7,q:"\"Bağlantıları pasif olarak dinler\" tanımı hangi prosedüre aittir?",
+ o:["listen()","accept()","bind()","read()","connect()"],
+ quote:"listen() — Bağlantıları pasif olarak dinler.",
+ exp:"listen() sadece <b>TCP sunucusunda</b> kullanılır. Bağlantıyı asıl kabul eden fonksiyon <b>accept()</b>'tir.", k:true},
+{sec:"API",p:4,s:8,q:"struct sockaddr_in yapısında sin_port ve sin_addr alanları kaç bittir?",
+ o:["sin_port 16 bit, sin_addr 32 bit","sin_port 32 bit, sin_addr 16 bit","İkisi de 32 bit","sin_port 8 bit, sin_addr 32 bit","sin_port 16 bit, sin_addr 48 bit"],
+ quote:"unsigned short sin_port; /* Address port (16 bits) */ · struct in_addr sin_addr; /* Internet address (32 bits) */",
+ exp:"sockaddr_in alanları: <code>sin_family</code> (AF_INET), <code>sin_port</code> (16 bit), <code>sin_addr</code> (32 bit IPv4), <code>sin_zero[8]</code> (kullanılmaz). Port 16 bit olduğu için <code>htons</code> (short), IP 32 bit olduğu için <code>htonl</code> (long) kullanılır.", k:true},
+{sec:"API",p:4,s:8,q:"struct sockaddr_in içindeki sin_zero[8] alanı için ne söylenmiştir?",
+ o:["Kullanılmaz (Not used)","Port numarasını tutar","IP adresini tutar","Adres ailesini tutar","Protokol numarasını tutar"],
+ quote:"char sin_zero[8]; /* Not used */",
+ exp:"Genel <code>struct sockaddr</code> yapısı <code>sa_family</code> ve <code>sa_data[14]</code> alanlarından oluşur. sockaddr_in de toplamda aynı boyuta gelsin diye sin_zero ile doldurulur. Kodlarda <code>bzero(&servaddr, sizeof(servaddr))</code> bu alanı da sıfırlar."},
+{sec:"API",p:4,s:8,q:"bind() ve connect() çağrılarında neden (struct sockaddr *) dönüşümü yapılır?",
+ o:["sockaddr_in bir sockaddr'a dönüştürülebildiği ve API genel sockaddr türünü beklediği için","sockaddr_in kullanılamadığı için","Port numarasını big-endian yapmak için","IP adresini string'e çevirmek için","Bellekten tasarruf etmek için"],
+ quote:"Not: sockaddr_in bir sockaddr'a dönüştürülebilir.",
+ exp:"Socket API adresler için <b>genel</b> bir veri türü tanımlar: <code>struct sockaddr</code>. TCP/IP için onun özel biçimi olan <code>sockaddr_in</code> doldurulur, sonra cast edilir. TCP kodundaki <code>#define SA struct sockaddr</code> ve <code>(SA*)&servaddr</code> tam olarak bu dönüşüm.", k:true},
+{sec:"API",p:5,s:9,q:"TCP (stream) akış diyagramında istemci ile sunucu arasındaki \"senkronizasyon noktası\" hangi iki çağrı arasındadır?",
+ o:["Sunucunun accept() ile istemcinin connect() çağrısı","Sunucunun listen() ile istemcinin socket() çağrısı","Sunucunun bind() ile istemcinin bind() çağrısı","Sunucunun send() ile istemcinin recv() çağrısı","Sunucunun close() ile istemcinin close() çağrısı"],
+ quote:"accept() ←synchronization point→ connect()",
+ exp:"TCP sunucu sırası: <b>socket → bind → listen → accept → recv/send → close</b>. TCP istemci sırası: <b>socket → connect → send/recv → close</b>. TCP istemcisinde bind() yoktur.", k:true},
+{sec:"API",p:5,s:9,q:"UDP (datagram) akış diyagramında sunucu tarafında bulunmayan çağrı hangisidir?",
+ o:["listen()","socket()","bind()","recvfrom()","sendto()"],
+ quote:"Datagram (e.g. UDP) Server: socket() → bind() → recvfrom() → sendto() → close()",
+ exp:"UDP bağlantısızdır, bu yüzden <b>listen(), accept() ve connect()</b> kullanılmaz. Diyagramda UDP istemcisinde de <b>bind()</b> var: socket → bind → sendto → recvfrom → close."},
+{sec:"API",p:5,s:10,q:"int sockid = socket(family, type, protocol); çağrısında IPv4 internet adresleri için genellikle kullanılan family değeri hangisidir?",
+ o:["PF_INET","PF_UNIX","SOCK_STREAM","IPPROTO_TCP","INADDR_ANY"],
+ quote:"PF_INET, IPv4 protocols, Internet addresses (typically used)",
+ exp:"<b>PF_INET</b> IPv4 için, <b>PF_UNIX</b> ise yerel iletişim (dosya adresleri) içindir. TCP kodunda bunun yerine <code>AF_INET</code> yazılıyor, pratikte aynı değerdir.", k:true},
+{sec:"API",p:5,s:10,q:"socket() çağrısında \"güvenilir, çift yönlü, bağlantı tabanlı servis\" için kullanılan type değeri hangisidir?",
+ o:["SOCK_STREAM","SOCK_DGRAM","SOCK_RAW","PF_INET","IPPROTO_UDP"],
+ quote:"SOCK_STREAM -reliable, 2-way, connection-based service",
+ exp:"<b>SOCK_STREAM = TCP</b> (güvenilir, bağlantılı). <b>SOCK_DGRAM = UDP</b> (güvenilmez, bağlantısız, maksimum uzunlukta mesajlar). Klasik soruda TCP kodunda boşluk bırakılırsa buraya <code>SOCK_STREAM</code> yazılır.", k:true},
+{sec:"API",p:5,s:10,q:"socket() çağrısındaki protocol parametresi genellikle hangi değere ayarlanır ve bu ne anlama gelir?",
+ o:["0; varsayılan protokolü kullan","1; TCP kullan","-1; hata","IPPROTO_RAW; ham paket","255; tüm protokoller"],
+ quote:"usually set to 0 (i.e., use default protocol)",
+ exp:"Protokol açıkça <code>IPPROTO_TCP</code> veya <code>IPPROTO_UDP</code> olarak da verilebilir. TCP kodundaki <code>socket(AF_INET, SOCK_STREAM, 0)</code> çağrısında 0 olduğu için SOCK_STREAM'in varsayılanı olan TCP seçilir.", k:true},
+{sec:"API",p:6,s:11,q:"\"Sokete İlişkilendirme\" akış diyagramına göre bind() hangi taraflarda yer alır?",
+ o:["TCP sunucu, UDP sunucu ve UDP istemci","Sadece TCP istemci","TCP istemci ve TCP sunucu","Sadece UDP istemci","Dört tarafın hepsi"],
+ quote:"Stream Server: socket() → bind() … Datagram Server/Client: socket() → bind()",
+ exp:"Diyagramda <b>TCP istemcisinde bind() yok</b>, çünkü istemcinin portu bağlantı kurulumunda belirlenir. TCP sunucusu ve iki UDP tarafı ise bind() yapıyor."},
+{sec:"API",p:6,s:12,q:"TCP/IP sunucusunda bind() için internet adresi genellikle neye ayarlanır ve bu ne anlama gelir?",
+ o:["INADDR_ANY; herhangi bir gelen arayüzü seçer","127.0.0.1; sadece yerel bağlantı","0.0.0.0'dan farklı sabit bir IP; tek arayüz","PF_INET; IPv4","INADDR_NONE; hiçbir arayüz"],
+ quote:"internet adresi genellikle INADDR_ANY olarak ayarlanır, yani herhangi bir gelen arayüzü seçer",
+ exp:"TCP sunucu kodunda <code>servaddr.sin_addr.s_addr = htonl(INADDR_ANY);</code> satırı tam olarak bu. Sunucunun birden fazla ağ kartı olsa bile her arayüzden gelen bağlantıyı kabul eder.", k:true},
+{sec:"API",p:6,s:12,q:"\"TCP ile bind örneği\"nde sunucu hangi porta bağlanmaktadır?",
+ o:["5100","8080","80","1111","21"],
+ quote:"addrport.sin_port = htons(5100);",
+ exp:"Örnek: <code>socket(PF_INET, SOCK_STREAM, 0)</code>, <code>sin_family = AF_INET</code>, <code>sin_port = htons(5100)</code>, <code>s_addr = htonl(INADDR_ANY)</code>. bind'in üçüncü parametresi <b>size</b>, yani addrport yapısının byte cinsinden boyutudur (<code>sizeof(addrport)</code>).", k:true},
+{sec:"API",p:7,s:13,q:"Datagram soketlerinde bind() işlemi ne zaman atlanabilir?",
+ o:["Soket sadece gönderiyorsa; işletim sistemi her gönderimde bir port bulur","Soket sadece alıyorsa","Hiçbir zaman atlanamaz","Sunucu tarafında her zaman","Soket hem alıp hem gönderiyorsa"],
+ quote:"Eğer sadece gönderiyorsa, bağlamaya gerek yok. … Eğer alıyorsa, bağlamaya gerek var.",
+ exp:"Kural: <b>Alacaksan bind et</b>, çünkü karşı taraf seni bilinen bir porttan bulmalı. Sadece gönderiyorsan işletim sistemi geçici bir port atar."},
+{sec:"API",p:7,s:13,q:"Stream (TCP) soketlerinde gönderen (istemci) tarafında bind() neden gerekmez?",
+ o:["Hedef bağlantı kurulumunda belirlenir ve alıcı uç bağlantı kurulumunda gönderenin portundan haberdar edilir","TCP port kullanmadığı için","İstemci her zaman 80. portu kullandığı için","bind() sadece UDP'de tanımlı olduğu için","İstemci listen() ile portu zaten belirlediği için"],
+ quote:"Gönderen portunun bilinmesine gerek yoktur (bağlantı kurulumu sırasında alıcı uç bağlantı noktasından haberdar edilir)",
+ exp:"Bu yüzden TCP istemci kodunda bind() yok: <code>socket → connect</code> yeterli.", k:true},
+{sec:"API",p:7,s:14,q:"\"Dinleme\" akış diyagramına göre listen() hangi tarafta kullanılır?",
+ o:["Sadece TCP sunucusunda","TCP sunucu ve TCP istemcide","UDP sunucu ve TCP sunucuda","Dört tarafın hepsinde","Sadece UDP istemcide"],
+ quote:"Stream (e.g. TCP) Server: socket() → bind() → listen() → accept()",
+ exp:"listen() ve accept() <b>sadece TCP sunucusuna</b> özgüdür. UDP'de dinleme ve bağlantı kabul aşaması yoktur."},
+{sec:"API",p:8,s:15,q:"int status = listen(sockid, queueLimit); çağrısındaki queueLimit (queuelen) neyi ifade eder?",
+ o:["Bir bağlantı için bekleyen aktif katılımcı/istemci sayısı","Gönderilecek maksimum byte sayısı","Port numarası","Zaman aşımı süresi (sn)","Sunucunun IP adresi"],
+ quote:"queuelen; integer, bir bağlantı için bekleyen aktif katılımcı/istemci sayısı",
+ exp:"TCP sunucu kodundaki <code>listen(sockfd, 5)</code> çağrısında <b>5</b>, kuyrukta bekleyebilecek bağlantı sayısıdır. Slayttaki örnekte bu değer <code>MAXPENDING</code> olarak geçiyor.", k:true},
+{sec:"API",p:8,s:15,q:"Slayta göre listen() çağrısının dönüş değeri (status) için ne söylenmiştir?",
+ o:["Dinleme varsa 1, hata varsa 0","Başarılıysa 0, hata varsa -1","Bağlantı sayısını döndürür","Yeni soket tanımlayıcısını döndürür","Her zaman 0 döner"],
+ quote:"status; eğer dinleme var ise 1, yoksa yani hata var ise 0",
+ exp:"Sınavda <b>slayttaki ifadeye göre</b> cevap ver: 1 / 0. Gerçek POSIX'te listen() başarıda 0, hatada -1 döner. TCP kodundaki <code>if ((listen(sockfd, 5)) != 0)</code> kontrolü de bu gerçek davranışa göre yazılmış."},
+{sec:"API",p:8,s:15,q:"Dinleme soketi (listening socket) ile ilgili hangisi doğrudur?",
+ o:["Asla gönderme ve alma işlemleri için kullanılmaz; sadece yeni bağlantıları almak için kullanılır","Veri göndermek için kullanılır","İstemci tarafında oluşturulur","accept() sonrası kapatılmak zorundadır","UDP soketleri için de kullanılır"],
+ quote:"Asla gönderme ve alma işlemleri için kullanılmaz!",
+ exp:"Veri alışverişi, accept()'in döndürdüğü <b>yeni soket</b> üzerinden yapılır. TCP kodunda <code>sockfd</code> dinler, <code>connfd = accept(...)</code> ile gelen soketle <code>read/write</code> yapılır. Boşluk doldurmada bu ikisini karıştırma.", k:true},
+{sec:"API",p:8,s:16,q:"\"Bağlantı Kabulü\" diyagramında vurgulanan adım hangisidir?",
+ o:["Sunucunun accept() ile istemcinin connect() arasındaki senkronizasyon","UDP sunucunun recvfrom() çağrısı","Her iki tarafın close() çağrısı","TCP sunucunun bind() çağrısı","UDP istemcinin sendto() çağrısı"],
+ quote:"accept() ←synchronization point→ connect()",
+ exp:"accept() bir istemci bağlanana kadar <b>bekler (bloklanır)</b>. İstemci connect() çağırınca iki taraf eşleşir ve TCP bağlantısı kurulmuş olur."},
+{sec:"API",p:9,s:17,q:"int status = connect(sockid, &foreignAddr, addrlen); çağrısında status değerleri ne anlama gelir?",
+ o:["Bağlantı başarılıysa 0, başarısızsa -1","Başarılıysa 1, başarısızsa 0","Gönderilen byte sayısı","Yeni soket tanımlayıcısı","Uzak portun numarası"],
+ quote:"status; Eğer bağlantı başarılı ise 0, başarısızsa -1",
+ exp:"<b>foreignAddr</b>: pasif katılımcının (sunucunun) adresi, sockaddr yapısı. <b>addrlen</b>: adres boyutu. TCP istemci kodunda <code>if (connect(...) != 0)</code> ile bu kontrol ediliyor.", k:true},
+{sec:"API",p:9,s:17,q:"int s = accept(sockid, &clientAddr, &addrLen); çağrısında clientAddr neyi tutar?",
+ o:["Aktif katılımcının (istemcinin) adresini, sockaddr yapısında","Sunucunun kendi adresini","Dinleme kuyruğunun uzunluğunu","Gönderilecek mesajı","Port numarasını string olarak"],
+ quote:"clientAddr; Aktif katılımcı/istemci adresleri, sockaddr yapısı",
+ exp:"<b>addrLen</b> istemcinin adres boyutudur ve <b>adresiyle (&)</b> verilir, çünkü fonksiyon onu doldurur. TCP kodunda <code>len = sizeof(cli); connfd = accept(sockfd, (SA*)&cli, &len);</code>. Dönüş değeri <b>s</b> yeni soket tanımlayıcısıdır.", k:true},
+{sec:"API",p:9,s:18,q:"\"Veri Okuma/Yazma\" diyagramında TCP ve UDP taraflarında kullanılan fonksiyon çiftleri hangileridir?",
+ o:["TCP: send()/recv(), UDP: sendto()/recvfrom()","TCP: sendto()/recvfrom(), UDP: send()/recv()","İkisi de send()/recv()","TCP: write()/listen(), UDP: read()/bind()","İkisi de sendto()/recvfrom()"],
+ quote:"Stream: recv() / send() · Datagram: recvfrom() / sendto()",
+ exp:"TCP'de bağlantı kurulu olduğu için adres verilmeden <b>send/recv</b> (veya <b>write/read</b>) kullanılır. UDP'de her pakette adres gerektiği için <b>sendto/recvfrom</b> kullanılır."},
+{sec:"API",p:10,s:19,q:"int count = send(sockid, msg, msgLen, flags); çağrısında flags genellikle ne olur ve hata durumunda count ne döner?",
+ o:["flags genellikle 0; hata varsa count -1","flags genellikle 1; hata varsa count 0","flags genellikle -1; hata varsa count 0","flags port numarasıdır; hata varsa count -1","flags genellikle 0; hata varsa count 0"],
+ quote:"flags; integer, özel seçenekler, genellikle sadece 0 · count; iletilen byte sayısı, eğer hata varsa -1",
+ exp:"<b>msg</b>: iletilecek mesaj (const void[]), <b>msgLen</b>: mesaj boyutu, <b>count</b>: iletilen byte sayısı. recv() da aynı mantıkta çalışır: <code>recv(sockid, recvBuf, bufLen, flags)</code>.", k:true},
+{sec:"API",p:10,s:19,q:"int count = recv(sockid, recvBuf, bufLen, flags); çağrısında recvBuf neyi ifade eder?",
+ o:["Alınan byte'ları depolayan tampon (void[])","Gönderilecek mesaj","Karşı tarafın adresi","Alınan byte sayısı","Soket tanımlayıcısı"],
+ quote:"recvBuf; void[], alınan byteları depolar.",
+ exp:"<b>bufLen</b>: tamponun boyutu. TCP kodundaki <code>read(connfd, buff, sizeof(buff))</code> de aynı mantıkla çalışır: buff tampon, sizeof(buff) boyut."},
+{sec:"API",p:10,s:20,q:"sendto() fonksiyonunun send()'den farklı olarak aldığı parametreler hangileridir?",
+ o:["foreignAddr (hedef adres, sockaddr) ve addrLen (boyutu)","clientAddr ve bufLen","queueLimit ve flags","msg ve msgLen","Sadece port numarası"],
+ quote:"foreignAddr: sockaddr yapısı, hedef adres · addrLen: foreignAddr'in boyutu",
+ exp:"<code>sendto(sockid, msg, msgLen, flags, &foreignAddr, addrlen)</code>. msg, msgLen, flags ve count send() ile aynıdır. recvfrom() ise <b>clientAddr</b> ile gönderenin (istemcinin) adresini öğrenir."},
+{sec:"API",p:11,s:21,q:"\"Soketi Kapatma\" diyagramına göre close() hangi taraflarda çağrılır?",
+ o:["TCP sunucu, TCP istemci, UDP sunucu ve UDP istemcinin hepsinde","Sadece TCP istemcide","Sadece sunucularda","Sadece UDP taraflarında","Hiçbirinde, işletim sistemi kapatır"],
+ quote:"close() · close() · close() · close()",
+ exp:"Diyagramın son satırında dört tarafta da <b>close()</b> var. Ancak örnek kodlarda sunucular sonsuz döngüde (<code>for(;;)</code>) çalıştığı için close genelde istemci soketi için çağrılıyor."},
+{sec:"API",p:11,s:22,q:"Soket kapatılırken (close) neler olur?",
+ o:["Akış soketleri için bağlantı sonlandırılır ve soketin kullandığı port serbest bırakılır","Sadece tampon temizlenir","IP adresi serbest bırakılır, port korunur","Bağlantı açık kalır, sadece okuma durur","Sunucu otomatik yeniden başlatılır"],
+ quote:"Akış soketleri için bağlantı sonlandırılır. · Soketin kullandığı Port numarası serbest bırakılır.",
+ exp:"<code>status = close(sockid);</code> başarılıysa <b>0</b>, hata olursa <b>-1</b> döner. TCP kodunun son satırı <code>close(sockfd);</code>.", k:true},
+
+// ───────────── TCP ÖRNEK ─────────────
+{sec:"TCP",p:12,s:23,q:"Akış temelli (TCP) örnekte sunucunun adımları hangi sırayla verilmiştir?",
+ o:["Soket oluşturma → Port atama → Dinleme → Tekrar: (kabul, iletişim, kapatma)","Soket oluşturma → Bağlantı kurma → İletişim → Kapatma","Port atama → Soket oluşturma → Kabul → Dinleme","Soket oluşturma → Dinleme → Port atama → İletişim","Dinleme → Kabul → Soket oluşturma → Kapatma"],
+ quote:"1. Bir TCP Soketi oluşturma 2. Sokete Port atama 3. Soketi dinleme 4. Tekrar",
+ exp:"Sunucuda 4. adım bir <b>döngüdür</b>: a) yeni bağlantı kabul, b) iletişim, c) bağlantıyı kapatma. İstemcinin adımları ise: <b>soket oluşturma → bağlantı kurma → iletişim → bağlantıyı kapatma</b>.", k:true},
+{sec:"TCP",p:12,s:23,q:"TCP sunucu örneğinde soket hangi çağrıyla oluşturulmuştur?",
+ o:["socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)","socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)","socket(PF_UNIX, SOCK_STREAM, 0)","socket(PF_INET, SOCK_RAW, IPPROTO_TCP)","bind(PF_INET, SOCK_STREAM, 0)"],
+ quote:"servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0",
+ exp:"Dönüş değeri <b>0'dan küçükse</b> hata vardır (<code>DieWithError(\"socket() failed\")</code>). TCP kodunda bu kontrol <code>if (sockfd == -1)</code> şeklinde yapılıyor.", k:true},
+{sec:"TCP",p:12,s:24,q:"TCP sunucu örneğinde \"Sokete Port atama\" adımında sin_addr.s_addr ve sin_port nasıl atanmıştır?",
+ o:["s_addr = htonl(INADDR_ANY); sin_port = htons(echoServPort)","s_addr = inet_addr(echoServIP); sin_port = htonl(echoServPort)","s_addr = htons(INADDR_ANY); sin_port = htonl(echoServPort)","s_addr = INADDR_ANY; sin_port = echoServPort","s_addr = ntohl(INADDR_ANY); sin_port = ntohs(echoServPort)"],
+ quote:"htonl(INADDR_ANY); /* Any incoming interface */ · htons(echoServPort); /* Local port */",
+ exp:"Kural: <b>IP 32 bit → htonl</b>, <b>port 16 bit → htons</b>. Ardından <code>bind(servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr))</code>. Klasik sorudaki boşluklar büyük ihtimalle burada olur.", k:true},
+{sec:"TCP",p:13,s:25,q:"TCP sunucu örneğinde soketin gelen bağlantıları dinlemesi için hangi çağrı yapılmıştır?",
+ o:["listen(servSock, MAXPENDING)","accept(servSock, MAXPENDING)","bind(servSock, MAXPENDING)","listen(clientSock, MAXPENDING)","connect(servSock, MAXPENDING)"],
+ quote:"/* Mark the socket so it will listen for incoming connections */ if (listen(servSock, MAXPENDING) < 0)",
+ exp:"listen() <b>sunucu soketi (servSock)</b> üzerinde çağrılır. MAXPENDING kuyruk uzunluğudur, TCP kodunda bu değer 5."},
+{sec:"TCP",p:13,s:26,q:"TCP sunucu örneğinde accept() çağrısıyla ilgili hangisi doğrudur?",
+ o:["Sonsuz döngüde, servSock üzerinde çağrılır ve dönüş değeri clientSock'a atanır","Sadece bir kez, clientSock üzerinde çağrılır","listen()'dan önce çağrılır","İstemci tarafında çağrılır","Dönüş değeri port numarasıdır"],
+ quote:"clientSock=accept(servSock,(struct sockaddr *)&echoClntAddr,&clntLen))<0",
+ exp:"Önce <code>clntLen = sizeof(echoClntAddr);</code> ile boyut ayarlanır, sonra accept çağrılır. <code>for (;;) /* Run forever */</code> döngüsü sayesinde sunucu sürekli yeni istemci kabul eder.", k:true},
+{sec:"TCP",p:14,s:27,q:"TCP istemci örneğinde soket oluşturma için açıklama satırında ne yazmaktadır?",
+ o:["Create a reliable, stream socket using TCP","Create a datagram/UDP socket","Create socket for incoming connections","Create a raw socket","Create socket for sending/receiving datagrams"],
+ quote:"/* Create a reliable, stream socket using TCP */",
+ exp:"İstemci: <code>clientSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)</code>. Sunucudakiyle aynı çağrıdır, sadece değişken adı farklı. \"incoming connections\" yorumu ise sunucu soketine ait."},
+{sec:"TCP",p:14,s:28,q:"TCP istemci örneğinde sunucunun IP adresi sockaddr_in yapısına nasıl atanmıştır?",
+ o:["echoServAddr.sin_addr.s_addr = inet_addr(echoservIP);","echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY);","echoServAddr.sin_port = inet_addr(echoservIP);","echoServAddr.sin_family = inet_addr(echoservIP);","echoServAddr.sin_addr = htons(echoservIP);"],
+ quote:"echoServAddr.sin_addr.s_addr = inet_addr(echoservIP); /* Server IP address*/",
+ exp:"<b>İstemci</b> sunucunun belirli IP'sini <code>inet_addr(\"x.x.x.x\")</code> ile yazar. <b>Sunucu</b> ise <code>htonl(INADDR_ANY)</code> kullanır. TCP kodunda istemci <code>inet_addr(\"127.0.0.1\")</code> kullanıyor. Topolojide sunucu IP'si verilirse buraya o yazılır.", k:true},
+{sec:"TCP",p:14,s:28,q:"TCP istemci örneğinde bağlantı kurma adımında hangi çağrı yapılır?",
+ o:["connect(clientSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr))","accept(clientSock, &echoServAddr, sizeof(echoServAddr))","bind(clientSock, &echoServAddr, sizeof(echoServAddr))","listen(clientSock, sizeof(echoServAddr))","sendto(clientSock, &echoServAddr)"],
+ quote:"if (connect(clientSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)",
+ exp:"connect'in ikinci parametresi <b>sunucunun adresi</b>, üçüncüsü bu adresin boyutudur. Hata olursa <code>DieWithError(\"connect() failed\")</code> çağrılır.", k:true},
+{sec:"TCP",p:15,s:29,q:"İstemci connect() ile bağlandığında sunucu tarafında ne olur?",
+ o:["Sunucunun kabul prosedürü artık engellenmemiş olur ve istemcinin soket adresi geri döndürülür","Sunucu listen()'ı yeniden çağırır","Sunucu yeni bir bind() yapar","Sunucu soketi kapanır","Hiçbir şey olmaz, sunucu beklemeye devam eder"],
+ quote:"Sunucunun kabul prosedürü artık engellenmemiş olur ve istemcinin soketi adresi geri döndürülür.",
+ exp:"accept() o ana kadar <b>bloklanmış</b> (bekliyor) durumdadır. connect ile eşleşince geri döner ve <code>echoClntAddr</code> içine istemcinin adresini yazar."},
+{sec:"TCP",p:15,s:30,q:"TCP istemci örneğinde mesaj gönderildikten sonra send()'in dönüş değeri neyle karşılaştırılır?",
+ o:["echoStringLen (gönderilmek istenen byte sayısı) ile","0 ile","-1 ile","sizeof(echoServAddr) ile","MAXPENDING ile"],
+ quote:"if (send(clientSock, echoString, echoStringLen, 0) != echoStringLen)",
+ exp:"Önce <code>echoStringLen = strlen(echoString);</code> ile uzunluk bulunur. send farklı sayıda byte gönderirse hata verilir: \"send() sent a different number of bytes than expected\"."},
+{sec:"TCP",p:16,s:31,q:"TCP sunucu örneğinde recv() fonksiyonunun 0 döndürmesi neyi ifade eder?",
+ o:["İletimin (transmission) sonunu","Bir hatayı","Tamponun dolduğunu","Yeni bir istemcinin bağlandığını","Mesajın 0 byte'lık bir sayı olduğunu"],
+ quote:"while (recvMsgSize > 0) { /* zero indicates end of transmission */",
+ exp:"Sunucu döngüde <b>recv → send (echo) → recv</b> yapar ve recvMsgSize 0 olunca durur. 0'dan küçük bir değer ise hata demektir (<code>DieWithError(\"recv() failed\")</code>)."},
+{sec:"TCP",p:16,s:32,q:"TCP örneğinde \"Bağlantıyı kapatma\" adımında hem istemci hem sunucuda çağrılan ifade hangisidir?",
+ o:["close(clientSock);","close(servSock);","shutdown(servSock);","exit(0);","listen(clientSock, 0);"],
+ quote:"close(clientSock); · close(clientSock);",
+ exp:"Sunucu döngü içinde <b>istemciye ait soketi</b> kapatır, dinleme soketi (servSock) açık kalır ve yeni bağlantıları beklemeye devam eder."},
+
+// ───────────── UDP ÖRNEK ─────────────
+{sec:"UDP",p:17,s:33,q:"Datagram (UDP) soket örneğinde sunucunun adımları hangileridir?",
+ o:["UDP soket oluşturma → Port atama → Tekrar: İletişim","UDP soket oluşturma → Port atama → Dinleme → Kabul","UDP soket oluşturma → Bağlantı kurma → İletişim","Port atama → Dinleme → İletişim","UDP soket oluşturma → Kabul → Kapatma"],
+ quote:"1. Bir UDP Soketi oluşturma 2. Sokete Port atama 3. Tekrar: a. İletişim",
+ exp:"UDP sunucusunda <b>dinleme ve kabul yoktur</b>. İstemci adımları: <b>UDP soket oluşturma → sokete port atama → iletişim → bağlantıyı kapatma</b>."},
+{sec:"UDP",p:17,s:34,q:"UDP örneğinde sunucu ve istemci soketleri hangi çağrıyla oluşturulmuştur?",
+ o:["socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)","socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)","socket(PF_INET, SOCK_DGRAM, IPPROTO_TCP)","socket(PF_UNIX, SOCK_DGRAM, 0)","socket(PF_INET, SOCK_RAW, IPPROTO_UDP)"],
+ quote:"socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)",
+ exp:"Yorum satırları: sunucu için \"Create socket for sending/receiving datagrams\", istemci için \"Create a datagram/UDP socket\". <b>SOCK_DGRAM</b> ile <b>IPPROTO_UDP</b> birlikte kullanılır."},
+{sec:"UDP",p:17,s:34,q:"UDP örneğinde istemcinin port atama (bind) adımında kullanılan port değişkeni hangisidir?",
+ o:["htons(echoClientPort)","htons(echoServPort)","htonl(echoClientPort)","inet_addr(echoClientPort)","htons(MAXPENDING)"],
+ quote:"echoClientAddr.sin_port = htons(echoClientPort); /* Local port */",
+ exp:"Bu örnekte UDP istemcisi de <b>kendi portuna bind ediyor</b>, çünkü sunucudan cevap alacak. Sunucu ise <code>htons(echoServPort)</code> ile kendi portuna bağlanıyor. İkisi de <code>htonl(INADDR_ANY)</code> kullanıyor."},
+{sec:"UDP",p:18,s:35,q:"UDP istemci örneğinde mesaj sunucuya hangi fonksiyonla gönderilir?",
+ o:["sendto(clientSock, echoString, echoStringLen, 0, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr))","send(clientSock, echoString, echoStringLen, 0)","connect(clientSock, &echoServAddr)","write(clientSock, echoString)","recvfrom(clientSock, echoString, echoStringLen, 0)"],
+ quote:"if (sendto( clientSock, echoString, echoStringLen, 0, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr))",
+ exp:"UDP'de connect yok, bu yüzden <b>hedef adres her sendto'da verilir</b>. Sunucu IP'si yine <code>inet_addr(echoservIP)</code> ile atanır."},
+{sec:"UDP",p:18,s:36,q:"UDP sunucu örneğinde recvfrom() çağrısı için yorumda ne denmiştir?",
+ o:["İstemciden mesaj gelene kadar bloklanır (Block until receive message from client)","Hemen döner, beklemez","Yeni bir soket döndürür","Bağlantıyı kabul eder","Sadece bir kez çalışır"],
+ quote:"/*Block until receive message from client*/",
+ exp:"Sunucu <code>for (;;)</code> döngüsünde <code>recvfrom(servSock, echoBuffer, ECHOMAX, 0, &echoClientAddr, ...)</code> ile bekler. Mesaj gelince gönderenin adresi <b>echoClientAddr</b>'a yazılır."},
+{sec:"UDP",p:18,s:36,q:"UDP sunucu örneğinde gelen mesaj geri (echo) kime gönderilir?",
+ o:["recvfrom ile öğrenilen echoClientAddr adresine, sendto ile","Sabit bir IP adresine, send ile","Tüm ağa broadcast olarak","echoServAddr adresine","connect ile bağlanılan istemciye, write ile"],
+ quote:"sendto(servSock, echobuffer, recvMsgSize, 0, (struct sockaddr *) &echoClientAddr, sizeof(echoClientAddr))",
+ exp:"UDP'de bağlantı olmadığı için sunucu cevabı, <b>recvfrom'dan aldığı adrese</b> sendto ile yollar. Gönderilen byte sayısı recvMsgSize'dan farklıysa hata verilir."},
+{sec:"UDP",p:19,s:37,q:"UDP örneğinin son adımında hangi taraf soketi kapatır?",
+ o:["İstemci, close(clientSock) ile; sunucu tekrar döngüsünde kalır","Sunucu, close(servSock) ile","İki taraf da kapatmaz","Sadece sunucu kapatır","Sunucu, close(clientSock) ile"],
+ quote:"close(clientSock); · 3. Tekrar: a. İletişim",
+ exp:"UDP sunucusunun adımlarında <b>kapatma yoktur</b>, sürekli \"tekrar: iletişim\" döngüsünde çalışır. İstemcinin 4. adımı ise bağlantıyı kapatmadır."},
+
+// ───────────── JAVA ─────────────
+{sec:"JAVA",p:19,s:38,q:"Java'da soket programlama için kullanılan ServerSocket, Socket ve DatagramSocket sınıfları hangi pakettedir?",
+ o:["java.net","java.io","java.lang","java.util","java.applet"],
+ quote:"Java.net → ServerSocket · Socket · DatagramSocket",
+ exp:"<b>java.net</b> soket sınıflarını içerir. <b>java.io</b> ise iki akış türüne ayrılır: <b>Byte Stream</b> ve <b>Character Stream</b>."},
+{sec:"JAVA",p:20,s:39,q:"Aşağıdakilerden hangisi java.io altındaki Byte Stream sınıflarından biridir?",
+ o:["DataOutputStream","BufferedReader","PrintWriter","FileWriter","InputStreamReader"],
+ quote:"Byte Stream → BufferedInputStream · BufferedOutputStream · DataInputStream · DataOutputStream · …",
+ exp:"Byte Stream sınıfları: <b>BufferedInputStream, BufferedOutputStream, DataInputStream, DataOutputStream, FileInputStream, FileOutputStream, InputStream, OutputStream</b>. Kolay kural: adı <b>Stream</b> ile bitiyorsa byte akışıdır."},
+{sec:"JAVA",p:20,s:40,q:"Aşağıdakilerden hangisi java.io altındaki Character Stream sınıflarından biridir?",
+ o:["PrintWriter","FileInputStream","DataInputStream","OutputStream","BufferedOutputStream"],
+ quote:"Character Stream → BufferedReader · BufferedWriter · FileReader · FileWriter · … · PrintWriter",
+ exp:"Character Stream sınıfları: <b>BufferedReader, BufferedWriter, FileReader, FileWriter, InputStreamReader, OutputStreamReader, PrintWriter</b>. Kolay kural: adı <b>Reader/Writer</b> ile bitiyorsa karakter akışıdır."},
+{sec:"JAVA",p:21,s:41,q:"java.net.ServerSocket sınıfı ne için kullanılır ve kaç kurucusu (constructor) vardır?",
+ o:["Sunucu uygulamalarında bağlantı noktası almak ve istemci isteklerini dinlemek için; 4 kurucu","İstemcinin sunucuya bağlanması için; 5 kurucu","UDP datagram göndermek için; 2 kurucu","Dosya okumak için; 4 kurucu","Sunucuya bağlanmak için; 3 kurucu"],
+ quote:"sunucu uygulamaları tarafından bir bağlantı noktası almak ve istemci isteklerini dinlemek için kullanılır",
+ exp:"Dört kurucu: <code>ServerSocket(int port)</code>, <code>(port, backlog)</code>, <code>(port, backlog, InetAddress)</code> ve parametresiz <code>ServerSocket()</code>. Socket sınıfında ise <b>5</b> kurucu var."},
+{sec:"JAVA",p:21,s:41,q:"ServerSocket(int port, int backlog) kurucusundaki backlog parametresi neyi belirtir?",
+ o:["Bir bekleme sırasında kaç gelen istemcinin saklanacağını","Zaman aşımı süresini","Bağlanılacak yerel IP adresini","Maksimum mesaj boyutunu","Sunucunun portunu"],
+ quote:"backlog parametresi bir bekleme sırasında kaç gelen istemcinin saklanacağını belirtir",
+ exp:"C'deki <code>listen(sockid, queueLimit)</code> çağrısının karşılığıdır. <b>InetAddress</b> parametresi ise birden fazla IP'si olan sunucuda hangi IP'nin istek kabul edeceğini belirler. Port zaten bağlıysa <b>istisna (exception)</b> oluşur."},
+{sec:"JAVA",p:21,s:41,q:"Parametresiz ServerSocket() kurucusu kullanıldığında soket nasıl bağlanır?",
+ o:["Bağlı olmayan bir soket oluşturur; hazır olunca bind() yöntemi kullanılır","Otomatik olarak 80. porta bağlanır","connect() ile istemciye bağlanır","Hemen accept() çağırır","Kullanılamaz, hata verir"],
+ quote:"Bağlı olmayan bir sunucu soketi oluşturur. … bind () yöntemini kullanın.",
+ exp:"Socket sınıfında da benzer bir durum var: parametresiz <code>Socket()</code> bağlı olmayan bir soket oluşturur ve sunucuya bağlamak için <b>connect()</b> kullanılır."},
+{sec:"JAVA",p:21,s:42,q:"ServerSocket sınıfındaki accept() yöntemi için hangisi doğrudur?",
+ o:["Gelen bir istemciyi bekler; setSoTimeout ayarlanmamışsa süresiz olarak engellenir (bloklanır)","Hemen döner ve null verir","İstemciye bağlantı isteği gönderir","Portu serbest bırakır","Sadece UDP için çalışır"],
+ quote:"Aksi takdirde, bu yöntem süresiz olarak engellenir.",
+ exp:"<b>setSoTimeout(int timeout)</b>, accept() sırasında ne kadar bekleneceğini ayarlar. <b>getLocalPort()</b> dinlenen portu döndürür ve kurucuya port olarak 0 verildiyse işe yarar. <b>bind(SocketAddress host, int backlog)</b> soketi adrese bağlar."},
+{sec:"JAVA",p:21,s:42,q:"ServerSocket'te kurucuya port numarası olarak 0 verildiğinde hangi yöntem özellikle yararlıdır?",
+ o:["getLocalPort()","accept()","setSoTimeout()","bind()","getInputStream()"],
+ quote:"bir yapıcıda bağlantı noktası numarası olarak 0'ı geçtiyseniz ve sunucunun sizin için bir bağlantı noktası bulmasına izin verirseniz yararlıdır",
+ exp:"Port 0 verilirse işletim sistemi boş bir port seçer. Hangi port seçildiğini öğrenmek için <b>getLocalPort()</b> kullanılır."},
+{sec:"JAVA",p:22,s:43,q:"java.net.Socket sınıfı ile ilgili hangisi doğrudur?",
+ o:["İstemci Socket nesnesini örnek oluşturarak alır, sunucu ise accept() yönteminin dönüş değerinden alır","Sadece sunucu tarafında kullanılır","Sadece UDP için kullanılır","Sunucu Socket nesnesini new Socket() ile oluşturur","İstemci Socket nesnesini accept() ile alır"],
+ quote:"İstemci bir Socket nesnesini örnek oluşturarak alırken, sunucu bir Socket nesnesini accept () yönteminin dönüş değerinden alır.",
+ exp:"Socket, <b>hem istemcinin hem sunucunun</b> iletişim için kullandığı soketi temsil eder. C'deki karşılığı: accept()'in döndürdüğü <code>connfd</code>."},
+{sec:"JAVA",p:22,s:43,q:"public Socket(String host, int port) kurucusu hangi istisnaları fırlatabilir?",
+ o:["UnknownHostException ve IOException","Sadece IOException","SocketTimeoutException","NullPointerException","Hiçbir istisna fırlatmaz"],
+ quote:"public Socket(String host, int port) throws UnknownHostException, IOException",
+ exp:"Bu kurucu istisna atmazsa <b>bağlantı başarılı olur</b> ve istemci sunucuya bağlanır. <code>Socket(InetAddress host, int port)</code> de aynıdır, tek farkı host'un InetAddress nesnesiyle verilmesidir."},
+{sec:"JAVA",p:22,s:44,q:"Socket sınıfında parametresiz Socket() kurucusu kullanıldığında sunucuya nasıl bağlanılır?",
+ o:["connect() yöntemi kullanılarak","bind() yöntemi kullanılarak","accept() yöntemi kullanılarak","listen() yöntemi kullanılarak","Otomatik bağlanır"],
+ quote:"Bağlı olmayan bir soket oluşturur. Bu soketi bir sunucuya bağlamak için connect () yöntemini kullanın.",
+ exp:"3. ve 4. kurucular (<code>localAddress, localPort</code> parametreli olanlar) yerel ana bilgisayarda belirtilen adres ve portta bir yuva oluşturarak bağlanır. 4. kurucunun 3.'den tek farkı host'un InetAddress olarak verilmesidir."},
+{sec:"JAVA",p:23,s:45,q:"Socket sınıfındaki getPort() yöntemi neyi döndürür?",
+ o:["Soketin uzak makinede bağlı olduğu bağlantı noktasını","Soketin yerel makinede bağlı olduğu portu","Bağlı olunan bilgisayarın IP adresini","Giriş akışını","Zaman aşımı değerini"],
+ quote:"Soketin uzak makinede bağlı olduğu bağlantı noktasını döndürür.",
+ exp:"<b>getPort()</b> uzak port, <b>getLocalPort()</b> yerel port, <b>getInetAddress()</b> bağlı olunan diğer bilgisayarın adresi. Bu yöntemler hem istemci hem sunucuda çağrılabilir."},
+{sec:"JAVA",p:23,s:45,q:"Socket sınıfındaki connect(SocketAddress host, int timeout) yöntemi ne zaman gereklidir?",
+ o:["Soket, bağımsız değişkensiz (parametresiz) kurucuyla başlatıldığında","Her zaman, her Socket nesnesi için","Sadece sunucu tarafında","Sadece UDP soketlerinde","Soket kapatılırken"],
+ quote:"Bu yöntem yalnızca Soketi bağımsız değişken yapıcısını kullanarak başlattığınızda gereklidir.",
+ exp:"Parametreli kurucular zaten bağlantıyı kurar. Sadece <code>new Socket()</code> ile oluşturulan soket için connect() gerekir."},
+{sec:"JAVA",p:23,s:46,q:"Socket sınıfındaki getInputStream() yöntemiyle ilgili hangisi doğrudur?",
+ o:["Soketin giriş akışını döndürür; giriş akışı uzak soketin çıkış akışına bağlıdır","Soketin çıkış akışını döndürür","Uzak soketin adresini döndürür","Yerel portu döndürür","Giriş akışı uzak soketin giriş akışına bağlıdır"],
+ quote:"Soketin giriş akışını döndürür. Giriş akışı uzak soketin çıkış akışına bağlıdır.",
+ exp:"Çapraz bağlantı: benim <b>input</b>'um karşının <b>output</b>'una, benim <b>output</b>'um karşının <b>input</b>'una bağlıdır. <b>getRemoteSocketAddress()</b> uzak soketin adresini, <b>getLocalPort()</b> yerel portu döndürür."},
+
+// ───────────── MESAJ OLUŞTURMA ─────────────
+{sec:"MESAJ",p:24,s:47,q:"İstemci sunucuya 2 integer (x ve y) gönderirken 1. çözüm olarak ne önerilmiştir?",
+ o:["Karakter kodlama (örn. ASCII)","Değerleri ikili olarak struct ile gönderme","Base64 kodlama","Sıkıştırma","Şifreleme"],
+ quote:"1st Çözüm: Karakter Kodlama (örn. ASCII)",
+ exp:"Avantajları: ekrana yazdırmak için de <b>aynı gösterim</b> kullanılır ve <b>rastgele büyüklükte sayılar</b> gönderilebilir. Örnek: <code>sprintf(msgBuffer, \"%d %d \", x, y); send(clientSocket, strlen(msgBuffer), 0);</code>"},
+{sec:"MESAJ",p:24,s:47,q:"Karakter kodlama örneğinde x = 17,998,720 ve y = 47,034,615 ASCII olarak gönderilirken '1' karakteri ve boşluk hangi byte değerleriyle gösterilmiştir?",
+ o:["'1' = 49, boşluk = 32","'1' = 1, boşluk = 0","'1' = 31, boşluk = 20","'1' = 65, boşluk = 32","'1' = 49, boşluk = 0"],
+ quote:"49 55 57 57 56 55 50 48 32 52 55 48 51 52 54 49 53 32",
+ exp:"ASCII'de rakamlar <b>48'den</b> başlar: '0'=48, '1'=49, …, '9'=57. Boşluk karakteri <b>32</b>. Yani her rakam <b>1 byte</b> yer kaplar."},
+{sec:"MESAJ",p:24,s:48,q:"Karakter kodlama (1. çözüm) için slaytta sayılan handikaplardan biri hangisidir?",
+ o:["İkinci bir sınırlayıcı gerekli; aksi halde sunucu veri katarlarını ayırt edemez","Büyük sayılar gönderilemez","Ekranda gösterim farklı olur","Big-endian dönüşümü zorunludur","UDP ile kullanılamaz"],
+ quote:"İkinci sınırlayıcı gerekli · Aksi takdirde sunucu bir diğer veri katarından ayrım yapamaz.",
+ exp:"Diğer handikaplar: <b>msgBuffer yeterince büyük olmalı</b> ve <b>strlen yalnızca mesajın byte'larını sayar</b>. Sonuç olarak bu çözüm tam yeterli değildir: her rakam bir bayt yerine 4 bit ile gösterilebilirdi ve sayıları manipüle etmek sakıncalıdır."},
+{sec:"MESAJ",p:24,s:48,q:"Karakter kodlama çözümü neden \"tam anlamıyla yeterli olamamaktadır\"?",
+ o:["Her rakam bir bayt yerine 4 bit ile temsil edilebilirken 1 bayt kullanılır ve sayıları manipüle etmek sakıncalıdır","Sayılar hiç gönderilemez","Sadece negatif sayılar gönderilebilir","TCP ile çalışmaz","Byte sıralaması bozulur"],
+ quote:"Her rakam bir bayt yerine 4 bit kullanılarak temsil edilebilir · Sayıları manipüle etmek sakıncalıdır.",
+ exp:"0–9 arası bir rakam 4 bit (16 değer) ile gösterilebilir. ASCII'de ise her rakam 8 bit harcar, yani yer israfı olur."},
+{sec:"MESAJ",p:25,s:49,q:"2. çözüm olan \"Değerleri Gönderme\"de protokolün belirlemesi gereken şeyler nelerdir?",
+ o:["Her integer için kaç bit kullanılacağı ve ne tip bir kodlama (2'ye tümleyen, işaretli, işaretsiz) kullanılacağı","Sadece port numarası","Sadece IP adresi","Mesajın şifreleme anahtarı","ASCII tablosunun sürümü"],
+ quote:"Her bir integer için kaç bit kullanılır. · Ne tip bir kodlama (2'ye tümleyen, işaretli sayılar, işaretsiz sayılar gibi) kullanılır.",
+ exp:"1. uygulama: <code>typedef struct { int x,y; } msgStruct;</code> ile struct'ı tek seferde gönderir. 2. uygulama: <code>send(clientSock, &x, sizeof(x), 0); send(clientSock, &y, sizeof(y), 0);</code>. Slayttaki soru: \"2nd implementation works in any case?\""},
+{sec:"MESAJ",p:25,s:50,q:"little-endian ve big-endian byte dizilimleri nasıl tanımlanmıştır?",
+ o:["little-endian: düşük byte'lar önce; big-endian: yüksek byte'lar önce","little-endian: yüksek byte'lar önce; big-endian: düşük byte'lar önce","İkisi de aynıdır","little-endian sadece ağda, big-endian sadece bellekte kullanılır","little-endian 16 bit, big-endian 32 bit"],
+ quote:"little-endian: düşük bytelar önce · big-endian: yüksek bytelar önce",
+ exp:"Adres ve portlar integer gibi depolanır: <code>u_short sin_port</code> (16 bit), <code>in_addr sin_addr</code> (32 bit). Farklı makineler ve işletim sistemleri farklı byte dizilimlerine sahip olduğu için dönüşüm gerekir.", k:true},
+{sec:"MESAJ",p:25,s:50,q:"Big-endian makinede 128.119.40.12 olarak saklanan adres, dönüşüm yapılmadan little-endian makineye gönderilirse nasıl yorumlanır?",
+ o:["12.40.119.128","128.119.40.12","40.12.128.119","119.128.12.40","0.0.0.0"],
+ quote:"Big-Endian machine 128.119.40.12 → Little-Endian machine 12.40.119.128",
+ exp:"Byte'lar aynı sırayla gider (128, 119, 40, 12) ama little-endian makine ilk byte'ı <b>en düşük</b> anlamlı byte kabul ettiği için adres <b>ters</b> okunur. Bu yüzden htonl/ntohl gerekir."},
+{sec:"MESAJ",p:26,s:51,q:"Big-endian dizilimde bellekte A adresine (ilk adrese) hangi byte yazılır?",
+ o:["En anlamlı byte (MS byte)","En az anlamlı byte (LS byte)","Ortadaki byte","Rastgele bir byte","Hiçbiri, A boş kalır"],
+ quote:"Big-Endian: MS byte → Memory A",
+ exp:"Şekilde veri 00001010 00010111 00001110 00000110. <b>Big-endian</b>: A=00001010 (MS byte). <b>Little-endian</b>: A=00000110 (LS byte), A+3=00001010."},
+{sec:"MESAJ",p:26,s:52,q:"Network byte-ordering (ağ bayt sıralaması) hangisidir?",
+ o:["Her zaman big-endian","Her zaman little-endian","Ana bilgisayara göre değişir","Middle-endian","Protokole göre değişir"],
+ quote:"Network Byte-Ordering : ağ tarafından kullanılan bayt sıralaması – her zaman big endian",
+ exp:"<b>Host byte-ordering</b>, ana bilgisayarın kullandığı sıralamadır (büyük veya küçük olabilir). Ağ sıralaması ise <b>her zaman big-endian</b>. Bu yüzden kodlarda port ve IP gönderilmeden önce <code>htons/htonl</code> uygulanır.", k:true},
+{sec:"MESAJ",p:26,s:52,q:"16 bitlik bir değeri (örneğin port numarası) host sıralamasından ağ sıralamasına çeviren fonksiyon hangisidir?",
+ o:["htons","htonl","ntohs","ntohl","inet_addr"],
+ quote:"u_short htons(u_short x); · u_long htonl(u_long x);",
+ exp:"Ezber kuralı: <b>h</b>ost <b>to</b> <b>n</b>etwork <b>s</b>hort = htons (16 bit, port). <b>l</b>ong = htonl (32 bit, IP). Ters yönleri <b>ntohs / ntohl</b>. Klasik sorudaki <code>servaddr.sin_port = htons(PORT);</code> satırı buna örnek.", k:true},
+{sec:"MESAJ",p:26,s:52,q:"htonl/htons gibi dönüşüm rutinleri big-endian kullanan makinelerde ne yapar?",
+ o:["Bir şey yapmaz","Byte dizilimini tersine çevirir","Değeri sıfırlar","Değeri ikiye katlar","Hata verir"],
+ quote:"Big-endian kullanılan makinelerde, bu rutinler bir şey yapmaz.",
+ exp:"Little-endian makinelerde ise <b>byte dizilimi tersine çevrilir</b>. Şekilde little-endian makinede gelen 128 119 40 12, ntohl ile 12 40 119 128 olarak belleğe yazılıyor."},
+{sec:"MESAJ",p:27,s:53,q:"Byte dizilimi örnek kodunda istemci port bilgisini göndermeden önce, sunucu ise aldıktan sonra hangi fonksiyonları kullanır?",
+ o:["İstemci htons(clientPort), sunucu ntohs(rcvBuffer)","İstemci ntohs, sunucu htons","İkisi de htonl","İstemci htonl, sunucu ntohl","Dönüşüm yapılmaz"],
+ quote:"message = htons(clientPort); · clientPort = ntohs(rcvBuffer);",
+ exp:"Gönderen <b>host → network</b> (hton), alan <b>network → host</b> (ntoh) dönüşümü yapar. Port <code>unsigned short</code> olduğu için \"s\" sürümleri kullanılır. Örnekte <code>servPort = 1111</code>; istemci sendto, sunucu recvfrom kullanıyor.", k:true}
+];
+
+const SEC_COLOR = {KAVRAM:"var(--ftp)",API:"var(--smtp)",TCP:"var(--snmp)",UDP:"var(--http)",JAVA:"var(--java)",MESAJ:"var(--mesaj)"};
+const SEC_NAME = {KAVRAM:"Soket Kavramı ve Mimari",API:"Soket Prosedürleri ve API",TCP:"Akış Temelli (TCP) Örnek",UDP:"Datagram (UDP) Örnek",JAVA:"Java Soket Sınıfları",MESAJ:"Mesaj Oluşturma ve Byte Dizilimi"};
+const LETTERS = "ABCDE";
+const KEY = "k5-test-v1";
+
+// Sabit karıştırma: her soru her açılışta aynı şık sırasıyla gelir.
+function seeded(n){ let x = (n + 1) * 2654435761 % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+Q.forEach((q, i) => {
+  q.id = i;
+  const r = seeded(i * 7 + 3);
+  const idx = q.o.map((_, k) => k);
+  for (let k = idx.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+  q.order = idx; // order[görünen konum] = orijinal indeks
+});
+
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { answers = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) {} }
+
+let fSec = "all", fOnly = null, revealAll = false;
+const main = document.getElementById("main");
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(){
+  main.innerHTML = "";
+  let lastSec = null, list = null, shown = 0;
+  Q.forEach(q => {
+    if (fSec !== "all" && q.sec !== fSec) return;
+    const a = answers[q.id];
+    if (fOnly === "wrong" && !(a !== undefined && a !== 0)) return;
+    if (fOnly === "blank" && a !== undefined) return;
+    if (q.sec !== lastSec) {
+      lastSec = q.sec;
+      const h = document.createElement("h2");
+      h.className = "section-head";
+      h.style.color = SEC_COLOR[q.sec];
+      const cnt = Q.filter(x => x.sec === q.sec).length;
+      h.innerHTML = `<span>${SEC_NAME[q.sec]}</span><small>${cnt} soru</small>`;
+      main.appendChild(h);
+      list = document.createElement("div"); list.className = "list"; main.appendChild(list);
+    }
+    list.appendChild(card(q)); shown++;
+  });
+  if (!shown) main.innerHTML = `<p class="empty">Bu filtrede gösterilecek soru yok.</p>`;
+  stats();
+}
+
+function card(q){
+  const el = document.createElement("article");
+  el.className = "q"; el.style.setProperty("--sec", SEC_COLOR[q.sec]); el.id = "q" + q.id;
+  const a = answers[q.id];
+  const answered = a !== undefined;
+  const open = answered || revealAll;
+  el.innerHTML = `
+    <div class="q-top">
+      <span class="num">Soru ${q.id + 1}</span>
+      <span class="tag">${q.sec}</span>
+      <span class="src">PDF s.${q.p} · Slayt ${q.s}</span>${q.k ? '<span class="kl">Klasiğe de yarar</span>' : ''}
+    </div>
+    <h3>${esc(q.q)}</h3>
+    <div class="opts"></div>`;
+  const opts = el.querySelector(".opts");
+  q.order.forEach((orig, pos) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button"; b.id = `q${q.id}o${pos}`;
+    b.innerHTML = `<span class="l">${LETTERS[pos]}</span><span></span>`;
+    b.lastChild.textContent = q.o[orig];
+    if (open) {
+      b.disabled = true;
+      if (orig === 0) b.classList.add("is-right");
+      else if (answered && orig === a) b.classList.add("is-wrong");
+      else b.classList.add("dim");
+    } else {
+      b.addEventListener("click", () => { answers[q.id] = orig; save(); el.replaceWith(card(q)); stats(); });
+    }
+    opts.appendChild(b);
+  });
+  if (open) {
+    const rightPos = q.order.indexOf(0);
+    const fb = document.createElement("div"); fb.className = "fb";
+    let verdict = "";
+    if (answered) verdict = a === 0
+      ? `<div class="verdict ok">Doğru. Cevap ${LETTERS[rightPos]}.</div>`
+      : `<div class="verdict bad">Yanlış. Doğru cevap ${LETTERS[rightPos]}.</div>`;
+    fb.innerHTML = `${verdict}
+      <blockquote class="quote"><span class="where">PDF sayfa ${q.p}, slayt ${q.s}'te şu ifadeyle geçiyor:</span><mark>${esc(q.quote)}</mark></blockquote>
+      <p class="exp">${q.exp}</p>`;
+    el.appendChild(fb);
+  }
+  return el;
+}
+
+function stats(){
+  const total = Q.length;
+  const done = Object.keys(answers).length;
+  const ok = Object.values(answers).filter(v => v === 0).length;
+  const bad = done - ok;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-done").textContent = done;
+  document.getElementById("s-ok").textContent = ok;
+  document.getElementById("s-bad").textContent = bad;
+  document.getElementById("s-pct").textContent = "%" + (done ? Math.round(ok / done * 100) : 0);
+  document.getElementById("p-ok").style.width = (ok / total * 100) + "%";
+  document.getElementById("p-bad").style.width = (bad / total * 100) + "%";
+}
+
+document.querySelectorAll("[data-sec]").forEach(b => b.addEventListener("click", () => {
+  fSec = b.dataset.sec;
+  document.querySelectorAll("[data-sec]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+document.querySelectorAll("[data-only]").forEach(b => b.addEventListener("click", () => {
+  fOnly = fOnly === b.dataset.only ? null : b.dataset.only;
+  document.querySelectorAll("[data-only]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.only === fOnly)));
+  render();
+}));
+const reveal = document.getElementById("b-reveal");
+reveal.addEventListener("click", () => {
+  revealAll = !revealAll;
+  reveal.textContent = revealAll ? "Cevapları gizle" : "Tüm cevapları göster";
+  render();
+});
+const reset = document.getElementById("b-reset");
+let armed = false;
+reset.addEventListener("click", () => {
+  if (!armed) { armed = true; reset.textContent = "Emin misin? Tekrar bas"; setTimeout(() => { armed = false; reset.textContent = "Sıfırla"; }, 3000); return; }
+  armed = false; reset.textContent = "Sıfırla";
+  answers = {}; save(); revealAll = false; reveal.textContent = "Tüm cevapları göster"; render();
+});
+
+render();
+</script>
+
+</body>
+</html>
