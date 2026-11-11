@@ -93,6 +93,9 @@ figure.shot figcaption{font-family:var(--f-display);font-weight:600;font-size:1r
 .tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:2px 8px;border-radius:5px}
 .tag.hesap{background:var(--green-soft);color:var(--green)}
 .tag.yorum{background:var(--pink-soft);color:var(--pink)}
+.q-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag.note{background:var(--pink-soft);color:var(--pink);text-transform:none;letter-spacing:0;font-size:.82rem;line-height:1.5}
+.tag.note b{font-size:1.15rem;font-weight:600;vertical-align:-1px}
 .tag.kavram{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .q-text{margin:0;font-weight:500}
 .q-text .given{display:block;margin-top:6px;font-family:var(--f-mono);font-size:.88rem;color:var(--muted)}
@@ -412,7 +415,8 @@ function render(){
     const card=document.createElement('article');
     card.className='q'; card.id=id; card.dataset.t=q.t;
     const tagName={hesap:'Hesaplama',yorum:'Yorum',kavram:'Kavram'}[q.t];
-    let h='<div class="q-top"><span class="q-no">Soru '+(i+1)+'</span><span class="tag '+q.t+'">'+tagName+'</span></div>';
+    const nums=QH[i].map(k=>HL[k].split(' ')[0]).join(' '), names=QH[i].map(k=>HL[k]).join(', ');
+    let h='<div class="q-top"><span class="q-no">Soru '+(i+1)+'</span><span class="q-tags"><span class="tag note" title="Notlardaki madde: '+names+'">Not <b>'+nums+'</b></span><span class="tag '+q.t+'">'+tagName+'</span></span></div>';
     h+='<p class="q-text">'+q.q+'</p><ul class="opts">';
     st.ord.forEach((oi,pos)=>{
       h+='<li><button class="opt" data-oi="'+oi+'"><span class="L">'+LET[pos]+')</span><span>'+q.o[oi]+'</span></button></li>';
