@@ -1,0 +1,155 @@
+//Ödev
+// kırmızı yansın sönsün
+// mavi yansın sönsün
+// yeşil yansın sönsün
+
+
+//HEX SAYILAR NASIL YAZILIR => BAŞINA 0x YAZMAMIZ GEREK
+// 0x0A => 10
+// 0x0B => 11
+// 0x0C => 12
+// 0x0D => 13
+// 0x0E => 14
+// 0x0F => 15
+
+// BINARY SAYILAR NASIL YAZILIR => BAŞINA 0b YAZMAMIZ GEREK
+// 0b1010 => 10
+// 0b1011 => 11
+// 0b1100 => 12
+
+// 0x000001AC bundaki sayılar hex sayı oluyor muş.
+// GPIO_PIN_1 0000 0010 => 0x00000002
+// GPIO_PIN_2 0000 0100 => 0x00000004
+// GPIO_PIN_3 0000 1000 => 0x00000008
+
+// unit32_t ve bool gibi değişken sınıflarını ekledik
+#include "stdint.h"
+#include "stdbool.h"
+#include "stdlib.h"
+#include "stdio.h"    // printf
+
+#include "inc/hw_types.h"
+#include "inc/hw_gpio.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "driverlib/gpio.c"
+#include "inc/hw_memmap.h"
+
+// # include "inc/tm4c123gh6pm.h" ucuz mikroişlemcilerde sadece bu olur
+
+void delay_ms (int ms) {
+    if (ms == 0) return;
+    // SysCtlDelay(1000);
+    // 1000 tur × 3 çevrim = 3000 çevrim bekler. SysCtlDelay ASSEMBLY SEVİYESİNDE YAZILMIŞTIR
+    SysCtlDelay((SysCtlClockGet() / 3000) * ms); // gelen ms değeri kadar bekler, PERFECT Bİ ŞEY BUNU KULLANMALISIN
+
+    // AŞŞAĞIDAKİ GİBİ YAZMAK İSTERSEN EĞER ARKADA DÖNEN DİĞER İŞLEMLER VS'NİN CYCLE 'LARI DA OLDUĞU
+    // İÇİN GECİKME OLACAKTIR O YÜZDEN YUKARDAKİNİ KULLANMALISIN.
+    // volatile int kalan_cycle = SysCtlClockGet() / 1000 * ms;
+    // while (kalan_cycle > 0) kalan_cycle--;
+}
+
+void led_pwm (int led, float duty, int sure) {
+    volatile int kalan = sure;
+    while (kalan > 0) {
+
+        if (duty > 0) {
+            GPIOPinWrite(GPIO_PORTF_BASE, led, led);
+            delay_ms(10 * duty);
+        }
+
+
+        if (duty < 1) {
+            GPIOPinWrite(GPIO_PORTF_BASE, led, 0);
+            delay_ms(10 * (( 1 - duty )));
+        }
+
+        kalan -= 10;
+
+    }
+}
+
+void main(void)
+{
+    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+    // Portun tipini ayarlama Output/Input
+
+    // GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 mikroişlemci dersinde veya yani yazılan sayıların
+    // binary karşılıklarını her bit bit veya işlemine sokuyor:
+    // 0010 | 0100 | 1000 => 0111 => 14 sonucunu veriyor
+
+    // GPIO_PORTF_BASE portun kendisi değil, F portunun register’larının bellekte başladığı adres (0x40025000). Fonksiyon bu adrese bakarak hangi portla çalışacağını anlıyor.
+
+    // 8 bit: Register tarafında evet, her port 8 bitlik (bit 0–7).
+    // Ama TM4C123'te F portunun fiziksel olarak sadece 5 pini var:
+    // PF0–PF4. LED’ler PF1 (kırmızı), PF2 (mavi), PF3 (yeşil);
+    // PF0 ve PF4 de kart üzerindeki butonlar.
+    // 2. bit => GPIO_PIN_1 0010
+    // 3. bit => GPIO_PIN_2 0100
+    // 4. bit => GPIO_PIN_3 1000
+
+
+    // GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1);
+
+    // printf("Bakalim kac cikacak: %d \n", GPIO_PIN_1 + GPIO_PIN_2 + GPIO_PIN_3);
+    // GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, 14);
+
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, 0x0E);
+
+    while (1) {
+
+        // GPIOPinWrite(GPIO_PORTF_BASE, MASKE, DEĞER);
+        // Sadece Maskede 1 Olan Değerlerin yerine yazma yapılır diğer alanlar korunur.
+
+        // Maske mikroişlemciye zaman kazandırır. Ayrıca mesela sadece bir byte'ın 3. bitini değişmek istiyoruz bu durumda
+        // Diğer bitlere yanlış değer yazmamak için maske ile diğer değerler maskelenir. Maske olmasa idi byte'ın diğer bitlerinin'de
+        // değerindne haberdar olmamız gerekirde elbette mümkün ama maske işimizi ciddi anlamda kısaltıyor.
+        // Sadece 7. bitin değerini değişelim => GPIOPinWrite(GPIO_PORTF_BASE, 0b01000000, 0b11111111);
+        // Diğerleri maskeli olduğu için sadece 7. bitti değişir
+
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0b00000010);
+        // delay_ms(500);
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0b00000000);
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0b11111111);
+        // delay_ms(500);
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 8); // 0b1000
+        // delay_ms(500);
+        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0b00000);
+
+        led_pwm(GPIO_PIN_1, 0.1, 500);
+        led_pwm(GPIO_PIN_1, 0.0, 1);
+        led_pwm(GPIO_PIN_2, 0.1, 500);
+        led_pwm(GPIO_PIN_2, 0.0, 1);
+        led_pwm(GPIO_PIN_3, 0.1, 500);
+        led_pwm(GPIO_PIN_3, 0.0, 1);
+
+
+        led_pwm(GPIO_PIN_1, 0.1, 200);
+        led_pwm(GPIO_PIN_1, 0.0, 1);
+        led_pwm(GPIO_PIN_2, 0.1, 200);
+        led_pwm(GPIO_PIN_2, 0.0, 1);
+        led_pwm(GPIO_PIN_3, 0.1, 200);
+        led_pwm(GPIO_PIN_3, 0.0, 1);
+
+        float a = 100;
+        while (a > 0) {
+            a--;
+            led_pwm(GPIO_PIN_3, a / 100, 10);
+        }
+        a = 100;
+        while (a > 0) {
+            a--;
+            led_pwm(GPIO_PIN_2, a / 100, 10);
+        }
+        a = 100;
+        while (a > 0) {
+            a--;
+            led_pwm(GPIO_PIN_1, a / 100, 10);
+        }
+    }
+}

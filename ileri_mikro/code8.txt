@@ -1,0 +1,49 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "inc/hw_gpio.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+
+#define KIRMIZI_LED GPIO_PIN_1
+#define SW1 GPIO_PIN_4
+#define SW2 GPIO_PIN_0
+#define ADIM_MS 100
+#define MIN_MS 100
+#define MAX_MS 2000
+volatile uint32_t sure_ms = 500;
+void bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }
+
+void Butonlari_Kontrol_Et (void) // SW1: sure_ms += ADIM_MS, SW2: sure_ms -= ADIM_MS {
+    if ((GPIO_PORTF_BASE & SW1) == SW1) {
+
+    }
+}
+void Bekle_ve_Dinle(uint32_t ms) // beklerken her 10 ms'de butonlari kontrol eder
+{
+// TODO
+}
+
+int main(void)
+{
+    SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
+    SYSCTL_OSC_MAIN); // 40 MHz
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)) {}
+        // PF0 kilidini ac
+        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+        HWREG(GPIO_PORTF_BASE + GPIO_O_CR) |= SW2;
+        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0;
+        GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, KIRMIZI_LED);
+        GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, SW1 | SW2);
+        GPIOPadConfigSet(GPIO_PORTF_BASE, SW1 | SW2, GPIO_STRENGTH_2MA,
+        GPIO_PIN_TYPE_STD_WPU);
+        while (1)
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, KIRMIZI_LED, KIRMIZI_LED);
+            Bekle_ve_Dinle(sure_ms);
+            GPIOPinWrite(GPIO_PORTF_BASE, KIRMIZI_LED, 0);
+            Bekle_ve_Dinle(sure_ms);
+        }
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>İleri Mikroişlemciler Vize Çalışma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: ders dizini — künye, sınav formatı, sonra çalışma sırasına göre sayfa listesi */
+:root{
+  --bg:#f1f2f4; --surface:#ffffff; --ink:#161b22; --muted:#5a6370; --line:#d8dce2; --accent:#b8202f;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1216; --surface:#171b21; --ink:#e5e8ec; --muted:#9aa3ae; --line:#2a3039; --accent:#ff7a86; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --ink:#e5e8ec; --muted:#9aa3ae; --line:#2a3039; --accent:#ff7a86; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:max(32px,env(safe-area-inset-top,0px)) 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,5vw,38px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:.92em}
+.back{font:500 13px/1 var(--f-mono);color:var(--accent);text-decoration:none}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:64ch}
+.facts{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.facts p{font-size:14.5px}
+.facts b{font-weight:600}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+li{border-top:1px solid var(--line)} li:first-child{border-top:none}
+a.row{display:grid;grid-template-columns:2.6em 1fr auto;gap:4px 14px;align-items:center;padding:16px;color:inherit;text-decoration:none}
+a.row:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+a.row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.no{font:600 13px/1 var(--f-mono);color:var(--accent)}
+.ti{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ti b{font-weight:600;font-size:16px}
+.ti span{font:12.5px/1.4 var(--f-mono);color:var(--muted)}
+.cnt{font:500 13px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+@media (max-width:480px){a.row{grid-template-columns:2.2em 1fr}.cnt{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <a class="back" href="../">← Tüm dersler</a>
+    <span class="eyebrow">İleri Mikroişlemciler · TM4C123 / Stellaris LaunchPad</span>
+    <h1>İleri Mikroişlemciler Vize Çalışma</h1>
+    <p class="lead">Derste yazdırılan kodlar (GPIO, HWREG, register, buton, PWM, UART) ve 2021, 2024 vizelerinden hazırlandı.</p>
+  </header>
+
+  <section class="facts" aria-labelledby="hF">
+    <h2 id="hF">Çıkmış sorulardan sınav formatı</h2>
+    <p><b>2024 (4 soru):</b> devre için GPIO ayarları · basılıp çekilince LED yakma (kesmesiz) · aynısı kesmeyle · PORTD ilk 4 pinin register adresi.</p>
+    <p><b>2021 (3 soru, 75 dk):</b> PORTD'de 1 sn aralıkla sıralı LED · <code>HWREG(GPIO_PORTF_BASE + 96)</code> hangi pinler · butonla sayı girişi, faktöriyel ve toplam.</p>
+    <p>Kâğıtta fonksiyon imzaları ve sabitler veriliyor; ezber değil, doğru çağrıyı doğru sırayla yazmak ölçülüyor.</p>
+  </section>
+
+  <ul>
+    <li><a class="row" href="kod-okuma-testi.html"><span class="no">1</span><span class="ti"><b>Kod Okuma Testi</b><span>Bu satır ne yapar, hangi LED yanar · temel, register, HWREG, API, kesme, UART</span></span><span class="cnt">57 soru</span></a></li>
+    <li><a class="row" href="adres-atolyesi.html"><span class="no">2</span><span class="ti"><b>Adres ve Maske Atölyesi</b><span>Adres ↔ pin, GPIOPinWrite, GPIOPinRead, bit işlemleri · sorular her seferinde yeniden üretilir</span></span><span class="cnt">5 mod</span></a></li>
+    <li><a class="row" href="kod-atolyesi.html"><span class="no">3</span><span class="ti"><b>Kod Atölyesi</b><span>2024 S1–S4, 2021 S1 ve S3, timer, register, ödev, UART · sınav formatında boşluk doldurma</span></span><span class="cnt">10 görev</span></a></li>
+  </ul>
+</div>
+</body>
+</html>

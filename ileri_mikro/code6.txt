@@ -1,0 +1,126 @@
+#include "stdbool.h"
+#include "stdint.h"
+#include "inc/hw_types.h" // HWREG
+#include "inc/hw_gpio.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "driverlib/gpio.c"
+#include "inc/hw_memmap.h"
+//#include "inc/tm4c123gh6pm.h"
+
+// HWREG() İLE ADRESLERE DİREKT YAZMA İŞLEMİ YAPILIR.
+// GPIO_PORTF_BASE = 0x40025000
+// GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);
+// HWREG(0x40025000 + maske 00) = deger
+// 0x40025000 + 0000 0010 00 = 0x40025008
+// 0x40025000 + 0000 1110 00 = 0x40025038
+// 0x40025000 + 1111 1111 00 = 0x400253FC
+// 0x40025000 + 0000 1110 00   = 0x40025038   (PF1, PF2, PF3) => LEDLER İÇİN BUNLAR YETERLİ
+
+
+int ikininustal(int value){
+    int i=1;
+    int carpim=1;
+    for (i=0;i<value;i++)
+    {
+        carpim=carpim*2;
+    }
+
+    return carpim;
+}
+
+void portfpin1yak()
+{
+    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);
+    HWREG(0x400253fc)=2;
+
+}
+
+void portfpin1sondur()
+{
+    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);
+    HWREG(0x400253fc)=0;
+
+}
+
+void portfpin1set(int setdegeri)
+{
+    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);
+    HWREG(0x400253fc)=setdegeri;
+
+}
+
+void portfpinXset(int pinno,int setdegeri)
+{
+    GPIOPinWrite(GPIO_PORTF_BASE, pinno, setdegeri);
+    //HWREG()=setdegeri;
+}
+
+void portset(long portvalue, int pinno,int setdegeri)
+{
+    //GPIOPinWrite(portvalue, pinno, setdegeri);
+    HWREG(portvalue+4*ikininustal(pinno))=0;
+}
+
+int main(void)
+{
+    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);
+    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
+
+
+    while(1){
+        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);
+        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);
+        //HWREG(0x400253fc)=4;
+        //portfpin1yak();
+        //portfpin1set(2);
+        //portfpin1sondur();
+        //portfpinXset(1, 2);
+        //portset(GPIO_PORTF_BASE, 1, 2);
+        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);
+        //SysCtlDelay(100000);
+        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 4);
+        //SysCtlDelay(100000);
+        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 8);
+        //SysCtlDelay(100000);
+
+        /*
+        int i;
+        for (i=2;i<9;i=i*2)
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);
+            SysCtlDelay(100000);
+        }
+
+        i=2;
+        while(i<9)
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);
+            SysCtlDelay(100000);
+            i=i*2;
+        }
+        */
+
+        int pindegeri;
+        //pindegeri=GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4);
+        //SysCtlDelay(1000);
+        if (GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4)==0){
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);
+        }
+
+        while(!GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4))
+        {
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);
+        }
+
+        //while(pindegeri!=16)
+        //{
+         //   GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);
+        //}
+
+    }
+}

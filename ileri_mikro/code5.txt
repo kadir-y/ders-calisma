@@ -1,0 +1,69 @@
+#include "stdint.h"
+#include "stdbool.h"
+#include "inc/tm4c123gh6pm.h"
+#include "driverlib/sysctl.h"
+
+
+void bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }
+
+void GpioInitSettings() {
+    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20;
+    GPIO_PORTF_LOCK_R = 0x4C4F434B;
+    GPIO_PORTF_CR_R = 0x01;
+    GPIO_PORTF_DIR_R |= 0x0E;
+    GPIO_PORTF_AFSEL_R = 0x00;
+    GPIO_PORTF_DEN_R = 0x1F;
+    GPIO_PORTF_PUR_R |= 0x11;
+}
+
+
+int main(void) {
+    GpioInitSettings();
+
+    uint32_t sure_ms = 500;
+    uint32_t basildi_sw2 = 0;
+    uint32_t basildi_sw1 = 0;
+    uint32_t a = 0;
+    uint32_t tekrar_sayisi = sure_ms / 20;
+
+    while(1){
+      if ((GPIO_PORTF_DATA_R & 0x01) == 0 && basildi_sw2 == 0){
+          basildi_sw2 = 1;
+          if (sure_ms > 100) {
+              sure_ms -= 100;
+              tekrar_sayisi = sure_ms / 20;
+          }
+      }
+
+      if ((GPIO_PORTF_DATA_R & 0x01) == 0x01 && basildi_sw2 == 1) {
+          basildi_sw2 = 0;
+      }
+
+      if ((GPIO_PORTF_DATA_R & 0x10) == 0 && basildi_sw1 == 0){
+          basildi_sw1 = 1;
+          if (sure_ms < 500) {
+              sure_ms += 100;
+              tekrar_sayisi = sure_ms / 20;
+          }
+      }
+
+      if ((GPIO_PORTF_DATA_R & 0x10) == 0x10 && basildi_sw1 == 1) {
+          basildi_sw1 = 0;
+      }
+
+      if (a == 0) {
+
+          // toggle ediyo basitce bu kısım
+          if ((GPIO_PORTF_DATA_R & 0b0010) == 0b0010) {
+              GPIO_PORTF_DATA_R &= 0b11111101;
+          } else {
+              GPIO_PORTF_DATA_R |= 0b0010;
+          }
+          a = tekrar_sayisi;
+
+      }
+
+      a--;
+      bekle_ms(20);
+    }
+}

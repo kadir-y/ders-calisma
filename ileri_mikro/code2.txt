@@ -1,0 +1,89 @@
+/*
+ * Created by SharpDevelop.
+ * User: Arzu
+ * Date: 12.11.2026
+ * Time: 19:12
+ *
+ * To change this template use Tools | Options | Coding | Edit Standard Headers.
+ */
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace bb
+{
+	/// <summary>
+	/// Description of MainForm.
+	/// </summary>
+	public partial class MainForm : Form
+	{
+		string gelenkarakter;
+
+		public MainForm()
+		{
+			//
+			// The InitializeComponent() call is required for Windows Forms designer support.
+			//
+			InitializeComponent();
+
+			//
+			// TODO: Add constructor code after the InitializeComponent() call.
+			//
+		}
+
+		void Button1Click(object sender, EventArgs e)
+		{
+
+		}
+
+		void Button1MouseMove(object sender, MouseEventArgs e)
+		{
+
+		}
+
+		void Btn_port_acClick(object sender, EventArgs e)
+		{
+
+			if (!serialPort1.IsOpen)
+			{
+				serialPort1.PortName=textCOMNO.Text;
+				serialPort1.BaudRate=Convert.ToInt32(textBAUDRATE.Text);
+				serialPort1.Open();
+				btn_port_kapat.Enabled=true;
+				btn_port_ac.Enabled=false;
+			}
+		}
+
+		void MainFormLoad(object sender, EventArgs e)
+		{
+			btn_port_kapat.Enabled=false;
+		}
+
+		void Btn_port_kapatClick(object sender, EventArgs e)
+		{
+			if (serialPort1.IsOpen)
+			{
+				serialPort1.Close();
+				btn_port_kapat.Enabled=false;
+				btn_port_ac.Enabled=true;
+			}
+		}
+
+		void SerialPort1DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+		{
+			gelenkarakter = serialPort1.ReadExisting();
+			this.Invoke(new EventHandler(goster));
+
+		}
+
+		void Btn_gonderClick(object sender, EventArgs e)
+		{
+			serialPort1.WriteLine(textGidenveri.Text);
+		}
+
+		void goster(object sender, EventArgs e){
+			textGelenveri.Text=textGelenveri.Text + gelenkarakter;
+		}
+	}
+}
