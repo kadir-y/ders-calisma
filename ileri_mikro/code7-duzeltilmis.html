@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>code7 düzeltilmiş · yeşil LED</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: üstte görev şeridi; görev kartı = soru, devre, kâğıttaki liste, araç çubuğu, gizli satırlardan oluşan kod alanı. */
+:root {
+  --bg: #f1f2f4; --surface: #ffffff; --ink: #161b22; --muted: #5a6370; --line: #d8dce2;
+  --accent: #b8202f; --accent-soft: #fbe6e8;
+  --ok: #157a46;
+  --code-bg: #1b2028; --code-ink: #e6e9ee; --code-muted: #8b95a3; --code-acc: #ff9aa5;
+  --blank-bg: #2a313c; --blank-line: #4a5462;
+  /* kod alanı her iki temada koyu: satır durum renkleri aynı */
+  --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #171b21; --ink: #e5e8ec; --muted: #9aa3ae; --line: #2a3039;
+    --accent: #ff7a86; --accent-soft: #3a1c21;
+    --ok: #5fd394;
+    --code-bg: #0b0e12; --code-ink: #e6e9ee; --code-muted: #7d8794; --code-acc: #ff9aa5;
+    --blank-bg: #1d232c; --blank-line: #3a4350;
+    --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --ink: #e5e8ec; --muted: #9aa3ae; --line: #2a3039;
+  --accent: #ff7a86; --accent-soft: #3a1c21;
+  --ok: #5fd394;
+  --code-bg: #0b0e12; --code-ink: #e6e9ee; --code-muted: #7d8794; --code-acc: #ff9aa5;
+  --blank-bg: #1d232c; --blank-line: #3a4350;
+  --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 32px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+.eyebrow { font: 600 11.5px/1.3 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.eyebrow a { color: inherit; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 8px 0 12px; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 22px; line-height: 1.2; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.lead { color: var(--muted); max-width: 68ch; }
+.lead + .lead { margin-top: 10px; }
+code { font-family: var(--f-mono); font-size: .92em; }
+.key { display: inline-flex; gap: 6px 14px; flex-wrap: wrap; margin-top: 12px; font: 500 13px/1.3 var(--f-mono); color: var(--muted); }
+.key span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.back { font: 500 13px/1 var(--f-mono); color: var(--accent); text-decoration: none; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.thead { display: grid; gap: 6px; }
+.src { justify-self: start; font: 600 12px/1 var(--f-mono); color: var(--accent); background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; }
+.qtext { font-size: 16px; max-width: 72ch; display: grid; gap: 8px; }
+.qtext blockquote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg); border-radius: 0 8px 8px 0; font-size: 15.5px; }
+.qtext ul { margin: 0; padding-left: 20px; display: grid; gap: 3px; }
+.circuit { background: var(--bg); border-radius: 8px; padding: 10px; overflow-x: auto; }
+.circuit svg { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; }
+details { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+summary { cursor: pointer; padding: 10px 12px; font: 600 14px/1.3 var(--f-body); }
+details pre { margin: 0; padding: 0 12px 12px; font: 13px/1.6 var(--f-mono); white-space: pre-wrap; color: var(--muted); }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 600 14px/1 var(--f-body); padding: 10px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:hover { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.prog { margin-left: auto; font: 600 14px/1 var(--f-mono); color: var(--muted); }
+
+/* kod alanı */
+.lines { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 10px 0; font: 14px/1.5 var(--f-mono); --indk: 1; }
+.row { display: grid; grid-template-columns: 64px 2.4em minmax(0, 1fr) 36px; align-items: start; gap: 0 8px; padding: 2px 10px; }
+.row .no { font: 12px/30px var(--f-mono); color: var(--code-muted); text-align: right; }
+.row.pk .no::after { content: "•"; color: var(--st-y); margin-left: 2px; }
+.cell { min-width: 0; padding-left: calc(var(--ind) * 1ch * var(--indk)); }
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; }
+.fx { white-space: pre-wrap; line-height: 30px; color: var(--code-ink); }
+.cmt { color: var(--code-muted); font-size: 12.5px; line-height: 1.4; }
+input.in { flex: 1 1 22ch; min-width: 12ch; font: 14px/1 var(--f-mono); color: var(--code-ink); background: var(--blank-bg); border: 1px dashed var(--blank-line); border-left-width: 3px; border-radius: 4px; padding: 6px 8px; }
+input.in::placeholder { color: var(--code-muted); }
+input.in.y { border: 1px solid var(--st-y); border-left-width: 3px; background: color-mix(in srgb, var(--st-y) 14%, var(--code-bg)); }
+input.in.r { border: 1px solid var(--st-r); border-left-width: 3px; background: color-mix(in srgb, var(--st-r) 18%, var(--code-bg)); }
+input.in.g { border: 1px solid var(--st-g); border-left-width: 3px; background: color-mix(in srgb, var(--st-g) 16%, var(--code-bg)); color: var(--st-g); }
+.rev { margin-top: 3px; padding: 3px 8px; border-radius: 4px; background: color-mix(in srgb, var(--st-y) 8%, transparent); color: var(--st-y); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13.5px; }
+.peek, .info { font: 600 11.5px/1 var(--f-mono); color: var(--code-muted); background: transparent; border: 1px solid var(--blank-line); border-radius: 4px; cursor: pointer; height: 26px; margin-top: 2px; }
+.peek { width: 64px; }
+.peek[aria-pressed="true"] { color: var(--st-y); border-color: var(--st-y); }
+.info { width: 28px; justify-self: end; font-size: 13px; font-style: italic; font-family: Georgia, serif; }
+.info[aria-expanded="true"] { color: var(--code-acc); border-color: var(--code-acc); }
+.peek:hover, .info:hover { color: var(--code-ink); border-color: var(--code-muted); }
+.ibox { margin: 4px 10px 8px calc(64px + 2.4em + 26px); padding: 10px 12px; border-radius: 6px; background: var(--blank-bg); border-left: 3px solid var(--code-acc); font: 14px/1.55 var(--f-body); display: grid; gap: 8px; }
+.ibox code { color: var(--code-acc); font-size: 13px; }
+.ibox b { font-weight: 600; }
+.gl { display: grid; grid-template-columns: minmax(0, max-content) 1fr; gap: 2px 10px; }
+.gl > code { font-weight: 600; overflow-wrap: anywhere; }
+.gl span code { font-weight: 400; }
+
+.finish a.btn { text-decoration: none; }
+.finish { padding: 12px 14px; border-radius: 8px; border: 1px solid var(--ok); background: color-mix(in srgb, var(--ok) 8%, var(--surface)); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 15px; }
+.note { font-size: 15px; padding: 12px 14px; border-radius: 8px; background: var(--bg); border: 1px dashed var(--line); display: grid; gap: 6px; }
+.note b { font-weight: 600; }
+.pager { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pager a.btn { text-decoration: none; display: inline-flex; flex-direction: column; gap: 4px; line-height: 1.25; max-width: 48%; }
+.pager a.btn small { font: 500 11.5px/1 var(--f-mono); color: var(--muted); }
+.pager a.next { margin-left: auto; text-align: right; }
+@media (max-width: 600px) { .pager a.btn { max-width: 100%; width: 100%; } }
+
+@media (max-width: 600px) {
+  .card { padding: 14px; }
+  .lines { font-size: 12.5px; --indk: .5; }
+  .row { grid-template-columns: 48px 1.8em minmax(0, 1fr) 30px; gap: 0 6px; padding: 2px 6px; }
+  .peek { width: 48px; font-size: 10.5px; }
+  .info { width: 26px; }
+  input.in { font-size: 12.5px; padding: 6px; }
+  .ibox { margin-left: 10px; }
+  .gl { grid-template-columns: 1fr; }
+  .prog { margin-left: 0; width: 100%; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← İleri Mikroişlemciler</a>
+    <div class="eyebrow" style="margin-top:14px">İleri Mikroişlemciler · Satır satır yazma</div>
+    <h1>code7 düzeltilmiş · yeşil LED</h1>
+    <p class="lead">Her satır gizli: satıra tıkla ve yazmaya başla. Takılırsan satır başındaki <b>göster</b> ile bak, sondaki <b>i</b> ile satırdaki komutların ve değişkenlerin ne işe yaradığını oku. Boşluklar önemsiz, büyük/küçük harf önemli. Enter ya da ↓ sonraki satıra, ↑ öncekine geçer.</p>
+    <div class="key" aria-label="Renkler">
+      <span style="--c:var(--st-y)">doğru gidiyor</span>
+      <span style="--c:var(--st-r)">3+ karakter yanlış</span>
+      <span style="--c:var(--st-g)">satır tamam</span>
+      <span style="--c:var(--st-y)">• bakılarak yazıldı</span>
+    </div>
+  </header>
+
+  <article class="card" id="task"></article>
+</div>
+
+<script>
+const G2024 = `void GPIOPadConfigSet(uint32_t ui32Port, uint8_t ui8Pins, uint32_t ui32Strength, uint32_t ui32PadType);
+void GPIOIntTypeSet(uint32_t ui32Port, uint8_t ui8Pins, uint32_t ui32IntType);
+void GPIOIntEnable(uint32_t ui32Port, uint32_t ui8Pins);
+uint32_t GPIOIntStatus(uint32_t ui32Port, bool bMasked);
+void GPIOIntRegister(uint32_t ui32Port, kesme_fonksiyonu);
+void GPIOIntClear(uint32_t ui32Port, uint32_t ui32IntFlags);
+int32_t GPIOPinRead(uint32_t ui32Port, uint8_t ui8Pins);
+void GPIOPinWrite(uint32_t ui32Port, uint8_t ui8Pins, uint8_t ui8Val);
+void GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins);
+void GPIOPinTypeGPIOOutput(uint32_t ui32Port, uint8_t ui8Pins);
+double pow(double x, double y);   // üst alma, lazım olursa
+void IntEnable(uint32_t ui32Interrupt);
+IntMasterEnable();
+
+GPIO_PIN_0   GPIO_FALLING_EDGE   GPIO_RISING_EDGE
+GPIO_STRENGTH_8MA   GPIO_PIN_TYPE_STD_WPU
+GPIO_PORTF_BASE 0x40025000   GPIO_PORTD_BASE 0x40007000
+SYSCTL_PERIPH_GPIOF   SYSCTL_PERIPH_GPIOA   SYSCTL_PERIPH_GPIOB   SYSCTL_PERIPH_TIMER0
+INT_GPIOF   // ui32Interrupt örneği`;
+
+const G2021 = `GPIOPinWrite(unsigned long ulPort, unsigned char ucPins, unsigned char ucVal);
+GPIOPinRead(unsigned long ulPort, unsigned char ucPins);
+GPIOPadConfigSet(unsigned long ulPort, unsigned char ucPins, unsigned long ulStrength, unsigned long ulPadType);
+GPIOPinTypeGPIOInput(unsigned long ulPort, unsigned char ucPins);
+GPIOPinTypeGPIOOutput(unsigned long ulPort, unsigned char ucPins);
+TimerEnable(unsigned long ulBase, unsigned long ulTimer);
+TimerIntEnable(unsigned long ulBase, unsigned long ulIntFlags);
+TimerDisable(unsigned long ulBase, unsigned long ulTimer);
+TimerConfigure(unsigned long ulBase, unsigned long ulConfig);
+TimerLoadSet(unsigned long ulBase, unsigned long ulTimer, unsigned long ulValue);
+TimerIntRegister(unsigned long ulBase, unsigned long ulTimer, void (*pfnHandler)(void));
+TimerIntClear(unsigned long ulBase, unsigned long ulIntFlags);
+IntMasterEnable();
+
+SYSCTL_PERIPH_GPIOF   SYSCTL_PERIPH_GPIOA   SYSCTL_PERIPH_GPIOD
+GPIO_STRENGTH_4MA   GPIO_PIN_TYPE_STD_WPU
+TIMER0_BASE   TIMER_CFG_32_BIT_PER   TIMER_A
+INT_TIMER0A   TIMER_TIMA_TIMEOUT`;
+
+// 2024 devresi: btn1 → PA0, btn2 → PA1, PB0–PB7 → LED (şemadaki etiketlerden)
+const SVG2024 = `<svg viewBox="0 0 520 250" role="img" aria-label="btn1 PA0'a, btn2 PA1'e bağlı; PB0–PB7 pinlerine birer LED bağlı" font-family="IBM Plex Mono, monospace" font-size="13">
+  <rect x="190" y="14" width="140" height="222" rx="8" fill="var(--surface)" stroke="var(--muted)"/>
+  <text x="260" y="34" text-anchor="middle" fill="var(--ink)" font-weight="600">TM4C123</text>
+  <g stroke="var(--muted)" fill="none" stroke-width="1.5">
+    <path d="M190 80 H120"/><path d="M190 140 H120"/>
+    <path d="M120 80 l-22 -10"/><path d="M96 80 H56 V104"/>
+    <path d="M120 140 l-22 -10"/><path d="M96 140 H56 V164"/>
+    <path d="M44 104 H68 M48 109 H64 M52 114 H60"/><path d="M44 164 H68 M48 169 H64 M52 174 H60"/>
+  </g>
+  <text x="198" y="84" fill="var(--ink)">PA0</text><text x="198" y="144" fill="var(--ink)">PA1</text>
+  <text x="110" y="62" text-anchor="middle" fill="var(--accent)" font-weight="600">btn1</text>
+  <text x="110" y="122" text-anchor="middle" fill="var(--accent)" font-weight="600">btn2</text>
+  ${[0,1,2,3,4,5,6,7].map(i => {
+    const y = 54 + i * 24;
+    return `<text x="322" y="${y + 4}" text-anchor="end" fill="var(--ink)">PB${i}</text>
+    <path d="M330 ${y} H392" stroke="var(--muted)" stroke-width="1.5"/>
+    <path d="M392 ${y - 7} L406 ${y} L392 ${y + 7} Z" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <path d="M406 ${y - 7} V${y + 7} M406 ${y} H452" stroke="var(--accent)" stroke-width="1.5"/>`;
+  }).join("")}
+  <path d="M452 54 V230" stroke="var(--muted)" stroke-width="1.5"/>
+  <path d="M440 230 H464 M444 235 H460 M448 240 H456" stroke="var(--muted)" stroke-width="1.5"/>
+  <text x="470" y="150" fill="var(--muted)" font-size="11.5">LD0–LD7</text>
+</svg>`;
+
+// Sözlük: bir satırda geçen her ad için info kutusunda gösterilir. Görevin vars alanı aynı adı ezer.
+const GL = {
+  SysCtlClockSet: "Sistem saatini ayarlar. Bu derste hep aynı satır: 16 MHz kristal PLL ile 400 MHz'e çıkar, 2'ye bölünür (200 MHz), SYSDIV_5 ile 5'e bölünür: <b>40 MHz</b>.",
+  SYSCTL_SYSDIV_5: "Saat bölücü: 200 MHz / 5 = 40 MHz.",
+  SYSCTL_USE_PLL: "Saat PLL üzerinden üretilsin.",
+  SYSCTL_XTAL_16MHZ: "Kart üzerindeki kristal 16 MHz.",
+  SYSCTL_OSC_MAIN: "Kaynak ana osilatör, yani dıştaki kristal.",
+  SysCtlPeripheralEnable: "Bir çevre biriminin (port, timer, UART) saatini açar. Saati kapalı birimin register'larına yazılamaz; bu yüzden ayarlardan önce gelir.",
+  SYSCTL_PERIPH_TIMER0: "Timer0'ın saati.",
+  SYSCTL_PERIPH_UART0: "UART0 biriminin saati.",
+  SysCtlClockGet: "O anki sistem saatini Hz olarak döndürür: burada 40 000 000.",
+  SysCtlDelay: "Verilen sayı kadar tur dönen bekleme döngüsü; her tur 3 saat çevrimi sürer. 40 MHz'de 1 saniye için <code>SysCtlClockGet()/3</code>.",
+  GPIOPinTypeGPIOOutput: "Pinleri çıkış yapar: yön register'ında (DIR) bitleri 1'ler, dijital işlevi (DEN) açar. (port, pin maskesi).",
+  GPIOPinTypeGPIOInput: "Pinleri giriş yapar: DIR'de bitleri 0'lar, DEN'i açar. Pull-up ayrıca GPIOPadConfigSet ile verilir.",
+  GPIOPadConfigSet: "Pinlerin akım gücünü ve pad tipini ayarlar: (port, pinler, akım, tip). Butonlarda tip pull-up olur.",
+  GPIO_STRENGTH_8MA: "Çıkış akımı sınırı 8 mA. Giriş pinlerinde etkisi yok; kâğıtta verildiği için yazılır.",
+  GPIO_STRENGTH_4MA: "Çıkış akımı sınırı 4 mA. Giriş pinlerinde etkisi yok.",
+  GPIO_STRENGTH_2MA: "Çıkış akımı sınırı 2 mA. Giriş pinlerinde etkisi yok.",
+  GPIO_PIN_TYPE_STD_WPU: "Standart pin + zayıf iç pull-up direnci. Toprağa bağlı buton bırakılınca 1, basılınca 0 okunur.",
+  GPIOPinRead: "Seçilen pinlerin değerini <b>yerinde</b> döndürür, diğer bitler 0. PA1 yüksekse sonuç 1 değil 2'dir; bu yüzden <code>== 0</code> ile bakmak güvenli.",
+  GPIOPinWrite: "(port, maske, değer): yalnızca maskede 1 olan pinlere değerdeki karşılık gelen biti yazar, diğer pinler korunur. Değer de bit konumunda: PF1'i yakmak için 1 değil 2.",
+  GPIOIntStatus: "Portta hangi pinlerin kesme bayrağının kalktığını döndürür. <code>true</code>: yalnızca kesmesi açık (maskeli) pinler.",
+  GPIOIntClear: "Verilen kesme bayraklarını temizler. Temizlenmeyen bayrak rutini hemen yeniden çağırır.",
+  GPIOIntTypeSet: "Kesmenin hangi olayda oluşacağını seçer: düşen kenar, yükselen kenar, iki kenar ya da seviye.",
+  GPIO_RISING_EDGE: "Yükselen kenar, 0 → 1. Pull-up'lı buton bırakılırken (çekilirken) oluşur.",
+  GPIO_FALLING_EDGE: "Düşen kenar, 1 → 0. Pull-up'lı butona basılırken oluşur.",
+  GPIOIntRegister: "Port kesmesi gelince çağrılacak fonksiyonu kaydeder. Fonksiyon adı parantezsiz yazılır: çağrılmaz, adresi verilir. NVIC iznini de içeride açar.",
+  GPIOIntEnable: "Seçilen pinlerin kesmesine pin düzeyinde izin verir.",
+  IntEnable: "Kesme denetleyicisinde (NVIC) bir kesme kaynağına izin verir.",
+  INT_GPIOA: "A portunun kesme numarası.",
+  INT_GPIOF: "F portunun kesme numarası.",
+  INT_TIMER0A: "Timer0 A kesmesinin numarası.",
+  IntMasterEnable: "İşlemcinin genel kesme anahtarı. Kapalıyken hiçbir kesme işlemciye ulaşmaz; en sona yazılır.",
+  HWREG: "Verilen adresteki 32 bitlik register'a doğrudan okur ya da yazar: <code>(*((volatile uint32_t *)(adres)))</code>.",
+  TimerConfigure: "Timer'ın çalışma modunu seçer.",
+  TIMER0_BASE: "Timer0'ın register'larının başladığı adres.",
+  TIMER_CFG_32_BIT_PER: "Timer A ve B birleşip 32 bitlik periyodik sayıcı olur: 0'a inince kendini yeniden yükler. (Stellaris'teki adı; TivaWare'de TIMER_CFG_PERIODIC.)",
+  TimerLoadSet: "Sayıcının başlangıç değerini yükler. Timer her saat çevriminde 1 azalır: 40 MHz'de 40 000 000 çevrim = 1 saniye.",
+  TIMER_A: "Timer'ın A yarısı. 32 bit modda tek sayıcı A adıyla kullanılır.",
+  TimerIntRegister: "Timer kesmesinde çağrılacak fonksiyonu kaydeder.",
+  TimerIntEnable: "Timer'ın hangi olayda kesme üreteceğini açar.",
+  TIMER_TIMA_TIMEOUT: "Timer A'nın 0'a inmesi (zaman aşımı) olayı.",
+  TimerIntClear: "Timer kesme bayrağını temizler; rutinin ilk satırı olur.",
+  TimerEnable: "Timer'ı çalıştırır. Ayarlar bitmeden kesme gelmesin diye en son yazılır.",
+  SYSCTL_RCGCGPIO_R: "GPIO saat açma register'ı: bit0 = A, bit1 = B … bit5 = F. SysCtlPeripheralEnable'ın register karşılığı.",
+  GPIO_PORTF_LOCK_R: "Kilit register'ı. 0x4C4F434B (ASCII 'LOCK') yazılınca kilitli pinlerin ayarı açılır. PF0 varsayılan olarak kilitli.",
+  GPIO_PORTF_CR_R: "Commit register'ı: kilitli pinlerden hangisinin ayarının değiştirilebileceğini belirler. 0x01 → PF0.",
+  GPIO_PORTF_DIR_R: "Yön register'ı: 1 = çıkış, 0 = giriş.",
+  GPIO_PORTF_AFSEL_R: "Alternatif fonksiyon seçimi. 0: pinler UART, PWM gibi işlevlerde değil, sade GPIO.",
+  GPIO_PORTF_DEN_R: "Dijital etkinleştirme. 1 yazılmayan pin dijital olarak çalışmaz.",
+  GPIO_PORTF_PUR_R: "Pull-up register'ı: 1 olan pinlere iç pull-up direnci bağlanır.",
+  GPIO_PORTF_DATA_R: "F portunun veri register'ı (bütün bitlerin açık olduğu maskeli adres 0x400253FC). Okununca pin seviyeleri gelir, yazılınca çıkışlar değişir.",
+  GPIOPinConfigure: "Pinin hangi alternatif işlevde kullanılacağını seçer (pin mux).",
+  GPIO_PA0_U0RX: "PA0 = UART0 alıcı (RX) ucu.",
+  GPIO_PA1_U0TX: "PA1 = UART0 verici (TX) ucu.",
+  GPIOPinTypeUART: "Pinleri UART'a devreder: alternatif fonksiyon açılır.",
+  UARTConfigSetExpClk: "(UART, saat, baud, çerçeve): haberleşme hızını ve veri çerçevesini ayarlar.",
+  UART0_BASE: "UART0'ın adresi. Kartta USB üzerinden bilgisayara sanal COM port olarak bağlı.",
+  UART_CONFIG_WLEN_8: "8 veri biti.",
+  UART_CONFIG_STOP_ONE: "1 stop biti.",
+  UART_CONFIG_PAR_NONE: "Parite yok.",
+  UARTEnable: "UART'ı çalıştırır.",
+  UARTCharsAvail: "Alıcı tamponunda okunmamış karakter varsa true döner; beklemez.",
+  UARTCharGet: "Bir karakter okur; karakter gelene kadar bekler.",
+  UARTCharPut: "Bir karakter gönderir; gönderme tamponu doluysa yer açılana kadar bekler.",
+  SysCtlPeripheralReady: "Çevre birimi kullanıma hazırsa true döner.",
+  GPIO_O_LOCK: "LOCK register'ının porta göre ofseti (0x520).",
+  GPIO_O_CR: "Commit (CR) register'ının porta göre ofseti (0x524).",
+  GPIO_LOCK_KEY: "Kilit anahtarı 0x4C4F434B, ASCII 'LOCK'.",
+  return: "Fonksiyondan değer döndürür.",
+  pow: "Üs alma: <code>pow(2, i)</code> = 2<sup>i</sup>. Kâğıtta 'lazım olursa' diye verilmiş.",
+  volatile: "Derleyiciye 'bu değişken beklenmedik anda değişebilir' der; her kullanımda bellekten yeniden okunur. Kesmede değişen değişkenler volatile olmalı.",
+  uint32_t: "İşaretsiz 32 bitlik tam sayı (stdint.h).",
+  true: "bool doğru değeri (stdbool.h), yani 1.",
+  main: "Programın giriş noktası: kart açılınca çalışma buradan başlar.",
+  while: "<code>while (koşul)</code>: koşul doğru olduğu sürece tekrar eder. <code>while(1)</code> hiç bitmeyen ana döngü; mikrodenetleyici programı kapanmaz.",
+  else: "<code>if</code>'in koşulu yanlışsa çalışan kısım.",
+  define: "<code>#define</code>: önişlemci sabiti. Derlemeden önce ad, yazılan değerle değiştirilir; bellekte yer tutmaz."
+};
+const PORTS = { A: "0x40004000", B: "0x40005000", C: "0x40006000", D: "0x40007000", E: "0x40024000", F: "0x40025000" };
+for (const p in PORTS) {
+  GL["SYSCTL_PERIPH_GPIO" + p] = `${p} portunun saati.`;
+  GL["GPIO_PORT" + p + "_BASE"] = `${p} portunun register'larının başladığı adres: <code>${PORTS[p]}</code>. Fonksiyonlar hangi portla çalışacağını bu adresten anlar.`;
+}
+for (let n = 0; n < 8; n++) {
+  GL["GPIO_PIN_" + n] = `${n}. pin = <code>1&lt;&lt;${n}</code> = 0x${(1 << n).toString(16).toUpperCase().padStart(2, "0")} (${(1 << n).toString(2).padStart(8, "0").replace(/(\d{4})(\d{4})/, "$1 $2")}).`;
+}
+
+// Görevler. L satırları: [kod, not?, kabul edilen başka yazımlar?]
+// "//" sonrası yorum ipucu olarak görünür, yazılmaz. Yalnızca { } ya da yorum olan satırlar hazır gösterilir.
+const RAW = {"code.txt": "#include \"stdint.h\"\n#include \"stdbool.h\"\n#include \"inc/hw_types.h\"\n#include \"inc/hw_gpio.h\"\n#include \"driverlib/pin_map.h\"\n#include \"driverlib/sysctl.h\"\n#include \"driverlib/gpio.h\"\n#include \"inc/hw_memmap.h\"\n#include \"inc/hw_uart.h\"\n#include \"driverlib/uart.h\"\n#include \"driverlib/uart.c\"\n\nvoid main(){\n    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40\n\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);\n\n    GPIOPinConfigure(GPIO_PA0_U0RX);\n    GPIOPinConfigure(GPIO_PA1_U0TX);\n    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);\n\n    UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 9600,\n                        UART_CONFIG_WLEN_8|UART_CONFIG_STOP_ONE|UART_CONFIG_PAR_NONE);\n    UARTEnable(UART0_BASE);\n\n    int gelenchar;\n\n    while(1){\n        // UARTCharPut(UART0_BASE, 'V');\n        //UARTCharPut(UART0_BASE, 'E');\n        //UARTCharPut(UART0_BASE, 'R');\n        //UARTCharPut(UART0_BASE, 'I');\n\n        if (UARTCharsAvail(UART0_BASE)){\n            UARTCharPut(UART0_BASE, UARTCharGet(UART0_BASE)+1);\n        }\n\n\n\n\n    }\n}\n", "code2.txt": "/*\n * Created by SharpDevelop.\n * User: Arzu\n * Date: 12.11.2026\n * Time: 19:12\n *\n * To change this template use Tools | Options | Coding | Edit Standard Headers.\n */\nusing System;\nusing System.Collections.Generic;\nusing System.Drawing;\nusing System.Windows.Forms;\n\nnamespace bb\n{\n\t/// <summary>\n\t/// Description of MainForm.\n\t/// <\/summary>\n\tpublic partial class MainForm : Form\n\t{\n\t\tstring gelenkarakter;\n\n\t\tpublic MainForm()\n\t\t{\n\t\t\t//\n\t\t\t// The InitializeComponent() call is required for Windows Forms designer support.\n\t\t\t//\n\t\t\tInitializeComponent();\n\n\t\t\t//\n\t\t\t// TODO: Add constructor code after the InitializeComponent() call.\n\t\t\t//\n\t\t}\n\n\t\tvoid Button1Click(object sender, EventArgs e)\n\t\t{\n\n\t\t}\n\n\t\tvoid Button1MouseMove(object sender, MouseEventArgs e)\n\t\t{\n\n\t\t}\n\n\t\tvoid Btn_port_acClick(object sender, EventArgs e)\n\t\t{\n\n\t\t\tif (!serialPort1.IsOpen)\n\t\t\t{\n\t\t\t\tserialPort1.PortName=textCOMNO.Text;\n\t\t\t\tserialPort1.BaudRate=Convert.ToInt32(textBAUDRATE.Text);\n\t\t\t\tserialPort1.Open();\n\t\t\t\tbtn_port_kapat.Enabled=true;\n\t\t\t\tbtn_port_ac.Enabled=false;\n\t\t\t}\n\t\t}\n\n\t\tvoid MainFormLoad(object sender, EventArgs e)\n\t\t{\n\t\t\tbtn_port_kapat.Enabled=false;\n\t\t}\n\n\t\tvoid Btn_port_kapatClick(object sender, EventArgs e)\n\t\t{\n\t\t\tif (serialPort1.IsOpen)\n\t\t\t{\n\t\t\t\tserialPort1.Close();\n\t\t\t\tbtn_port_kapat.Enabled=false;\n\t\t\t\tbtn_port_ac.Enabled=true;\n\t\t\t}\n\t\t}\n\n\t\tvoid SerialPort1DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)\n\t\t{\n\t\t\tgelenkarakter = serialPort1.ReadExisting();\n\t\t\tthis.Invoke(new EventHandler(goster));\n\n\t\t}\n\n\t\tvoid Btn_gonderClick(object sender, EventArgs e)\n\t\t{\n\t\t\tserialPort1.WriteLine(textGidenveri.Text);\n\t\t}\n\n\t\tvoid goster(object sender, EventArgs e){\n\t\t\ttextGelenveri.Text=textGelenveri.Text + gelenkarakter;\n\t\t}\n\t}\n}\n", "code3.txt": "#include \"stdbool.h\"\n#include \"stdint.h\"\n#include \"inc/hw_types.h\"\n#include \"inc/hw_gpio.h\"\n#include \"driverlib/pin_map.h\"\n#include \"driverlib/sysctl.h\"\n#include \"driverlib/gpio.h\"\n#include \"driverlib/gpio.c\"\n#include \"inc/hw_memmap.h\"\n//#include \"inc/tm4c123gh6pm.h\"\n\n\nint ikininustal(int value){\n    int i=1;\n    int carpim=1;\n    for (i=0;i<value;i++)\n    {\n        carpim=carpim*2;\n    }\n\n    return carpim;\n}\n\nvoid portfpin1yak()\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=2;\n\n}\n\nvoid portfpin1sondur()\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=0;\n\n}\n\nvoid portfpin1set(int setdegeri)\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=setdegeri;\n\n}\n\nvoid portfpinXset(int pinno,int setdegeri)\n{\n    GPIOPinWrite(GPIO_PORTF_BASE, pinno, setdegeri);\n    //HWREG()=setdegeri;\n}\n\nvoid portset(long portvalue, int pinno,int setdegeri)\n{\n    //GPIOPinWrite(portvalue, pinno, setdegeri);\n    HWREG(portvalue+4*ikininustal(pinno))=0;\n}\n\nint main(void)\n{\n    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);\n    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);\n    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);\n    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);\n\n\n    while(1){\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);\n        //HWREG(0x400253fc)=4;\n        //portfpin1yak();\n        //portfpin1set(2);\n        //portfpin1sondur();\n        //portfpinXset(1, 2);\n        //portset(GPIO_PORTF_BASE, 1, 2);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        //SysCtlDelay(100000);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 4);\n        //SysCtlDelay(100000);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 8);\n        //SysCtlDelay(100000);\n\n        /*\n        int i;\n        for (i=2;i<9;i=i*2)\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);\n            SysCtlDelay(100000);\n        }\n\n        i=2;\n        while(i<9)\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);\n            SysCtlDelay(100000);\n            i=i*2;\n        }\n        */\n\n        int pindegeri;\n        //pindegeri=GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4);\n        //SysCtlDelay(1000);\n        if (GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4)==0){\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        }\n\n        while(!GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4))\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        }\n\n        //while(pindegeri!=16)\n        //{\n         //   GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        //}\n\n    }\n}\n", "code4.txt": "//Ödev\n// kırmızı yansın sönsün\n// mavi yansın sönsün\n// yeşil yansın sönsün\n\n\n//HEX SAYILAR NASIL YAZILIR => BAŞINA 0x YAZMAMIZ GEREK\n// 0x0A => 10\n// 0x0B => 11\n// 0x0C => 12\n// 0x0D => 13\n// 0x0E => 14\n// 0x0F => 15\n\n// BINARY SAYILAR NASIL YAZILIR => BAŞINA 0b YAZMAMIZ GEREK\n// 0b1010 => 10\n// 0b1011 => 11\n// 0b1100 => 12\n\n// 0x000001AC bundaki sayılar hex sayı oluyor muş.\n// GPIO_PIN_1 0000 0010 => 0x00000002\n// GPIO_PIN_2 0000 0100 => 0x00000004\n// GPIO_PIN_3 0000 1000 => 0x00000008\n\n// unit32_t ve bool gibi değişken sınıflarını ekledik\n#include \"stdint.h\"\n#include \"stdbool.h\"\n#include \"stdlib.h\"\n#include \"stdio.h\"    // printf\n\n#include \"inc/hw_types.h\"\n#include \"inc/hw_gpio.h\"\n#include \"driverlib/pin_map.h\"\n#include \"driverlib/sysctl.h\"\n#include \"driverlib/gpio.h\"\n#include \"driverlib/gpio.c\"\n#include \"inc/hw_memmap.h\"\n\n// # include \"inc/tm4c123gh6pm.h\" ucuz mikroişlemcilerde sadece bu olur\n\nvoid delay_ms (int ms) {\n    if (ms == 0) return;\n    // SysCtlDelay(1000);\n    // 1000 tur × 3 çevrim = 3000 çevrim bekler. SysCtlDelay ASSEMBLY SEVİYESİNDE YAZILMIŞTIR\n    SysCtlDelay((SysCtlClockGet() / 3000) * ms); // gelen ms değeri kadar bekler, PERFECT Bİ ŞEY BUNU KULLANMALISIN\n\n    // AŞŞAĞIDAKİ GİBİ YAZMAK İSTERSEN EĞER ARKADA DÖNEN DİĞER İŞLEMLER VS'NİN CYCLE 'LARI DA OLDUĞU\n    // İÇİN GECİKME OLACAKTIR O YÜZDEN YUKARDAKİNİ KULLANMALISIN.\n    // volatile int kalan_cycle = SysCtlClockGet() / 1000 * ms;\n    // while (kalan_cycle > 0) kalan_cycle--;\n}\n\nvoid led_pwm (int led, float duty, int sure) {\n    volatile int kalan = sure;\n    while (kalan > 0) {\n\n        if (duty > 0) {\n            GPIOPinWrite(GPIO_PORTF_BASE, led, led);\n            delay_ms(10 * duty);\n        }\n\n\n        if (duty < 1) {\n            GPIOPinWrite(GPIO_PORTF_BASE, led, 0);\n            delay_ms(10 * (( 1 - duty )));\n        }\n\n        kalan -= 10;\n\n    }\n}\n\nvoid main(void)\n{\n    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);\n\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);\n\n    // Portun tipini ayarlama Output/Input\n\n    // GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 mikroişlemci dersinde veya yani yazılan sayıların\n    // binary karşılıklarını her bit bit veya işlemine sokuyor:\n    // 0010 | 0100 | 1000 => 0111 => 14 sonucunu veriyor\n\n    // GPIO_PORTF_BASE portun kendisi değil, F portunun register’larının bellekte başladığı adres (0x40025000). Fonksiyon bu adrese bakarak hangi portla çalışacağını anlıyor.\n\n    // 8 bit: Register tarafında evet, her port 8 bitlik (bit 0–7).\n    // Ama TM4C123'te F portunun fiziksel olarak sadece 5 pini var:\n    // PF0–PF4. LED’ler PF1 (kırmızı), PF2 (mavi), PF3 (yeşil);\n    // PF0 ve PF4 de kart üzerindeki butonlar.\n    // 2. bit => GPIO_PIN_1 0010\n    // 3. bit => GPIO_PIN_2 0100\n    // 4. bit => GPIO_PIN_3 1000\n\n\n    // GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1);\n\n    // printf(\"Bakalim kac cikacak: %d \\n\", GPIO_PIN_1 + GPIO_PIN_2 + GPIO_PIN_3);\n    // GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, 14);\n\n    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, 0x0E);\n\n    while (1) {\n\n        // GPIOPinWrite(GPIO_PORTF_BASE, MASKE, DEĞER);\n        // Sadece Maskede 1 Olan Değerlerin yerine yazma yapılır diğer alanlar korunur.\n\n        // Maske mikroişlemciye zaman kazandırır. Ayrıca mesela sadece bir byte'ın 3. bitini değişmek istiyoruz bu durumda\n        // Diğer bitlere yanlış değer yazmamak için maske ile diğer değerler maskelenir. Maske olmasa idi byte'ın diğer bitlerinin'de\n        // değerindne haberdar olmamız gerekirde elbette mümkün ama maske işimizi ciddi anlamda kısaltıyor.\n        // Sadece 7. bitin değerini değişelim => GPIOPinWrite(GPIO_PORTF_BASE, 0b01000000, 0b11111111);\n        // Diğerleri maskeli olduğu için sadece 7. bitti değişir\n\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0b00000010);\n        // delay_ms(500);\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0b00000000);\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0b11111111);\n        // delay_ms(500);\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 8); // 0b1000\n        // delay_ms(500);\n        // GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0b00000);\n\n        led_pwm(GPIO_PIN_1, 0.1, 500);\n        led_pwm(GPIO_PIN_1, 0.0, 1);\n        led_pwm(GPIO_PIN_2, 0.1, 500);\n        led_pwm(GPIO_PIN_2, 0.0, 1);\n        led_pwm(GPIO_PIN_3, 0.1, 500);\n        led_pwm(GPIO_PIN_3, 0.0, 1);\n\n\n        led_pwm(GPIO_PIN_1, 0.1, 200);\n        led_pwm(GPIO_PIN_1, 0.0, 1);\n        led_pwm(GPIO_PIN_2, 0.1, 200);\n        led_pwm(GPIO_PIN_2, 0.0, 1);\n        led_pwm(GPIO_PIN_3, 0.1, 200);\n        led_pwm(GPIO_PIN_3, 0.0, 1);\n\n        float a = 100;\n        while (a > 0) {\n            a--;\n            led_pwm(GPIO_PIN_3, a / 100, 10);\n        }\n        a = 100;\n        while (a > 0) {\n            a--;\n            led_pwm(GPIO_PIN_2, a / 100, 10);\n        }\n        a = 100;\n        while (a > 0) {\n            a--;\n            led_pwm(GPIO_PIN_1, a / 100, 10);\n        }\n    }\n}\n", "code5.txt": "#include \"stdint.h\"\n#include \"stdbool.h\"\n#include \"inc/tm4c123gh6pm.h\"\n#include \"driverlib/sysctl.h\"\n\n\nvoid bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }\n\nvoid GpioInitSettings() {\n    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20;\n    GPIO_PORTF_LOCK_R = 0x4C4F434B;\n    GPIO_PORTF_CR_R = 0x01;\n    GPIO_PORTF_DIR_R |= 0x0E;\n    GPIO_PORTF_AFSEL_R = 0x00;\n    GPIO_PORTF_DEN_R = 0x1F;\n    GPIO_PORTF_PUR_R |= 0x11;\n}\n\n\nint main(void) {\n    GpioInitSettings();\n\n    uint32_t sure_ms = 500;\n    uint32_t basildi_sw2 = 0;\n    uint32_t basildi_sw1 = 0;\n    uint32_t a = 0;\n    uint32_t tekrar_sayisi = sure_ms / 20;\n\n    while(1){\n      if ((GPIO_PORTF_DATA_R & 0x01) == 0 && basildi_sw2 == 0){\n          basildi_sw2 = 1;\n          if (sure_ms > 100) {\n              sure_ms -= 100;\n              tekrar_sayisi = sure_ms / 20;\n          }\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x01) == 0x01 && basildi_sw2 == 1) {\n          basildi_sw2 = 0;\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x10) == 0 && basildi_sw1 == 0){\n          basildi_sw1 = 1;\n          if (sure_ms < 500) {\n              sure_ms += 100;\n              tekrar_sayisi = sure_ms / 20;\n          }\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x10) == 0x10 && basildi_sw1 == 1) {\n          basildi_sw1 = 0;\n      }\n\n      if (a == 0) {\n\n          // toggle ediyo basitce bu kısım\n          if ((GPIO_PORTF_DATA_R & 0b0010) == 0b0010) {\n              GPIO_PORTF_DATA_R &= 0b11111101;\n          } else {\n              GPIO_PORTF_DATA_R |= 0b0010;\n          }\n          a = tekrar_sayisi;\n\n      }\n\n      a--;\n      bekle_ms(20);\n    }\n}\n", "code6.txt": "#include \"stdbool.h\"\n#include \"stdint.h\"\n#include \"inc/hw_types.h\" // HWREG\n#include \"inc/hw_gpio.h\"\n#include \"driverlib/pin_map.h\"\n#include \"driverlib/sysctl.h\"\n#include \"driverlib/gpio.h\"\n#include \"driverlib/gpio.c\"\n#include \"inc/hw_memmap.h\"\n//#include \"inc/tm4c123gh6pm.h\"\n\n// HWREG() İLE ADRESLERE DİREKT YAZMA İŞLEMİ YAPILIR.\n// GPIO_PORTF_BASE = 0x40025000\n// GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n// HWREG(0x40025000 + maske 00) = deger\n// 0x40025000 + 0000 0010 00 = 0x40025008\n// 0x40025000 + 0000 1110 00 = 0x40025038\n// 0x40025000 + 1111 1111 00 = 0x400253FC\n// 0x40025000 + 0000 1110 00   = 0x40025038   (PF1, PF2, PF3) => LEDLER İÇİN BUNLAR YETERLİ\n\n\nint ikininustal(int value){\n    int i=1;\n    int carpim=1;\n    for (i=0;i<value;i++)\n    {\n        carpim=carpim*2;\n    }\n\n    return carpim;\n}\n\nvoid portfpin1yak()\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=2;\n\n}\n\nvoid portfpin1sondur()\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=0;\n\n}\n\nvoid portfpin1set(int setdegeri)\n{\n    //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n    HWREG(0x400253fc)=setdegeri;\n\n}\n\nvoid portfpinXset(int pinno,int setdegeri)\n{\n    GPIOPinWrite(GPIO_PORTF_BASE, pinno, setdegeri);\n    //HWREG()=setdegeri;\n}\n\nvoid portset(long portvalue, int pinno,int setdegeri)\n{\n    //GPIOPinWrite(portvalue, pinno, setdegeri);\n    HWREG(portvalue+4*ikininustal(pinno))=0;\n}\n\nint main(void)\n{\n    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);\n    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);\n    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);\n    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);\n\n\n    while(1){\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_PIN_1);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);\n        //HWREG(0x400253fc)=4;\n        //portfpin1yak();\n        //portfpin1set(2);\n        //portfpin1sondur();\n        //portfpinXset(1, 2);\n        //portset(GPIO_PORTF_BASE, 1, 2);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        //SysCtlDelay(100000);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 4);\n        //SysCtlDelay(100000);\n        //GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 8);\n        //SysCtlDelay(100000);\n\n        /*\n        int i;\n        for (i=2;i<9;i=i*2)\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);\n            SysCtlDelay(100000);\n        }\n\n        i=2;\n        while(i<9)\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, i);\n            SysCtlDelay(100000);\n            i=i*2;\n        }\n        */\n\n        int pindegeri;\n        //pindegeri=GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4);\n        //SysCtlDelay(1000);\n        if (GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4)==0){\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        }\n\n        while(!GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4))\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        }\n\n        //while(pindegeri!=16)\n        //{\n         //   GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 2);\n        //}\n\n    }\n}\n", "code7.txt": "//Includes\n#include \"stdint.h\"\n#include \"stdbool.h\"\n\n#include \"inc/tm4c123gh6pm.h\"\n\n/*            ------ ----- ------- ÖDEV ------- ------ -----\n * KIRMIZI LED BAŞLANGIÇTA YANAR\n *\n *\n *\n *\n *\n *\n *\n * */\n\n\n\n\n\n//Offsetler + Base adres = Ram Adres'i\n\nvoid GpioInitSettings(){\n\n    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20; // Portf Aktif\n   // SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R (1<<5);\n    GPIO_PORTF_LOCK_R = 0x4C4F434B;\n    GPIO_PORTF_CR_R = 0x01;\n    GPIO_PORTF_DIR_R |= 0x0E; // pin0 ile pin4 input , 1-2-3 output\n   // GPIO_PORTF_DIR_R |= (1<<1) |(1<<2) | (1<<3);\n    GPIO_PORTF_AFSEL_R = 0x00;\n    GPIO_PORTF_DEN_R = 0x1F;\n\n    GPIO_PORTF_PUR_R |= 0x11;\n}\n\n\nint main(void)\n{\n    GpioInitSettings();\n\n    while(1){\n\n      if ((GPIO_PORTF_DATA_R & 0x01) == 0){\n          GPIO_PORTF_DATA_R |= ~0b1000;\n      }\n\n      else if ((GPIO_PORTF_DATA_R & 0x10) == 0){\n          GPIO_PORTF_DATA_R &= ~0b0111;\n\n      }\n    }\n}\n", "code8.txt": "#include <stdint.h>\n#include <stdbool.h>\n#include \"inc/hw_memmap.h\"\n#include \"inc/hw_types.h\"\n#include \"inc/hw_gpio.h\"\n#include \"driverlib/sysctl.h\"\n#include \"driverlib/gpio.h\"\n\n#define KIRMIZI_LED GPIO_PIN_1\n#define SW1 GPIO_PIN_4\n#define SW2 GPIO_PIN_0\n#define ADIM_MS 100\n#define MIN_MS 100\n#define MAX_MS 2000\nvolatile uint32_t sure_ms = 500;\nvoid bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }\n\nvoid Butonlari_Kontrol_Et (void) // SW1: sure_ms += ADIM_MS, SW2: sure_ms -= ADIM_MS {\n    if ((GPIO_PORTF_BASE & SW1) == SW1) {\n\n    }\n}\nvoid Bekle_ve_Dinle(uint32_t ms) // beklerken her 10 ms'de butonlari kontrol eder\n{\n// TODO\n}\n\nint main(void)\n{\n    SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |\n    SYSCTL_OSC_MAIN); // 40 MHz\n    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);\n    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)) {}\n        // PF0 kilidini ac\n        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;\n        HWREG(GPIO_PORTF_BASE + GPIO_O_CR) |= SW2;\n        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0;\n        GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, KIRMIZI_LED);\n        GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, SW1 | SW2);\n        GPIOPadConfigSet(GPIO_PORTF_BASE, SW1 | SW2, GPIO_STRENGTH_2MA,\n        GPIO_PIN_TYPE_STD_WPU);\n        while (1)\n        {\n            GPIOPinWrite(GPIO_PORTF_BASE, KIRMIZI_LED, KIRMIZI_LED);\n            Bekle_ve_Dinle(sure_ms);\n            GPIOPinWrite(GPIO_PORTF_BASE, KIRMIZI_LED, 0);\n            Bekle_ve_Dinle(sure_ms);\n        }\n}\n", "code9.txt": "#include \"stdint.h\"\n#include \"stdbool.h\"\n#include \"inc/tm4c123gh6pm.h\"\n#include \"driverlib/sysctl.h\"\n\nvoid bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }\n\nvoid GpioInitSettings() {\n    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20;\n    GPIO_PORTF_LOCK_R = 0x4C4F434B;\n    GPIO_PORTF_CR_R = 0x01;\n    GPIO_PORTF_DIR_R |= 0x0E;\n    GPIO_PORTF_AFSEL_R = 0x00;\n    GPIO_PORTF_DEN_R = 0x1F;\n    GPIO_PORTF_PUR_R |= 0x11;\n}\n\n\nint main(void) {\n    GpioInitSettings();\n\n    uint32_t sure_ms = 500;\n    uint32_t basildi_sw2 = 0;\n    uint32_t basildi_sw1 = 0;\n    uint32_t a = 0;\n    uint32_t tekrar_sayisi = sure_ms / 10;\n\n    while(1){\n      if ((GPIO_PORTF_DATA_R & 0x01) == 0 && basildi_sw2 == 0){\n          basildi_sw2 = 1;\n          if (sure_ms > 100) {\n              sure_ms -= 100;\n              tekrar_sayisi = sure_ms / 10;\n          }\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x01) == 0x01 && basildi_sw2 == 1) {\n          basildi_sw2 = 0;\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x10) == 0 && basildi_sw1 == 0){\n          basildi_sw1 = 1;\n          if (sure_ms < 500) {\n              sure_ms += 100;\n              tekrar_sayisi = sure_ms / 10;\n          }\n      }\n\n      if ((GPIO_PORTF_DATA_R & 0x10) == 0x10 && basildi_sw1 == 1) {\n          basildi_sw1 = 0;\n      }\n\n      if (a == 0) {\n\n          // toggle ediyo basitce bu kısım\n          if ((GPIO_PORTF_DATA_R & 0b0010) == 0b0010) {\n              GPIO_PORTF_DATA_R &= 0b11111101;\n          } else {\n              GPIO_PORTF_DATA_R |= 0b0010;\n          }\n          a = tekrar_sayisi;\n\n      }\n\n      a--;\n      bekle_ms(10);\n    }\n}\n"};
+
+// ---- derste yazdırılan kodlar: dosya metni RAW içinde, notlar boşluksuz satır koduna göre ----
+const REG_NOTES = {
+  'voidGpioInitSettings(){': "API'deki SysCtlPeripheralEnable ve GPIOPinType… çağrılarının register karşılığı.",
+  'voidGpioInitSettings(){': "API'deki SysCtlPeripheralEnable ve GPIOPinType… çağrılarının register karşılığı.",
+  'SYSCTL_RCGCGPIO_R=SYSCTL_RCGCGPIO_R|0x20;': "0010 0000 = 0x20 = <code>(1&lt;&lt;5)</code>: bit5 = F portu. VEYA ile diğer portların saati korunur.",
+  'GPIO_PORTF_LOCK_R=0x4C4F434B;': "0x4C 0x4F 0x43 0x4B = ASCII 'L' 'O' 'C' 'K'. PF0 kilitli olduğu için önce kilit açılır.",
+  'GPIO_PORTF_CR_R=0x01;': "PF0'ın ayarının değiştirilmesine izin verilir.",
+  'GPIO_PORTF_DIR_R|=0x0E;': "0000 1110: PF1, PF2, PF3 çıkış. PF0 ve PF4 0 kalır: giriş.",
+  'GPIO_PORTF_AFSEL_R=0x00;': "Alternatif fonksiyon yok, sade GPIO.",
+  'GPIO_PORTF_DEN_R=0x1F;': "0001 1111: kullanılan beş pinin (PF0–PF4) hepsi dijital. DEN yazılmazsa pinler çalışmaz.",
+  'GPIO_PORTF_PUR_R|=0x11;': "0001 0001: pull-up yalnızca butonlara, PF0 ve PF4.",
+  'GpioInitSettings();': "Port ayarları tek fonksiyonda."
+};
+
+const SURE_NOTES = Object.assign({}, REG_NOTES, {
+  'voidbekle_ms(uint32_tms){SysCtlDelay((SysCtlClockGet()/3000)*ms);}': "SysCtlClockGet()/3000 = 1 ms'lik tur sayısı (her tur 3 çevrim), ms ile çarpılır. Bu dosyada SysCtlClockSet yok; kart varsayılan saatiyle çalışır ve SysCtlClockGet o saati döndürür.",
+  'intmain(void){': "Programın giriş noktası.",
+  'uint32_tsure_ms=500;': "LED'in yanık ve sönük kalma süresi (ms).",
+  'uint32_tbasildi_sw2=0;': "SW2 basılı tutulurken süre yalnızca bir kez değişsin diye bayrak.",
+  'uint32_tbasildi_sw1=0;': "SW1 için aynı bayrak.",
+  'uint32_ta=0;': "Geri sayaç: 0 olunca LED'in durumu değişir.",
+  'uint32_ttekrar_sayisi=sure_ms/20;': "Döngü her turda 20 ms beklediği için 500 ms = 25 tur.",
+  'if((GPIO_PORTF_DATA_R&0x01)==0&&basildi_sw2==0){': "SW2 (PF0, 0x01) basılı ve bu basış daha önce sayılmamışsa.",
+  'basildi_sw2=1;': "Basış sayıldı.",
+  'if(sure_ms>100){': "Alt sınır 100 ms.",
+  'sure_ms-=100;': "SW2 süreyi kısaltır: LED daha hızlı yanıp söner.",
+  'tekrar_sayisi=sure_ms/20;': "Tur sayısı yeni süreye göre güncellenir.",
+  'if((GPIO_PORTF_DATA_R&0x01)==0x01&&basildi_sw2==1){': "SW2 bırakıldı (pin yine 1): bayrak sıfırlanır, sonraki basış yeniden sayılır.",
+  'basildi_sw2=0;': "Bayrak sıfırlandı.",
+  'if((GPIO_PORTF_DATA_R&0x10)==0&&basildi_sw1==0){': "SW1 (PF4, 0x10) basılı ve sayılmamışsa.",
+  'basildi_sw1=1;': "Basış sayıldı.",
+  'if(sure_ms<500){': "Üst sınır 500 ms.",
+  'sure_ms+=100;': "SW1 süreyi uzatır: LED daha yavaş yanıp söner.",
+  'if((GPIO_PORTF_DATA_R&0x10)==0x10&&basildi_sw1==1){': "SW1 bırakıldı: bayrak sıfırlanır.",
+  'basildi_sw1=0;': "Bayrak sıfırlandı.",
+  'if(a==0){': "Sayaç bitti: LED'in durumu değişecek.",
+  'if((GPIO_PORTF_DATA_R&0b0010)==0b0010){': "Kırmızı (PF1) şu an yanıyor mu?",
+  'GPIO_PORTF_DATA_R&=0b11111101;': "Yalnızca bit1 0'lanır: kırmızı söner, diğer pinler korunur. <code>&amp;= ~0b0010</code> ile aynı.",
+  '}else{': "Kırmızı sönükse:",
+  'GPIO_PORTF_DATA_R|=0b0010;': "Yalnızca bit1 1 olur: kırmızı yanar.",
+  'a=tekrar_sayisi;': "Sayaç yeniden kurulur.",
+  'a--;': "Her turda sayaç bir azalır.",
+  'bekle_ms(20);': "Her tur 20 ms: butonlara 20 ms'de bir bakılır, LED tekrar_sayisi tur sonra durum değiştirir."
+});
+
+const HWREG_NOTES = {
+  'intikininustal(intvalue){': "2 üzeri value'yu döngüyle hesaplar (<code>1 &lt;&lt; value</code> ile aynı). portset'te pin numarasından maske üretmek için kullanılıyor.",
+  'inti=1;': "Başlangıç değeri önemsiz; for döngüsü i'yi zaten 0'dan başlatıyor.",
+  'intcarpim=1;': "Çarpım 1'den başlar.",
+  'for(i=0;i<value;i++)': "value kez döner.",
+  'carpim=carpim*2;': "Her turda 2 ile çarpılır: 1, 2, 4, 8 …",
+  'returncarpim;': "Sonuç: 2<sup>value</sup>.",
+  'voidportfpin1yak()': "PF1'i (kırmızı) yakan yardımcı fonksiyon.",
+  'HWREG(0x400253fc)=2;': "0x3FC = 0xFF &lt;&lt; 2: sekiz pinin hepsine erişen adres. 2 = 0000 0010 yazılınca PF1 1, diğer bütün pinler 0 olur. Üstteki yorumdaki GPIOPinWrite yalnızca PF1'e dokunurdu; bu satır diğer LED'leri de söndürür.",
+  'voidportfpin1sondur()': "Bütün pinlere 0 yazan fonksiyon.",
+  'HWREG(0x400253fc)=0;': "Bütün pinler 0: LED'lerin hepsi söner.",
+  'voidportfpin1set(intsetdegeri)': "F portunun tamamına verilen değeri yazar.",
+  'HWREG(0x400253fc)=setdegeri;': "2 kırmızı, 4 mavi, 8 yeşil; 0x0E üçü birden (beyaz).",
+  'voidportfpinXset(intpinno,intsetdegeri)': "Adı pinno ama aslında maske bekliyor: GPIOPinWrite'ın ikinci parametresine gidiyor.",
+  'GPIOPinWrite(GPIO_PORTF_BASE,pinno,setdegeri);': "pinno maske, setdegeri değer olarak kullanılır.",
+  'voidportset(longportvalue,intpinno,intsetdegeri)': "Tek bir pine maskeli adresle erişen fonksiyon.",
+  'HWREG(portvalue+4*ikininustal(pinno))=0;': "4 × 2<sup>pinno</sup> = (1 &lt;&lt; pinno) &lt;&lt; 2: yalnızca o pine erişen maskeli adres. pinno = 1 → 0x40025000 + 8 = 0x40025008 (PF1). setdegeri kullanılmıyor, hep 0 yazılıyor; yani bu fonksiyon pini yalnızca söndürür.",
+  'intmain(void)': "Programın giriş noktası.",
+  'GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);': "Üç LED çıkış: kırmızı, mavi, yeşil.",
+  'GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,GPIO_PIN_4);': "PF4 = SW1 giriş.",
+  'GPIOPadConfigSet(GPIO_PORTF_BASE,GPIO_PIN_4,GPIO_STRENGTH_4MA,GPIO_PIN_TYPE_STD_WPU);': "SW1 pull-up'lı: basılıyken 0 okunur.",
+  'intpindegeri;': "Tanımlanmış ama yalnızca yorum satırlarında kullanılıyor.",
+  'if(GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4)==0){': "SW1 basılı mı?",
+  'GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,2);': "Maske üç LED, değer 2: yalnızca kırmızı yanar, mavi ve yeşil söner. Bu programda LED'i söndüren satır yok; bir kez basınca kırmızı yanık kalır.",
+  'while(!GPIOPinRead(GPIO_PORTF_BASE,GPIO_PIN_4))': "Buton basılı kaldıkça döner: okunan 0, <code>!0</code> doğru."
+};
+const HWREG_VARS = {
+  ikininustal:"2 üzeri value'yu hesaplayan fonksiyon.", value:"Üs.", i:"Döngü sayacı.", carpim:"Ara sonuç: 2'nin kuvveti.",
+  portfpin1yak:"PF1'i yakan fonksiyon.", portfpin1sondur:"Bütün F pinlerini söndüren fonksiyon.", portfpin1set:"F portuna değer yazan fonksiyon.",
+  portfpinXset:"GPIOPinWrite'ı saran fonksiyon.", portset:"Tek pine maskeli adresle 0 yazan fonksiyon.",
+  setdegeri:"Yazılacak değer.", pinno:"Pin numarası (portfpinXset'te aslında maske).", portvalue:"Portun taban adresi.", pindegeri:"Kullanılmayan değişken."
+};
+const SURE_VARS = {
+  bekle_ms:"ms kadar bekleyen fonksiyon.", ms:"Beklenecek süre (milisaniye).", GpioInitSettings:"Register'larla port ayarı yapan fonksiyon.",
+  sure_ms:"LED'in yanık/sönük kalma süresi (ms).", basildi_sw1:"SW1 basışı sayıldı mı bayrağı.", basildi_sw2:"SW2 basışı sayıldı mı bayrağı.",
+  a:"Geri sayaç (tur).", tekrar_sayisi:"Bir yarım periyodun kaç tur sürdüğü: sure_ms / tur süresi."
+};
+
+const CTASKS = [
+{id:"c1", page:"code.html", group:"Derste yazdırılan kodlar", title:"code.txt · UART yankı", src:"code.txt",
+ text:`<p>Derste yazdırılan UART örneği: bilgisayardan gelen karakterin bir fazlasını geri gönderir ('A' gelirse 'B'). 9600 baud, 8 veri biti, 1 stop biti, paritesiz. Bilgisayar tarafı code2.txt'deki C# programı.</p>`,
+ raw:"code.txt",
+ vars:{ gelenchar:"Tanımlanmış ama kullanılmıyor." },
+ notes:{
+  'voidmain(){': "Derste main böyle yazılmış; diğer örneklerde <code>int main(void)</code>.",
+  'SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);': "F portu bu programda kullanılmıyor; satır derste kalmış, zararı yok.",
+  'SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);': "UART0'ın pinleri PA0 ve PA1.",
+  'SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);': "Timer da bu programda kullanılmıyor.",
+  'SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);': "Haberleşme biriminin kendisi.",
+  'GPIOPinTypeUART(GPIO_PORTA_BASE,GPIO_PIN_0|GPIO_PIN_1);': "PA0 ve PA1 UART'a devredilir.",
+  'UARTConfigSetExpClk(UART0_BASE,SysCtlClockGet(),9600,': "9600 baud; satır bir alttakinde devam ediyor. C# tarafında da 9600 seçilmeli, hızlar farklıysa anlamsız karakterler gelir.",
+  'UART_CONFIG_WLEN_8|UART_CONFIG_STOP_ONE|UART_CONFIG_PAR_NONE);': "Çerçeve: 8 veri biti, 1 stop biti, parite yok (8N1). Üç ayar VEYA ile birleşir.",
+  'intgelenchar;': "Tanımlanmış ama kullanılmıyor.",
+  'if(UARTCharsAvail(UART0_BASE)){': "Önce veri var mı diye bakılır; UARTCharGet veri yoksa bekler ve döngü takılır.",
+  'UARTCharPut(UART0_BASE,UARTCharGet(UART0_BASE)+1);': "Okunan karakterin ASCII kodu + 1 geri gönderilir: 'A' (65) → 'B' (66)."
+ }},
+
+{id:"c2", page:"code2.html", group:"Derste yazdırılan kodlar", title:"code2.txt · C# seri port programı", src:"code2.txt",
+ text:`<p>code.txt'deki UART programının bilgisayar tarafı: C# Windows Forms (SharpDevelop). COM port adı ve baud hızı kutulardan alınır, port açılır; gönderilen metin karta gider, karttan gelen cevap kutuya yazılır.</p>`,
+ raw:"code2.txt",
+ vars:{
+  using:"Kullanılacak .NET ad alanını ekler; C'deki #include'a benzer.", namespace:"Kodun ad alanı.", partial:"Sınıfın bir kısmı başka dosyada (tasarımcının ürettiği dosya).",
+  MainForm:"Programın ana penceresi.", Form:"Windows Forms pencere sınıfı.", gelenkarakter:"Seri porttan gelen metin; goster bunu kutuya ekler.",
+  InitializeComponent:"Tasarımcının ürettiği fonksiyon: düğmeleri ve kutuları oluşturur.",
+  serialPort1:"Forma eklenmiş SerialPort bileşeni: seri port bağlantısı.", IsOpen:"Port açık mı (true/false).",
+  PortName:"Port adı, ör. COM3.", BaudRate:"Haberleşme hızı.", Convert:".NET dönüştürme sınıfı.", ToInt32:"Metni 32 bitlik tam sayıya çevirir.",
+  Open:"Portu açar.", Close:"Portu kapatır.", Enabled:"Düğme basılabilir mi.", Text:"Kutunun içindeki metin.",
+  textCOMNO:"COM port numarasının yazıldığı kutu.", textBAUDRATE:"Baud hızının yazıldığı kutu.", textGidenveri:"Gönderilecek metnin kutusu.", textGelenveri:"Gelen metnin göründüğü kutu.",
+  btn_port_ac:"'Port aç' düğmesi.", btn_port_kapat:"'Port kapat' düğmesi.",
+  ReadExisting:"Alıcı tamponunda ne varsa metin olarak okur.", Invoke:"Verilen fonksiyonu formun kendi iş parçacığında çalıştırır.",
+  EventHandler:"(sender, e) imzalı olay fonksiyonu tipi.", goster:"Gelen metni kutuya ekleyen fonksiyon.", WriteLine:"Metni sonuna satır sonu ekleyerek gönderir.",
+  sender:"Olayı oluşturan nesne.", EventArgs:"Olay bilgisi.", MouseEventArgs:"Fare olayı bilgisi."
+ },
+ notes:{
+  'usingSystem;': "Temel .NET tipleri.",
+  'usingSystem.Collections.Generic;': "Liste gibi koleksiyonlar; bu kodda kullanılmıyor, şablondan geliyor.",
+  'usingSystem.Drawing;': "Çizim tipleri; şablondan geliyor.",
+  'usingSystem.Windows.Forms;': "Form, Button, TextBox gibi pencere bileşenleri.",
+  'namespacebb': "Projenin ad alanı.",
+  'publicpartialclassMainForm:Form': "Ana pencere sınıfı. <code>: Form</code> pencere sınıfından türetildiğini gösterir.",
+  'stringgelenkarakter;': "Seri porttan gelen metin burada tutulur.",
+  'publicMainForm()': "Yapıcı: form oluşturulurken çalışır.",
+  'InitializeComponent();': "Tasarımcının ürettiği düğme ve kutular oluşturulur.",
+  'voidButton1Click(objectsender,EventArgse)': "Boş olay fonksiyonu: tasarımcıda düğmeye çift tıklanınca oluşmuş, kullanılmıyor.",
+  'voidButton1MouseMove(objectsender,MouseEventArgse)': "Boş olay fonksiyonu, kullanılmıyor.",
+  'voidBtn_port_acClick(objectsender,EventArgse)': "'Port aç' düğmesine basılınca çalışır.",
+  'if(!serialPort1.IsOpen)': "Port zaten açıksa tekrar açmaya çalışılmaz; açık portu yeniden açmak hata verir.",
+  'serialPort1.PortName=textCOMNO.Text;': "Port adı kutudan alınır. Kartın hangi COM'da olduğu Aygıt Yöneticisi'nde görünür.",
+  'serialPort1.BaudRate=Convert.ToInt32(textBAUDRATE.Text);': "Kutudaki metin sayıya çevrilir. Kart tarafındaki 9600 ile aynı olmalı.",
+  'serialPort1.Open();': "Port açılır.",
+  'btn_port_kapat.Enabled=true;': "Port açıkken 'kapat' düğmesi basılabilir olur.",
+  'btn_port_ac.Enabled=false;': "Açık portu tekrar açmaya çalışmamak için 'aç' düğmesi pasif olur.",
+  'voidMainFormLoad(objectsender,EventArgse)': "Form ilk açıldığında çalışır.",
+  'btn_port_kapat.Enabled=false;': "'Kapat' düğmesi pasif olur: kapalı port kapatılamaz.",
+  'voidBtn_port_kapatClick(objectsender,EventArgse)': "'Port kapat' düğmesine basılınca çalışır.",
+  'if(serialPort1.IsOpen)': "Yalnızca açık port kapatılır.",
+  'serialPort1.Close();': "Port kapanır.",
+  'btn_port_ac.Enabled=true;': "Port yeniden açılabilir.",
+  'voidSerialPort1DataReceived(objectsender,System.IO.Ports.SerialDataReceivedEventArgse)': "Porta veri gelince çalışır. Bu olay arka planda ayrı bir iş parçacığında çağrılır; form kutularına buradan doğrudan yazılamaz.",
+  'gelenkarakter=serialPort1.ReadExisting();': "Gelen veri değişkene alınır.",
+  'this.Invoke(newEventHandler(goster));': "Kutuya yazma işi goster fonksiyonuyla formun iş parçacığına bırakılır.",
+  'voidBtn_gonderClick(objectsender,EventArgse)': "'Gönder' düğmesine basılınca çalışır.",
+  'serialPort1.WriteLine(textGidenveri.Text);': "Kutudaki metin karta gönderilir. Kart her karakterin bir fazlasını geri yollar: 'A' yazılırsa 'B' gelir.",
+  'voidgoster(objectsender,EventArgse){': "Gelen metni kutuya ekleyen fonksiyon.",
+  'textGelenveri.Text=textGelenveri.Text+gelenkarakter;': "Eski metnin sonuna yeni gelen eklenir."
+ }},
+
+{id:"c3", page:"code3.html", group:"Derste yazdırılan kodlar", title:"code3.txt · HWREG ve buton", src:"code3.txt",
+ text:`<p>Derste yazdırılan kod: kırmızı LED'i GPIOPinWrite yerine HWREG ile doğrudan adrese yazarak yakma, bunun için yardımcı fonksiyonlar ve PF4 (SW1) butonu. while içindeki denemelerin çoğu yorum satırında; çalışan kısım: SW1'e basılınca kırmızı LED yanar.</p>`,
+ raw:"code3.txt", vars:HWREG_VARS, notes:HWREG_NOTES},
+
+{id:"c4", page:"code4.html", group:"Derste yazdırılan kodlar", title:"code4.txt · Hex, maske, yazılımla PWM", src:"code4.txt",
+ text:`<p>Derste yazdırılan ödev kodu: hex ve binary yazımı, GPIOPinWrite maskesi, SysCtlDelay ile ms bekleme ve yazılımla PWM. LED'ler sırayla loş yanıp söner, sonra yeşil, mavi ve kırmızı sırayla yavaşça söner.</p>`,
+ raw:"code4.txt",
+ vars:{ delay_ms:"Milisaniye bekleme fonksiyonu.", ms:"Beklenecek süre (ms).", led_pwm:"Yazılımla PWM fonksiyonu.", led:"PWM uygulanacak pin (maske).", duty:"Yanık kalma oranı: 0 = hep sönük, 1 = hep yanık.", sure:"Toplam süre (ms).", kalan:"Kalan süre (ms).", a:"Parlaklık sayacı (100 → 0)." },
+ notes:{
+  'voiddelay_ms(intms){': "Milisaniye bekleme fonksiyonu.",
+  'if(ms==0)return;': "SysCtlDelay(0) çağrılırsa sayaç 0'dan eksiye taşar ve çok uzun bekler; bu satır bunu önler.",
+  'SysCtlDelay((SysCtlClockGet()/3000)*ms);': "SysCtlClockGet()/3000 ≈ 13 333 tur = 1 ms (her tur 3 çevrim), ms ile çarpılır.",
+  'voidled_pwm(intled,floatduty,intsure){': "Yazılımla PWM: led pinini sure ms boyunca, 10 ms'lik periyotlarla, duty oranında yakar.",
+  'volatileintkalan=sure;': "Kalan süre.",
+  'while(kalan>0){': "Süre bitene kadar 10 ms'lik periyotlar.",
+  'if(duty>0){': "duty 0 ise yakma kısmı atlanır.",
+  'GPIOPinWrite(GPIO_PORTF_BASE,led,led);': "Maske ve değer aynı: o pin 1 olur. Değer bit konumunda olduğu için 1 değil led yazılır.",
+  'delay_ms(10*duty);': "Periyodun yanık kısmı: 10 × duty ms. delay_ms int aldığı için küsurat atılır: duty 0.1 → 1 ms, 0.15 → yine 1 ms.",
+  'if(duty<1){': "duty 1 ise söndürme kısmı atlanır.",
+  'GPIOPinWrite(GPIO_PORTF_BASE,led,0);': "Pin 0: LED söner, diğer pinler korunur.",
+  'delay_ms(10*((1-duty)));': "Periyodun sönük kısmı: 10 × (1 − duty) ms.",
+  'kalan-=10;': "Bir periyot 10 ms.",
+  'voidmain(void)': "Programın giriş noktası.",
+  'GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,0x0E);': "0x0E = 0000 1110 = 14: PF1, PF2, PF3. (Dosyadaki yorumda <code>0010 | 0100 | 1000 =&gt; 0111</code> yazıyor; doğrusu 1110.)",
+  'led_pwm(GPIO_PIN_1,0.1,500);': "Kırmızı 500 ms boyunca %10 parlaklıkta. Sonraki iki satır aynısını mavi ve yeşil için yapar.",
+  'led_pwm(GPIO_PIN_1,0.0,1);': "duty 0: yalnızca 10 ms sönük kalır; LED'ler arasında kısa bir ara.",
+  'led_pwm(GPIO_PIN_1,0.1,200);': "Aynı sıra bu kez 200 ms: daha hızlı.",
+  'floata=100;': "Parlaklık sayacı 100'den başlar.",
+  'while(a>0){': "100 adım.",
+  'a--;': "Her adımda parlaklık %1 azalır.",
+  'led_pwm(GPIO_PIN_3,a/100,10);': "duty = a/100: 0.99'dan 0'a iner. Her adım 10 ms; 100 adımda yeşil 1 saniyede yavaşça söner. a float olduğu için a/100 küsuratlı çıkar; int olsaydı hep 0 olurdu.",
+  'a=100;': "Sayaç sonraki LED için başa alınır."
+ }},
+
+{id:"c5", page:"code5.html", group:"Derste yazdırılan kodlar", title:"code5.txt · Register ile süre ayarı", src:"code5.txt",
+ text:`<p>Derste yazdırılan kod: API yerine register adlarıyla (<code>inc/tm4c123gh6pm.h</code>) F portu ayarlanır. Kırmızı LED sure_ms aralıkla yanıp söner; SW1 süreyi 100 ms artırır, SW2 azaltır (100–500 ms). Döngü her turda 20 ms bekler.</p>`,
+ raw:"code5.txt", vars:SURE_VARS, notes:SURE_NOTES},
+
+{id:"c6", page:"code6.html", group:"Derste yazdırılan kodlar", title:"code6.txt · HWREG adres hesabı", src:"code6.txt",
+ text:`<p>code3.txt'nin aynısı; başına HWREG adres hesabını anlatan yorumlar eklenmiş: maske iki bit sola kaydırılıp taban adrese eklenir. 0x40025000 + (0000 1110 &lt;&lt; 2) = 0x40025038 yalnızca üç LED'e erişir.</p>`,
+ raw:"code6.txt", vars:HWREG_VARS, notes:HWREG_NOTES},
+
+{id:"c7", page:"code7.html", group:"Derste yazdırılan kodlar", title:"code7.txt · Register ile buton ve LED", src:"code7.txt",
+ text:`<p>Derste yazdırılan ödev: register adlarıyla F portu ayarlanır; SW2'ye ve SW1'e basılınca LED'ler değişir. Dosyadaki iki bit işleminin gerçekte ne yaptığı satır bilgisinde. Yalnızca yeşili yakıp söndüren hâli "code7 düzeltilmiş" sayfasında.</p>`,
+ raw:"code7.txt", vars:{ GpioInitSettings:"Register'larla port ayarı yapan fonksiyon." },
+ notes:Object.assign({}, REG_NOTES, {
+  'intmain(void)': "Programın giriş noktası.",
+  'while(1){': "Sonsuz döngü.",
+  'if((GPIO_PORTF_DATA_R&0x01)==0){': "SW2 (PF0) basılı mı?",
+  'GPIO_PORTF_DATA_R|=~0b1000;': "<b>Dikkat:</b> ~0b1000 = …1111 0111. VEYA ile PF3 dışındaki bütün bitler 1 olur: kırmızı ve mavi yanar (mor), yeşil değişmez. Yalnızca yeşili yakmak için <code>|= 0b1000</code>.",
+  'elseif((GPIO_PORTF_DATA_R&0x10)==0){': "SW1 (PF4) basılı mı?",
+  'GPIO_PORTF_DATA_R&=~0b0111;': "~0b0111 = …1111 1000: bit0, 1, 2 0'lanır. Kırmızı (PF1) ve mavi (PF2) söner; PF0 giriş olduğu için etkilenmez. Yeşili söndürmek için <code>&amp;= ~0b1000</code>."
+ })},
+
+{id:"c8", page:"code8.html", group:"Derste yazdırılan kodlar", title:"code8.txt · Ödev şablonu", src:"code8.txt",
+ text:`<p>Derste verilen ödev şablonu (yarım): kırmızı LED sure_ms aralıkla yanıp sönecek, SW1 süreyi artıracak, SW2 azaltacak. Şablonda iki hata var, satır bilgisinde açıklanıyor. Tamamlanmış hâli "code8 tamamlanmış" sayfasında.</p>`,
+ raw:"code8.txt",
+ vars:{
+  KIRMIZI_LED:"Kırmızı LED = PF1.", SW1:"SW1 butonu = PF4.", SW2:"SW2 butonu = PF0 (kilitli pin).",
+  ADIM_MS:"Her basışta eklenecek/çıkarılacak süre: 100 ms.", MIN_MS:"Alt sınır: 100 ms.", MAX_MS:"Üst sınır: 2000 ms.",
+  sure_ms:"LED'in yanık ve sönük kalma süresi.", bekle_ms:"ms kadar bekleyen fonksiyon.", ms:"Beklenecek süre (ms).",
+  Butonlari_Kontrol_Et:"Butonlara bakıp süreyi güncelleyecek fonksiyon.", Bekle_ve_Dinle:"Beklerken her 10 ms'de butonlara bakacak fonksiyon (TODO)."
+ },
+ notes:{
+  'volatileuint32_tsure_ms=500;': "Başlangıç süresi 500 ms.",
+  'voidbekle_ms(uint32_tms){SysCtlDelay((SysCtlClockGet()/3000)*ms);}': "SysCtlClockGet()/3000 = 1 ms'lik tur sayısı (≈ 13 333), ms ile çarpılır.",
+  'voidButonlari_Kontrol_Et(void)': "<b>Hata:</b> fonksiyonu açan <code>{</code> satır sonundaki yorumun içinde kalmış; derleyici onu görmez ve kod derlenmez. <code>{</code> yorumdan önce ya da alt satıra yazılmalı.",
+  'if((GPIO_PORTF_BASE&SW1)==SW1){': "<b>Hata:</b> GPIO_PORTF_BASE bir adres sabiti (0x40025000), pin değeri değil. 0x40025000 &amp; 0x10 = 0, koşul hiç doğru olmaz. Doğrusu <code>GPIOPinRead(GPIO_PORTF_BASE, SW1)</code>; pull-up'lı buton basılıyken 0 döner.",
+  'voidBekle_ve_Dinle(uint32_tms)': "Ödevin TODO kısmı: ms boyunca her 10 ms'de butonlara bakacak.",
+  'intmain(void)': "Programın giriş noktası.",
+  'SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|': "Satır bir alttakinde devam ediyor: 40 MHz.",
+  'SYSCTL_OSC_MAIN);': "SysCtlClockSet'in son parametresi.",
+  'SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);': "Butonlar ve LED F portunda.",
+  'while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)){}': "Port hazır olana kadar bekler; saati açtıktan hemen sonra register'a yazmak güvenli olmayabilir.",
+  'HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK)=GPIO_LOCK_KEY;': "PF0 kilidini açar: LOCK register'ına 0x4C4F434B. code5/code7'deki <code>GPIO_PORTF_LOCK_R = 0x4C4F434B</code> satırının HWREG ile yazılışı.",
+  'HWREG(GPIO_PORTF_BASE+GPIO_O_CR)|=SW2;': "PF0'ın (SW2) ayarının değişmesine izin verir.",
+  'HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK)=0;': "Kilidi yeniden kapatır.",
+  'GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,KIRMIZI_LED);': "Kırmızı LED çıkış.",
+  'GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,SW1|SW2);': "İki buton giriş.",
+  'GPIOPadConfigSet(GPIO_PORTF_BASE,SW1|SW2,GPIO_STRENGTH_2MA,': "Satır bir alttakinde devam ediyor: butonlara pull-up.",
+  'GPIO_PIN_TYPE_STD_WPU);': "Pull-up: basılı buton 0 okunur.",
+  'GPIOPinWrite(GPIO_PORTF_BASE,KIRMIZI_LED,KIRMIZI_LED);': "Kırmızı yanar.",
+  'Bekle_ve_Dinle(sure_ms);': "Beklerken butonlar dinlenir.",
+  'GPIOPinWrite(GPIO_PORTF_BASE,KIRMIZI_LED,0);': "Kırmızı söner."
+ }},
+
+{id:"c9", page:"code9.html", group:"Derste yazdırılan kodlar", title:"code9.txt · Register ile süre ayarı (10 ms)", src:"code9.txt",
+ text:`<p>code5.txt'nin aynısı; tek fark döngünün her turda 20 yerine 10 ms beklemesi. Butonlara daha sık bakılır, tur sayısı iki katına çıkar.</p>`,
+ raw:"code9.txt", vars:SURE_VARS,
+ notes:Object.assign({}, SURE_NOTES, {
+  'uint32_ttekrar_sayisi=sure_ms/10;': "Döngü her turda 10 ms beklediği için 500 ms = 50 tur. code5'te /20.",
+  'tekrar_sayisi=sure_ms/10;': "Tur sayısı yeni süreye göre güncellenir.",
+  'bekle_ms(10);': "Her tur 10 ms. code5'ten tek farkı bu: butonlara daha sık bakılır."
+ })}
+];
+
+// tüm sayfalarda geçerli: #include satırları
+const COMMON = {
+  '#include"stdint.h"': "uint32_t gibi sabit genişlikli tam sayı tipleri.",
+  '#include<stdint.h>': "uint32_t gibi sabit genişlikli tam sayı tipleri.",
+  '#include"stdbool.h"': "bool, true, false.",
+  '#include<stdbool.h>': "bool, true, false.",
+  '#include"stdlib.h"': "Standart C kütüphanesi.",
+  '#include"stdio.h"': "printf için.",
+  '#include"inc/hw_types.h"': "HWREG burada tanımlı.",
+  '#include"inc/hw_gpio.h"': "GPIO register ofsetleri (GPIO_O_LOCK gibi).",
+  '#include"inc/hw_memmap.h"': "GPIO_PORTF_BASE gibi taban adresler.",
+  '#include"inc/hw_uart.h"': "UART register ofsetleri.",
+  '#include"inc/tm4c123gh6pm.h"': "Register adları (GPIO_PORTF_DATA_R gibi) bu dosyada tanımlı.",
+  '#include"driverlib/pin_map.h"': "GPIO_PA0_U0RX gibi pin işlevi sabitleri.",
+  '#include"driverlib/sysctl.h"': "SysCtl fonksiyonları ve SYSCTL_ sabitleri.",
+  '#include"driverlib/gpio.h"': "GPIO API fonksiyonları.",
+  '#include"driverlib/gpio.c"': ".c dosyası doğrudan include edilmiş: GPIO fonksiyonlarının kodu bu dosyayla birlikte derlenir.",
+  '#include"driverlib/uart.h"': "UART API fonksiyonları.",
+  '#include"driverlib/uart.c"': ".c dosyası doğrudan include edilmiş: UART fonksiyonlarının kodu bu dosyayla birlikte derlenir."
+};
+
+const TASKS = [
+{id:"t1", page:"vize-2024-s1.html", group:"Vize soruları", title:"2024 S1 · GPIO ayarları", src:"2024 Vize S1",
+ text:`<blockquote>Soru 1: Verilen devre için gerekli olan gpio ayarlarını yazınız.</blockquote><p>Devre: btn1 → PA0, btn2 → PA1, LD0–LD7 → PB0–PB7. Butonlar toprağa bağlı varsayılıyor (kâğıtta <code>GPIO_PIN_TYPE_STD_WPU</code> verilmiş).</p>`,
+ circuit:SVG2024, given:G2024,
+ L:[
+  ["int main(void)", "Programın giriş noktası. Sınav şablonunda hazır veriliyor."],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40Mhz", "Şablonda hazır veriliyor ama her programın ilk satırı; ezbere bilmek iyi olur."],
+  [""],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);        // butonların portu", "Butonlar A portunda."],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);        // LED'lerin portu", "LED'ler B portunda. Kâğıtta SYSCTL_PERIPH_GPIOB verilmesi de bu yüzden. İki satırın sırası önemsiz."],
+  [""],
+  ["    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);      // btn1, btn2", "PA0 ve PA1: <code>GPIO_PIN_0|GPIO_PIN_1</code> = 0x03."],
+  ["    GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);", "Butonlar toprağa bağlı. Pull-up olmazsa bırakılan buton boşta kalır ve okunan değer belirsiz olur."],
+  [""],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, 0xFF);       // LD0–LD7", "Sekiz LED, sekiz pin: 1111 1111 = 0xFF. <code>GPIO_PIN_0|…|GPIO_PIN_7</code> da aynı sayı.", ["GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);"]],
+  [""],
+  ["    while(1)", "Sonsuz döngü: mikrodenetleyici programı hiç bitmez, ana iş burada döner."],
+  ["    {"],
+  ["        //kodlar"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t2", page:"vize-2024-s2.html", group:"Vize soruları", title:"2024 S2 · Basılıp çekilme", src:"2024 Vize S2",
+ text:`<blockquote>Soru 2: btn1’e basılıp çekildikten sonra PORTB’ye bağlı çift numaralı ledlerin hepsini, btn2’e basılıp çekildikten sonra PORTB’ye bağlı tek numaralı ledlerin hepsini birden yakınız. Kesme rutini kullanmayınız.</blockquote><p>Soru 1'deki ayarlar yapılmış kabul ediliyor. Butonlar pull-up'lı: basılıyken 0 okunur.</p>`,
+ circuit:SVG2024, given:G2024,
+ L:[
+  ["    while(1)", "Kesme kullanılmadığı için butonlara sonsuz döngüde sürekli bakılır (polling)."],
+  ["    {"],
+  ["        if (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) == 0)          // btn1 basıldı mı?", "Pull-up'lı buton basılıyken pin toprağa çekilir: 0 okunur."],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) == 0);  // çekilmesini bekle", "Sondaki <code>;</code> döngünün gövdesi boş demek: buton basılı kaldıkça burada beklenir. Çekilince pin 1 olur ve geçilir. 'Basılıp çekildikten sonra' şartı bu satırla sağlanır. code3'teki <code>while(!GPIOPinRead(...))</code> aynı fikir."],
+  ["            GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0x55);              // çift numaralılar", "PB0, PB2, PB4, PB6 = 0101 0101 = <b>0x55</b>. Maske 0xFF olduğu için tek numaralılar söner."],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) == 0)          // btn2 basıldı mı?", "btn2 = PA1. Bırakılınca GPIOPinRead 1 değil 2 döndürür; bu yüzden <code>== 1</code> değil <code>== 0</code> ile bakılır."],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) == 0);", "Yine çekilmesini bekle."],
+  ["            GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0xAA);              // tek numaralılar", "PB1, PB3, PB5, PB7 = 1010 1010 = <b>0xAA</b>. Maske 0xAA yazılırsa önceki çift LED'ler yanık kalır; o da kabul edilebilir.", ["GPIOPinWrite(GPIO_PORTB_BASE,0xAA,0xAA);"]],
+  ["        }"],
+  ["    }"]
+ ],
+ note:`<p><b>Gerçek kartta:</b> mekanik buton basılıp bırakılırken birkaç ms boyunca titreşir (ark). Bu soruda LED'i yakmak tekrar etse de sonuç değişmediği için sorun olmaz; sayma yapan sorularda <code>SysCtlDelay</code> ile kısa bir bekleme eklemek iyi olur.</p>`},
+
+{id:"t3", page:"vize-2024-s3.html", group:"Vize soruları", title:"2024 S3 · Aynı soru kesmeyle", src:"2024 Vize S3",
+ text:`<blockquote>Soru 3: Bir önceki soruyu kesme rutininde yapınız.</blockquote><p>Sınav şablonunda kesme fonksiyonunun adı <code>GPIOKesmesi</code> ve değişkenlerin en üstte tanımlanması isteniyor.</p>`,
+ circuit:SVG2024, given:G2024,
+ vars:{ durum:"Kesmeye hangi pinlerin neden olduğunu tutan değişken. Kesmede değiştiği için volatile.", GPIOKesmesi:"Şablondaki kesme fonksiyonu. Port A'da kesme olunca donanım bu fonksiyonu çağırır." },
+ L:[
+  ["// DEĞİŞKENLENİZİN HEPSİNİ BURADA TANIMLAYIN."],
+  ["volatile uint32_t durum;", "Şablon değişkenlerin en üstte tanımlanmasını istiyor."],
+  [""],
+  ["void GPIOKesmesi(void)", "Kesme fonksiyonu parametre almaz, değer döndürmez."],
+  ["{"],
+  ["    durum = GPIOIntStatus(GPIO_PORTA_BASE, true);", "Kesmeye hangi butonun neden olduğu bu değerden anlaşılır.", ["durum=GPIOIntStatus(GPIO_PORTA_BASE,1);"]],
+  ["    GPIOIntClear(GPIO_PORTA_BASE, durum);", "Rutinin ilk işi bayrağı temizlemek. Temizlenmezse rutin bitince hemen yeniden çağrılır ve ana program ilerleyemez."],
+  [""],
+  ["    if (durum & GPIO_PIN_0)                             // btn1", "VE işlemi: durum'un 0. biti 1 ise kesmeyi btn1 oluşturmuş."],
+  ["        GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0x55);", "Çift numaralılar."],
+  ["    if (durum & GPIO_PIN_1)                             // btn2", "1. bit 1 ise kesmeyi btn2 oluşturmuş. İkisi aynı anda da gelebilir; bu yüzden else değil iki ayrı if."],
+  ["        GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0xAA);", "Tek numaralılar."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40Mhz"],
+  ["    // Soru 1'deki GPIO ayarları"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);"],
+  ["    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);"],
+  ["    GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);"],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, 0xFF);"],
+  [""],
+  ["    // kesme ayarları"],
+  ["    GPIOIntTypeSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_RISING_EDGE);", "Basınca 1→0 (düşen kenar), <b>çekince 0→1 (yükselen kenar)</b>. Soru 'basılıp çekildikten sonra' dediği için RISING. FALLING yazılırsa LED basma anında yanar."],
+  ["    GPIOIntRegister(GPIO_PORTA_BASE, GPIOKesmesi);", "Fonksiyon adı parantezsiz yazılır: fonksiyon çağrılmaz, adresi verilir."],
+  ["    GPIOIntEnable(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);", "Yalnızca iki butonun pininde kesme açılır."],
+  ["    IntEnable(INT_GPIOA);", "Kâğıtta örnek olarak <code>INT_GPIOF</code> verilmiş ama butonlar A portunda: <code>INT_GPIOA</code>. (GPIOIntRegister bu izni zaten verir; yazmak zarar vermez.)"],
+  ["    IntMasterEnable();", "Genel izin en son: önce her şey ayarlanır, sonra kesmeler açılır."],
+  [""],
+  ["    while(1)", "Ana döngü boş kalır; iş kesmede yapılıyor."],
+  ["    {"],
+  ["        // boş: iş kesmede yapılıyor"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t4", page:"vize-2024-s4.html", group:"Vize soruları", title:"2024 S4 · PORTD ilk 4 pin adresi", src:"2024 Vize S4",
+ text:`<blockquote>Soru 4: PORTD’nin ilk 4 pinine ait register adresini hesaplayınız. (Bu register adresi sadece ilk 4 pine ait olması gereklidir)</blockquote><p>Kâğıtta verilen: <code>GPIO_PORTD_BASE 0x40007000</code>. Hesap adım adım kod olarak yazılıyor; sınavda yalnızca sonuç adresi istenir.</p>`,
+ given:G2024,
+ vars:{ maske:"Hangi pinlere erişileceği: 1 olan bitler.", ofset:"Maskenin adres içindeki karşılığı.", adres:"Taban adres + ofset: yalnızca maskedeki pinlere erişen veri adresi." },
+ L:[
+  ["uint32_t maske = 0x0F;                  // PD0–PD3 hangi bitler?", "PD0–PD3 = 0000 1111 = 0x0F.", ["uint32_tmaske=0b00001111;", "uint32_tmaske=15;"]],
+  ["uint32_t ofset = maske << 2;            // maske adreste 2 bit kayık", "Veri register'ında adresin 9..2 bitleri maske olarak kullanılır; bu yüzden maske 2 sola kaydırılır: 0000 1111 → 0011 1100 = 0x3C (onluk 60).", ["uint32_tofset=0x3C;"]],
+  ["uint32_t adres = 0x40007000 + ofset;    // taban + ofset", "0x40007000 + 0x3C = <b>0x4000703C</b>. Maske kaydırılmadan eklenirse 0x4000700F çıkar; bu yanlış.", ["uint32_tadres=GPIO_PORTD_BASE+ofset;", "uint32_tadres=0x4000703C;"]],
+  [""],
+  ["HWREG(adres) = 0x0F;                    // PD0–PD3'ün hepsini 1 yap", "Bu adresten yalnızca PD0–PD3 yazılabilir, PD4–PD7 etkilenmez. 0xFF yazmak da aynı sonucu verir. Maskeli adresin faydası tam olarak bu.", ["HWREG(0x4000703C)=0x0F;"]],
+  ["HWREG(adres) = 0x05;                    // yalnızca PD0 ve PD2 yansın", "0000 0101: PD0 ve PD2 1, PD1 ve PD3 0. PD4–PD7 yine etkilenmez.", ["HWREG(0x4000703C)=0x05;"]]
+ ]},
+
+{id:"t5", page:"vize-2021-s1.html", group:"Vize soruları", title:"2021 S1 · PORTD'de sıralı LED", src:"2021 Vize S1",
+ text:`<blockquote>1. Stellaris kitinin kullanıldığı 5 ledli bir devrede birer saniye aralıklarla, (PORTD-5-4-3-2-1 pinlerine bağlı) ledlerin verilen sırada yanmasını sağlayacak kodu api fonksiyonlari ile yazınız.</blockquote><p>Sıra: PD5 → PD4 → PD3 → PD2 → PD1, her seferinde tek LED yanık.</p>`,
+ given:G2021,
+ vars:{ i:"Döngü sayacı: o an yanacak LED'in pin numarası." },
+ L:[
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);", "LED'ler D portunda."],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, 0x3E);          // PD1–PD5", "0011 1110 = <b>0x3E</b>. PD0 kullanılmıyor.", ["GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);"]],
+  [""],
+  ["    int i;"],
+  ["    while(1)"],
+  ["    {"],
+  ["        for (i = 5; i >= 1; i--)", "5'ten 1'e geri sayar: PD5 → PD4 → … → PD1, sorudaki sıra."],
+  ["        {"],
+  ["            GPIOPinWrite(GPIO_PORTD_BASE, 0x3E, 1 << i);     // yalnızca PDi yansın", "<code>1 &lt;&lt; i</code>: yalnızca i. biti 1 olan sayı. i = 5 → 0x20 (PD5), i = 4 → 0x10 (PD4) … Maske 0x3E olduğu için diğer dördü söner. Kâğıttaki <code>pow(2, i)</code> da aynı işi yapar.", ["GPIOPinWrite(GPIO_PORTD_BASE,0x3E,(1<<i));", "GPIOPinWrite(GPIO_PORTD_BASE,0x3E,pow(2,i));"]],
+  ["            SysCtlDelay(SysCtlClockGet() / 3);               // 1 saniye", "40 MHz'de 1 saniye = 40 000 000 çevrim; her tur 3 çevrim → <code>SysCtlClockGet()/3</code> ≈ 13 333 333 tur.", ["SysCtlDelay(13333333);"]],
+  ["        }"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t6", page:"vize-2021-s1-timer.html", group:"Vize soruları", title:"2021 S1 · Timer0 ile", src:"2021 Vize · timer listesi",
+ text:`<p>2021 kâğıdında timer fonksiyonları da verilmiş. 1. sorunun bekleme kısmını Timer0 kesmesiyle yap: kesme her saniye bir sonraki LED'i yaksın.</p>`,
+ given:G2021,
+ vars:{ sira:"Sıradaki LED'in pin numarası (5 → 1). Kesmede değiştiği için volatile.", Timer0Kesmesi:"Timer0 her 0'a indiğinde (her saniye) çağrılan kesme fonksiyonu." },
+ L:[
+  ["volatile int sira = 5;", "PD5'ten başlanır."],
+  [""],
+  ["void Timer0Kesmesi(void)"],
+  ["{"],
+  ["    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);", "Bayrak temizlenmezse rutin bitince hemen yeniden çağrılır."],
+  ["    GPIOPinWrite(GPIO_PORTD_BASE, 0x3E, 1 << sira);", "Yalnızca sıradaki LED yanar.", ["GPIOPinWrite(GPIO_PORTD_BASE,0x3E,(1<<sira));"]],
+  ["    sira--;", "Bir sonraki saniyede bir alttaki pin."],
+  ["    if (sira < 1) sira = 5;", "PD1'den sonra başa, PD5'e dönülür."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);", "GPIO gibi timer da bir çevre birimi; saati açılmadan ayarlanamaz."],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, 0x3E);"],
+  [""],
+  ["    TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);", "32 bit, periyodik: her saniye kendiliğinden yeniden başlar."],
+  ["    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() - 1);", "1 saniye = 40 000 000 çevrim. 0 da sayıldığı için tam değer −1; <code>SysCtlClockGet()</code> da olur. /3 yalnızca SysCtlDelay içindir.", ["TimerLoadSet(TIMER0_BASE,TIMER_A,SysCtlClockGet());", "TimerLoadSet(TIMER0_BASE,TIMER_A,39999999);", "TimerLoadSet(TIMER0_BASE,TIMER_A,40000000);"]],
+  ["    TimerIntRegister(TIMER0_BASE, TIMER_A, Timer0Kesmesi);", "Fonksiyon adı parantezsiz."],
+  ["    IntEnable(INT_TIMER0A);", "NVIC'te Timer0A kesmesinin izni."],
+  ["    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);", "Timer 0'a inince kesme üretsin."],
+  ["    IntMasterEnable();"],
+  ["    TimerEnable(TIMER0_BASE, TIMER_A);", "Timer en son çalıştırılır. Kâğıttaki fonksiyon kutusunda da sıra bu."],
+  [""],
+  ["    while(1)", "Boş döngü: bekleme işini timer yapıyor."],
+  ["    {"],
+  ["    }"],
+  ["}"]
+ ],
+ note:`<p><b>Fark:</b> SysCtlDelay ile beklerken işlemci başka iş yapamaz. Timer kesmesinde <code>while(1)</code> boş kalır; buton okumak gibi işler aynı anda yapılabilir.</p>`},
+
+{id:"t10", page:"vize-2021-s3.html", group:"Vize soruları", title:"2021 S3 · Sayı girişi, faktöriyel, toplam", src:"2021 Vize S3",
+ text:`<p>2021'in büyük sorusu (özet):</p><ul><li>Başta bütün LED'ler sönük, SAYI1 = SAYI2 = 0.</li><li>PF4 (Sayı Girişi) ilk basılıp çekildiğinde SAYI1, ikinci kez basılıp çekildiğinde SAYI2 PD2–PD6'dan okunur; üçüncü basışta yine SAYI1 okunur.</li><li>PF3 (FAKTÖRİYEL) basılıp çekilince SAYI2'nin faktöriyeli alınır; sonuç 1000'den büyükse PF6'daki taşma LED'i yanar.</li><li>PF1 (TOPLA) basılıp çekilince SAYI1 ile SAYI2 arasındaki sayılar toplanır. Sonuç LD0–LD7'de (PC0–PC7) gösterilir.</li></ul><p>GPIO ayarları yapılmış kabul ediliyor; butonlar pull-up'lı.</p>`,
+ given:G2021,
+ vars:{
+  sayi1:"SAYI1: ilk girilen sayı.", sayi2:"SAYI2: ikinci girilen sayı.",
+  adim:"Sıradaki girişin hangi sayıya gideceği: 0 → SAYI1, 1 → SAYI2.",
+  gelen:"PD2–PD6'dan okunan 5 bitlik sayı (0–31).",
+  f:"Faktöriyel sonucu.", t:"Toplam.", k:"Döngü sayacı."
+ },
+ L:[
+  ["volatile int sayi1 = 0, sayi2 = 0, adim = 0;", "Soruda başlangıçta SAYI1 = SAYI2 = 0 isteniyor."],
+  [""],
+  ["    while(1)"],
+  ["    {"],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0)              // Sayı Girişi", "PF4 basılı mı?"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);", "Çekilmesini bekle (sorudaki 1-0-1)."],
+  ["            int gelen = GPIOPinRead(GPIO_PORTD_BASE, 0x7C) >> 2;          // PD2–PD6 → 0..31", "0x7C = 0111 1100 = PD2–PD6. GPIOPinRead bitleri yerinde döndürür; PD2 en düşük bit olsun diye 2 sağa kaydırılır.", ["intgelen=GPIOPinRead(GPIO_PORTD_BASE,GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6)>>2;"]],
+  ["            if (adim == 0) { sayi1 = gelen; adim = 1; }", "İlk basış SAYI1'e."],
+  ["            else           { sayi2 = gelen; adim = 0; }", "İkinci basış SAYI2'ye; sonra başa dönülür."],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) == 0)              // FAKTÖRİYEL"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) == 0);"],
+  ["            int f = 1, k;"],
+  ["            for (k = 2; k <= sayi2; k++) f = f * k;", "2'den SAYI2'ye kadar çarpılır. SAYI2 13 veya büyükse sonuç int'e sığmaz; f > 1000 olunca <code>break</code> ile durmak taşmayı önler."],
+  ["            if (f > 1000) GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_6, GPIO_PIN_6);   // taşma ledi", "Kâğıttaki gibi PF6. Gerçek kartta F portunda yalnızca PF0–PF4 var; sınavda şemaya göre yazılır.", ["if(f>1000)GPIOPinWrite(GPIO_PORTF_BASE,0x40,0x40);"]],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) == 0)              // TOPLA"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) == 0);"],
+  ["            int t = 0, k;"],
+  ["            for (k = sayi1; k <= sayi2; k++) t = t + k;", "'Arasındaki sayılar' uçları da kapsıyor mu belirsiz; burada dahil. SAYI1 &gt; SAYI2 ise döngü hiç çalışmaz."],
+  ["            GPIOPinWrite(GPIO_PORTC_BASE, 0xFF, t);                       // LD0–LD7", "Toplam 255'i geçerse yalnızca alt 8 bit görünür."],
+  ["        }"],
+  ["    }"]
+ ],
+ note:`<p>PD2–PD6 anahtarları da toprağa bağlı ve pull-up'lıysa kapalı anahtar 0 okunur. Bu durumda okunan değerin tersi alınabilir: <code>(~GPIOPinRead(...) &amp; 0x7C) &gt;&gt; 2</code>.</p>`},
+
+...CTASKS,
+
+{id:"t7", page:"code7-duzeltilmis.html", group:"Düzeltilmiş çözümler", title:"code7 düzeltilmiş · yeşil LED", src:"code7.txt · düzeltilmiş",
+ text:`<p>Derste yazdırılan <code>GpioInitSettings</code>: API kullanmadan, <code>inc/tm4c123gh6pm.h</code>'deki register adlarıyla F portunu ayarla. PF1–PF3 çıkış (LED), PF0 ve PF4 pull-up'lı giriş (SW2, SW1).</p><p>Ardından SW2'ye basılınca yeşil LED yansın, SW1'e basılınca sönsün; diğer LED'ler etkilenmesin.</p>`,
+ vars:{ GpioInitSettings:"Derste yazılan ayar fonksiyonu: API'deki SysCtlPeripheralEnable ve GPIOPinType… çağrılarının register karşılığı." },
+ L:[
+  ["void GpioInitSettings(){"],
+  ["    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20;   // Portf Aktif", "0010 0000 = 0x20 = <code>(1&lt;&lt;5)</code>: bit5 = F portu. VEYA ile diğer portların saati korunur.", ["SYSCTL_RCGCGPIO_R|=0x20;", "SYSCTL_RCGCGPIO_R=SYSCTL_RCGCGPIO_R|(1<<5);", "SYSCTL_RCGCGPIO_R|=(1<<5);"]],
+  ["    GPIO_PORTF_LOCK_R = 0x4C4F434B;", "0x4C 0x4F 0x43 0x4B = ASCII 'L' 'O' 'C' 'K'. PF0 kilitli olduğu için önce kilit açılır."],
+  ["    GPIO_PORTF_CR_R = 0x01;", "PF0'ın ayarının değiştirilmesine izin verilir."],
+  ["    GPIO_PORTF_DIR_R |= 0x0E;                       // 1-2-3 output", "0000 1110: PF1, PF2, PF3 çıkış. PF0 ve PF4 0 kalır: giriş."],
+  ["    GPIO_PORTF_AFSEL_R = 0x00;", "Alternatif fonksiyon yok, sade GPIO."],
+  ["    GPIO_PORTF_DEN_R = 0x1F;", "0001 1111: kullanılan beş pinin (PF0–PF4) hepsi dijital. DEN yazılmazsa pinler çalışmaz."],
+  ["    GPIO_PORTF_PUR_R |= 0x11;", "0001 0001: pull-up yalnızca butonlara, PF0 ve PF4."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    GpioInitSettings();"],
+  ["    while(1){"],
+  ["      if ((GPIO_PORTF_DATA_R & 0x01) == 0){            // SW2 (PF0) basılı", "VE ile yalnızca 0. bit bırakılır; basılıyken 0."],
+  ["          GPIO_PORTF_DATA_R |= 0x08;                   // yeşili yak", "PF3 = 0000 1000. VEYA ile yalnızca bu bit 1 olur, diğerleri korunur. code7'de buraya <code>|= ~0b1000</code> yazılmıştı: o, yeşil dışındaki bütün bitleri 1 yapar.", ["GPIO_PORTF_DATA_R|=0b1000;", "GPIO_PORTF_DATA_R|=GPIO_PIN_3;"]],
+  ["      }"],
+  ["      else if ((GPIO_PORTF_DATA_R & 0x10) == 0){      // SW1 (PF4) basılı", "0x10 = 0001 0000 = PF4."],
+  ["          GPIO_PORTF_DATA_R &= ~0x08;                  // yeşili söndür", "<code>~0x08</code> = …1111 0111. VE ile yalnızca PF3 söner, kırmızı ve mavi korunur. 0xF7 de aynı. code7'de buraya <code>~0b0111</code> yazılmıştı: o, yeşili değil kırmızı ve maviyi söndürür.", ["GPIO_PORTF_DATA_R&=0xF7;", "GPIO_PORTF_DATA_R&=~0b1000;"]],
+  ["      }"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t8", page:"code8-tamamlanmis.html", group:"Düzeltilmiş çözümler", title:"code8 tamamlanmış · Bekle_ve_Dinle", src:"code8.txt · tamamlanmış",
+ text:`<p>Derste verilen ödev şablonu: kırmızı LED <code>sure_ms</code> aralıkla yanıp sönsün. SW1'e her basışta süre 100 ms artsın, SW2'ye her basışta 100 ms azalsın (100–2000 ms arası). Beklerken her 10 ms'de butonlara bakılsın.</p><p><code>main</code> şablondaki gibi; PF0 kilidi açılmış, SW1 ve SW2 pull-up'lı giriş. Burada iki TODO fonksiyonu tamamlanıyor.</p>`,
+ vars:{
+  KIRMIZI_LED:"Kırmızı LED = PF1.", SW1:"SW1 butonu = PF4.", SW2:"SW2 butonu = PF0 (kilitli pin).",
+  ADIM_MS:"Her basışta eklenen/çıkarılan süre: 100 ms.", MIN_MS:"Alt sınır: 100 ms.", MAX_MS:"Üst sınır: 2000 ms.",
+  sure_ms:"LED'in yanık ve sönük kalma süresi. Butonlarla değişir.",
+  sw1_basili:"SW1'in bir önceki kontrolde basılı olup olmadığı. Basılı tutulan butonun tekrar tekrar sayılmasını önler.",
+  sw2_basili:"SW2 için aynı bayrak.",
+  bekle_ms:"ms kadar bekler: <code>SysCtlClockGet()/3000</code> = 1 ms'lik tur sayısı (≈ 13 333), ms ile çarpılır.",
+  Butonlari_Kontrol_Et:"Butonlara bir kez bakıp süreyi güncelleyen fonksiyon.",
+  Bekle_ve_Dinle:"ms kadar beklerken her 10 ms'de butonlara bakan fonksiyon.",
+  ms:"Beklenecek süre (milisaniye).", i:"Kaçıncı 10 ms'lik dilimde olunduğu."
+ },
+ L:[
+  ["#define KIRMIZI_LED GPIO_PIN_1"],
+  ["#define SW1 GPIO_PIN_4"],
+  ["#define SW2 GPIO_PIN_0"],
+  ["#define ADIM_MS 100"],
+  ["#define MIN_MS 100"],
+  ["#define MAX_MS 2000"],
+  ["volatile uint32_t sure_ms = 500;", "Başlangıç süresi 500 ms."],
+  ["uint32_t sw1_basili = 0, sw2_basili = 0;", "İki buton bayrağı aynı satırda tanımlanıyor."],
+  ["void bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }", "Şablonda hazır veriliyor. code4'te de aynı fonksiyon var: 'SysCtlDelay ASSEMBLY SEVİYESİNDE YAZILMIŞTIR'."],
+  [""],
+  ["void Butonlari_Kontrol_Et(void)     // SW1: +ADIM_MS, SW2: -ADIM_MS", "Şablonda <code>{</code> yorumun içinde kaldığı için derlenmiyordu; burada ayrı satırda."],
+  ["{"],
+  ["    if (GPIOPinRead(GPIO_PORTF_BASE, SW1) == 0) {", "Basılı = 0. Şablondaki <code>(GPIO_PORTF_BASE &amp; SW1) == SW1</code> pini değil adres sabitini okuyordu; doğrusu GPIOPinRead."],
+  ["        if (!sw1_basili && sure_ms + ADIM_MS <= MAX_MS) sure_ms += ADIM_MS;", "Yalnızca basışın ilk anında (bayrak 0 iken) ve süre 2000'i geçmeyecekse artırılır."],
+  ["        sw1_basili = 1;", "Buton hâlâ basılıysa sonraki kontrollerde tekrar artırılmaz."],
+  ["    } else {"],
+  ["        sw1_basili = 0;", "Bırakılınca bayrak sıfırlanır; bir sonraki basış yeniden sayılır."],
+  ["    }"],
+  [""],
+  ["    if (GPIOPinRead(GPIO_PORTF_BASE, SW2) == 0) {", "SW2 = PF0."],
+  ["        if (!sw2_basili && sure_ms - ADIM_MS >= MIN_MS) sure_ms -= ADIM_MS;", "Süre 100'ün altına inmesin."],
+  ["        sw2_basili = 1;"],
+  ["    } else {"],
+  ["        sw2_basili = 0;"],
+  ["    }"],
+  ["}"],
+  [""],
+  ["void Bekle_ve_Dinle(uint32_t ms)    // beklerken her 10 ms'de butonlara bak"],
+  ["{"],
+  ["    uint32_t i;"],
+  ["    for (i = 0; i < ms / 10; i++) {", "500 ms bekleme = 50 tane 10 ms'lik dilim."],
+  ["        bekle_ms(10);"],
+  ["        Butonlari_Kontrol_Et();", "Her dilimden sonra butonlara bakılır. Tek parça <code>bekle_ms(sure_ms)</code> ile beklense o sırada yapılan basışlar kaçardı."],
+  ["    }"],
+  ["}"]
+ ],
+ note:`<p>code5 ve code9 aynı fikri doğrudan register'larla, 20 ve 10 ms adımlarla uyguluyor.</p>`}
+];
+
+const PAGE = "t7";
+
+const KEY = "mikro-satir-v1";
+const TOL = 3;   // bu kadar karakter yanlış yazılınca satır kırmızı olur
+let store = { inp: {}, peek: {}, sum: {} };
+try { store = Object.assign(store, JSON.parse(localStorage.getItem(KEY) || "{}") || {}); } catch (e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+function esc(s){ return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+const norm = s => String(s).replace(/\s+/g, "");
+
+// Dosyadan gelen görevlerde satırlar RAW metninden kurulur; /* */ blokları yorum satırı sayılır.
+function linesFromRaw(t){
+  const out = [];
+  let inBlock = false;
+  for (let line of RAW[t.raw].replace(/\r/g, "").replace(/\t/g, "    ").replace(/\s+$/, "").split("\n")) {
+    line = line.replace(/\s+$/, "");
+    if (!line && out.length && !out[out.length - 1][0]) continue;   // art arda boş satırları teke indir
+    if (inBlock || /^\s*\/\*/.test(line)) {
+      out.push([line, null, null, true]);
+      inBlock = !line.includes("*/");
+      continue;
+    }
+    out.push([line]);
+  }
+  return out;
+}
+
+function rowsOf(t){
+  return (t.L || linesFromRaw(t)).map(([raw, note, alts, isCmt]) => {
+    const lead = raw.length - raw.trimStart().length;
+    if (isCmt) return { code: "", cmt: raw.trim(), fixed: true, ind: lead, targets: [] };
+    const k = raw.indexOf("//");
+    const code = (k < 0 ? raw : raw.slice(0, k)).replace(/\s+$/, "");
+    const cmt = k < 0 ? "" : raw.slice(k);
+    const key = norm(code);
+    const fixed = !code.trim() || /^[\s{};]*$/.test(code) || /^\s*#include/.test(code);
+    note = note || (key && ((t.notes && t.notes[key]) || COMMON[key])) || undefined;
+    alts = alts || (t.alts && t.alts[key]) || [];
+    return { code, cmt, note, fixed, ind: lead, targets: [key, ...alts.map(norm)] };
+  });
+}
+
+// "" boş · "y" doğru gidiyor · "r" TOL+ karakter yanlış · "g" tamam
+function state(row, val){
+  const v = norm(val);
+  if (!v) return "";
+  let wrong = Infinity;
+  for (const t of row.targets) {
+    if (v === t) return "g";
+    let p = 0;
+    while (p < v.length && p < t.length && v[p] === t[p]) p++;
+    wrong = Math.min(wrong, v.length - p);
+  }
+  return wrong < TOL ? "y" : "r";
+}
+
+function numInfo(s){
+  const v = /^0b/i.test(s) ? parseInt(s.slice(2), 2) : parseInt(s.slice(2), 16);
+  if (v <= 0xFF) {
+    const b = v.toString(2).padStart(8, "0");
+    const bits = [0,1,2,3,4,5,6,7].filter(k => (v >> k) & 1);
+    return `onluk ${v} · ikilik ${b.slice(0, 4)} ${b.slice(4)} · 1 olan bitler: ${bits.length ? bits.join(", ") : "yok"}`;
+  }
+  for (const p in PORTS) {
+    const off = v - parseInt(PORTS[p], 16);
+    if (off >= 0 && off <= 0x3FC && off % 4 === 0) {
+      const m = off >> 2, pins = [0,1,2,3,4,5,6,7].filter(k => (m >> k) & 1).map(k => "P" + p + k);
+      return off === 0
+        ? `GPIO_PORT${p}_BASE. Ofset 0: maske 0, hiçbir pine erişmez.`
+        : `GPIO_PORT${p}_BASE + 0x${off.toString(16).toUpperCase()} · maske = 0x${off.toString(16).toUpperCase()} &gt;&gt; 2 = 0x${m.toString(16).toUpperCase().padStart(2, "0")} → erişilen pinler: ${pins.join(", ")}`;
+    }
+  }
+  return `onluk ${v.toLocaleString("tr-TR")}`;
+}
+
+function infoHtml(t, row){
+  const out = [];
+  if (row.note) out.push(`<p>${row.note}</p>`);
+  const seen = new Set();
+  for (const id of row.code.replace(/0[xb][0-9a-f]+/gi, " ").match(/[A-Za-z_]\w*/g) || []) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const d = (t.vars && t.vars[id]) || GL[id];
+    if (d) out.push(`<div class="gl"><code>${esc(id)}</code><span>${d}</span></div>`);
+  }
+  for (const n of new Set(row.code.match(/\b0[xb][0-9a-f]+\b/gi) || [])) {
+    out.push(`<div class="gl"><code>${esc(n)}</code><span>${numInfo(n)}</span></div>`);
+  }
+  return out.join("") || "<p>Bu satırda açıklanacak ek bir şey yok.</p>";
+}
+
+const card = document.getElementById("task");
+
+function taskProgress(t){
+  const rows = rowsOf(t), vals = store.inp[t.id] || {};
+  const typ = rows.map((r, i) => i).filter(i => !rows[i].fixed);
+  return { total: typ.length, done: typ.filter(i => state(rows[i], vals[i] || "") === "g").length };
+}
+
+function drawTask(){
+  const idx = Math.max(0, TASKS.findIndex(x => x.id === PAGE));
+  const t = TASKS[idx], prev = TASKS[idx - 1], next = TASKS[idx + 1];
+  const rows = rowsOf(t);
+  const vals = store.inp[t.id] = store.inp[t.id] || {};
+  const peek = store.peek[t.id] = store.peek[t.id] || {};
+
+  const linesHtml = rows.map((r, i) => {
+    const pad = `style="--ind:${r.ind}"`;
+    const info = r.note || !r.fixed
+      ? `<button type="button" class="info" data-act="info" aria-expanded="false" aria-label="Satır ${i + 1} bilgisi">i</button>` : "<span></span>";
+    const box = r.note || !r.fixed ? `<div class="ibox" data-ibox="${i}" hidden>${infoHtml(t, r)}</div>` : "";
+    if (r.fixed) {
+      return `<div class="row fixed" data-i="${i}"><span></span><span class="no">${i + 1}</span>
+        <div class="cell" ${pad}><div class="line">${r.code.trim() ? `<span class="fx">${esc(r.code.trim())}</span>` : ""}${r.cmt ? `<span class="cmt">${esc(r.cmt)}</span>` : ""}</div></div>
+        ${info}</div>${box}`;
+    }
+    return `<div class="row" data-i="${i}"><button type="button" class="peek" data-act="peek" aria-pressed="false">göster</button><span class="no">${i + 1}</span>
+      <div class="cell" ${pad}><div class="line"><input class="in" data-i="${i}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Satır ${i + 1}">${r.cmt ? `<span class="cmt">${esc(r.cmt)}</span>` : ""}</div>
+      <div class="rev" hidden>${esc(r.code.trim())}</div></div>
+      ${info}</div>${box}`;
+  }).join("");
+
+  const link = (x, cls, label) => x ? `<a class="btn ${cls}" href="${x.page}"><small>${label}</small>${esc(x.title)}</a>` : "<span></span>";
+  card.innerHTML = `
+    <div class="thead"><span class="src">${esc(t.src)}</span><h2>${esc(t.title)}</h2></div>
+    <div class="qtext">${t.text}</div>
+    ${t.circuit ? `<div class="circuit">${t.circuit}</div>` : ""}
+    ${t.given ? `<details><summary>Sınav kâğıdında verilen fonksiyonlar ve sabitler</summary><pre>${esc(t.given)}</pre></details>` : ""}
+    <div class="bar">
+      <button type="button" class="btn primary" data-a="all">Tümünü göster</button>
+      <button type="button" class="btn" data-a="redo">Bakılanları tekrar yaz</button>
+      <button type="button" class="btn" data-a="reset">Sıfırla</button>
+      <span class="prog" id="prog"></span>
+    </div>
+    <div class="lines" id="lines">${linesHtml}</div>
+    <div class="finish" id="finish" hidden></div>
+    ${t.note ? `<div class="note">${t.note}</div>` : ""}
+    <nav class="pager" aria-label="Sayfalar">${link(prev, "prev", "← Önceki")}${link(next, "next", "Sonraki →")}</nav>`;
+
+  const inputs = [...card.querySelectorAll("input.in")];
+  const allBtn = card.querySelector('[data-a="all"]');
+  const rowEl = i => card.querySelector(`.row[data-i="${i}"]`);
+
+  function paint(inp){
+    const i = +inp.dataset.i, st = state(rows[i], inp.value);
+    inp.classList.remove("y", "r", "g");
+    if (st) inp.classList.add(st);
+    inp.readOnly = st === "g";
+    rowEl(i).classList.toggle("pk", st === "g" && !!peek[i]);
+    return st;
+  }
+  function setPeek(i, on){
+    const el = rowEl(i);
+    el.querySelector(".rev").hidden = !on;
+    const b = el.querySelector(".peek");
+    b.setAttribute("aria-pressed", String(on));
+    b.textContent = on ? "gizle" : "göster";
+  }
+  function progText(){
+    const p = taskProgress(t);
+    card.querySelector("#prog").textContent = `${p.done} / ${p.total} satır`;
+    (store.sum = store.sum || {})[t.id] = p;
+    save();
+    return p;
+  }
+  function refresh(){
+    const p = progText();
+    const anyHidden = inputs.some(inp => rowEl(inp.dataset.i).querySelector(".rev").hidden);
+    allBtn.textContent = anyHidden ? "Tümünü göster" : "Tümünü gizle";
+    const peeked = inputs.filter(inp => peek[inp.dataset.i]).length;
+    card.querySelector('[data-a="redo"]').disabled = peeked === 0;
+    const fin = card.querySelector("#finish");
+    fin.hidden = p.done !== p.total;
+    if (!fin.hidden) {
+      fin.innerHTML = peeked
+        ? `<span><b>Tamam.</b> ${p.total} satırın ${peeked} tanesine bakarak yazdın. Bunları bir de gizli hâlde dene.</span><button type="button" class="btn" data-a="redo">Bakılanları tekrar yaz</button>`
+        : `<span><b>Tamam.</b> ${p.total} satırın hepsini bakmadan yazdın.</span>${next ? `<a class="btn primary" href="${next.page}">Sonraki sayfa →</a>` : ""}`;
+    }
+  }
+  function focusFrom(i, dir){
+    const pos = inputs.findIndex(x => +x.dataset.i === i);
+    for (let k = pos + dir; k >= 0 && k < inputs.length; k += dir) {
+      if (dir > 0 && inputs[k].classList.contains("g")) continue;
+      inputs[k].focus();
+      return;
+    }
+  }
+
+  inputs.forEach(inp => {
+    const i = +inp.dataset.i;
+    if (vals[i]) inp.value = vals[i];
+    paint(inp);
+    inp.addEventListener("input", () => {
+      vals[i] = inp.value;
+      if (paint(inp) === "g") { refresh(); focusFrom(i, 1); }
+      else progText();
+    });
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); focusFrom(i, 1); }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const pos = inputs.indexOf(inp);
+        if (pos > 0) inputs[pos - 1].focus();
+      }
+    });
+  });
+
+  card.querySelector("#lines").addEventListener("click", e => {
+    const b = e.target.closest("button[data-act]");
+    if (!b) return;
+    const i = +b.closest(".row").dataset.i;
+    if (b.dataset.act === "peek") {
+      const on = b.getAttribute("aria-pressed") !== "true";
+      setPeek(i, on);
+      const inp = rowEl(i).querySelector("input");
+      if (on && !inp.classList.contains("g")) { peek[i] = 1; save(); }
+      refresh();
+    }
+    if (b.dataset.act === "info") {
+      const box = card.querySelector(`[data-ibox="${i}"]`);
+      box.hidden = !box.hidden;
+      b.setAttribute("aria-expanded", String(!box.hidden));
+    }
+  });
+
+  card.onclick = e => {
+    const a = e.target.closest("button[data-a]")?.dataset.a;
+    if (!a) return;
+    if (a === "all") {
+      const show = allBtn.textContent === "Tümünü göster";
+      inputs.forEach(inp => {
+        const i = +inp.dataset.i;
+        setPeek(i, show);
+        if (show && !inp.classList.contains("g")) peek[i] = 1;
+      });
+      save(); refresh();
+    }
+    if (a === "redo") {
+      inputs.forEach(inp => {
+        const i = +inp.dataset.i;
+        if (!peek[i]) return;
+        delete peek[i]; delete vals[i];
+        inp.value = ""; paint(inp); setPeek(i, false);
+      });
+      save(); refresh();
+      const first = inputs.find(x => !x.classList.contains("g"));
+      if (first) first.focus();
+    }
+    if (a === "reset") {
+      if (!confirm("Bu sayfadaki bütün satırlar silinsin mi?")) return;
+      store.inp[t.id] = {}; store.peek[t.id] = {}; save(); drawTask();
+    }
+  };
+
+  refresh();
+}
+
+drawTask();
+</script>
+
+</body>
+</html>
