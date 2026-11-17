@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Satır Satır Yazma</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: üstte görev şeridi; görev kartı = soru, devre, kâğıttaki liste, araç çubuğu, gizli satırlardan oluşan kod alanı. */
+:root {
+  --bg: #f1f2f4; --surface: #ffffff; --ink: #161b22; --muted: #5a6370; --line: #d8dce2;
+  --accent: #b8202f; --accent-soft: #fbe6e8;
+  --ok: #157a46;
+  --code-bg: #1b2028; --code-ink: #e6e9ee; --code-muted: #8b95a3; --code-acc: #ff9aa5;
+  --blank-bg: #2a313c; --blank-line: #4a5462;
+  /* kod alanı her iki temada koyu: satır durum renkleri aynı */
+  --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #171b21; --ink: #e5e8ec; --muted: #9aa3ae; --line: #2a3039;
+    --accent: #ff7a86; --accent-soft: #3a1c21;
+    --ok: #5fd394;
+    --code-bg: #0b0e12; --code-ink: #e6e9ee; --code-muted: #7d8794; --code-acc: #ff9aa5;
+    --blank-bg: #1d232c; --blank-line: #3a4350;
+    --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --ink: #e5e8ec; --muted: #9aa3ae; --line: #2a3039;
+  --accent: #ff7a86; --accent-soft: #3a1c21;
+  --ok: #5fd394;
+  --code-bg: #0b0e12; --code-ink: #e6e9ee; --code-muted: #7d8794; --code-acc: #ff9aa5;
+  --blank-bg: #1d232c; --blank-line: #3a4350;
+  --st-y: #e8c547; --st-r: #ff6b5e; --st-g: #4fd18b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 32px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+.eyebrow { font: 600 11.5px/1.3 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.eyebrow a { color: inherit; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 8px 0 12px; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 22px; line-height: 1.2; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.lead { color: var(--muted); max-width: 68ch; }
+.lead + .lead { margin-top: 10px; }
+code { font-family: var(--f-mono); font-size: .92em; }
+.key { display: inline-flex; gap: 6px 14px; flex-wrap: wrap; margin-top: 12px; font: 500 13px/1.3 var(--f-mono); color: var(--muted); }
+.key span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+.tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.task-btn { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: center; text-align: left; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; min-width: 0; }
+.task-btn .no { grid-row: span 2; font: 600 13px/1 var(--f-mono); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--bg); color: var(--muted); }
+.task-btn b { font: 600 13px/1.25 var(--f-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-btn small { font: 500 11px/1.2 var(--f-mono); color: var(--muted); }
+.task-btn[aria-current="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.task-btn.done .no { background: var(--ok); color: var(--surface); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.thead { display: grid; gap: 6px; }
+.src { justify-self: start; font: 600 12px/1 var(--f-mono); color: var(--accent); background: var(--accent-soft); padding: 5px 8px; border-radius: 4px; }
+.qtext { font-size: 16px; max-width: 72ch; display: grid; gap: 8px; }
+.qtext blockquote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg); border-radius: 0 8px 8px 0; font-size: 15.5px; }
+.qtext ul { margin: 0; padding-left: 20px; display: grid; gap: 3px; }
+.circuit { background: var(--bg); border-radius: 8px; padding: 10px; overflow-x: auto; }
+.circuit svg { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; }
+details { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+summary { cursor: pointer; padding: 10px 12px; font: 600 14px/1.3 var(--f-body); }
+details pre { margin: 0; padding: 0 12px 12px; font: 13px/1.6 var(--f-mono); white-space: pre-wrap; color: var(--muted); }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 600 14px/1 var(--f-body); padding: 10px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:hover { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.prog { margin-left: auto; font: 600 14px/1 var(--f-mono); color: var(--muted); }
+
+/* kod alanı */
+.lines { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 10px 0; font: 14px/1.5 var(--f-mono); --indk: 1; }
+.row { display: grid; grid-template-columns: 64px 2.4em minmax(0, 1fr) 36px; align-items: start; gap: 0 8px; padding: 2px 10px; }
+.row .no { font: 12px/30px var(--f-mono); color: var(--code-muted); text-align: right; }
+.row.pk .no::after { content: "•"; color: var(--st-y); margin-left: 2px; }
+.cell { min-width: 0; padding-left: calc(var(--ind) * 1ch * var(--indk)); }
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; }
+.fx { white-space: pre-wrap; line-height: 30px; color: var(--code-ink); }
+.cmt { color: var(--code-muted); font-size: 12.5px; line-height: 1.4; }
+input.in { flex: 1 1 22ch; min-width: 12ch; font: 14px/1 var(--f-mono); color: var(--code-ink); background: var(--blank-bg); border: 1px dashed var(--blank-line); border-left-width: 3px; border-radius: 4px; padding: 6px 8px; }
+input.in::placeholder { color: var(--code-muted); }
+input.in.y { border: 1px solid var(--st-y); border-left-width: 3px; background: color-mix(in srgb, var(--st-y) 14%, var(--code-bg)); }
+input.in.r { border: 1px solid var(--st-r); border-left-width: 3px; background: color-mix(in srgb, var(--st-r) 18%, var(--code-bg)); }
+input.in.g { border: 1px solid var(--st-g); border-left-width: 3px; background: color-mix(in srgb, var(--st-g) 16%, var(--code-bg)); color: var(--st-g); }
+.rev { margin-top: 3px; padding: 3px 8px; border-radius: 4px; background: color-mix(in srgb, var(--st-y) 8%, transparent); color: var(--st-y); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13.5px; }
+.peek, .info { font: 600 11.5px/1 var(--f-mono); color: var(--code-muted); background: transparent; border: 1px solid var(--blank-line); border-radius: 4px; cursor: pointer; height: 26px; margin-top: 2px; }
+.peek { width: 64px; }
+.peek[aria-pressed="true"] { color: var(--st-y); border-color: var(--st-y); }
+.info { width: 28px; justify-self: end; font-size: 13px; font-style: italic; font-family: Georgia, serif; }
+.info[aria-expanded="true"] { color: var(--code-acc); border-color: var(--code-acc); }
+.peek:hover, .info:hover { color: var(--code-ink); border-color: var(--code-muted); }
+.ibox { margin: 4px 10px 8px calc(64px + 2.4em + 26px); padding: 10px 12px; border-radius: 6px; background: var(--blank-bg); border-left: 3px solid var(--code-acc); font: 14px/1.55 var(--f-body); display: grid; gap: 8px; }
+.ibox code { color: var(--code-acc); font-size: 13px; }
+.ibox b { font-weight: 600; }
+.gl { display: grid; grid-template-columns: minmax(0, max-content) 1fr; gap: 2px 10px; }
+.gl > code { font-weight: 600; overflow-wrap: anywhere; }
+.gl span code { font-weight: 400; }
+
+.finish { padding: 12px 14px; border-radius: 8px; border: 1px solid var(--ok); background: color-mix(in srgb, var(--ok) 8%, var(--surface)); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 15px; }
+.note { font-size: 15px; padding: 12px 14px; border-radius: 8px; background: var(--bg); border: 1px dashed var(--line); display: grid; gap: 6px; }
+.note b { font-weight: 600; }
+.pager { display: flex; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 600px) {
+  .card { padding: 14px; }
+  .lines { font-size: 12.5px; --indk: .5; }
+  .row { grid-template-columns: 48px 1.8em minmax(0, 1fr) 30px; gap: 0 6px; padding: 2px 6px; }
+  .peek { width: 48px; font-size: 10.5px; }
+  .info { width: 26px; }
+  input.in { font-size: 12.5px; padding: 6px; }
+  .ibox { margin-left: 10px; }
+  .gl { grid-template-columns: 1fr; }
+  .prog { margin-left: 0; width: 100%; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><a href="./">İleri Mikroişlemciler</a> · Vize çalışması</div>
+    <h1>Satır Satır Yazma</h1>
+    <p class="lead">Vizenin kod soruları ve derste yazdırılan kodlar, tam çözümüyle burada. Her satır gizli: satıra tıkla ve yazmaya başla. Takılırsan satırın başındaki <b>göster</b> ile cevaba bak, sonundaki <b>i</b> ile o satırdaki komutların ve değişkenlerin ne işe yaradığını oku.</p>
+    <p class="lead">Boşluklar önemsiz, istediğin gibi yaz. Büyük/küçük harf önemli, çünkü C'de de önemli. Enter ya da ↓ bir sonraki satıra, ↑ bir öncekine geçer.</p>
+    <div class="key" aria-label="Renkler">
+      <span style="--c:var(--st-y)">doğru gidiyor</span>
+      <span style="--c:var(--st-r)">3+ karakter yanlış</span>
+      <span style="--c:var(--st-g)">satır tamam</span>
+      <span style="--c:var(--st-y)">• bakılarak yazıldı</span>
+    </div>
+  </header>
+
+  <nav class="tasks" id="tasks" aria-label="Görevler"></nav>
+  <article class="card" id="task"></article>
+</div>
+
+<script>
+const G2024 = `void GPIOPadConfigSet(uint32_t ui32Port, uint8_t ui8Pins, uint32_t ui32Strength, uint32_t ui32PadType);
+void GPIOIntTypeSet(uint32_t ui32Port, uint8_t ui8Pins, uint32_t ui32IntType);
+void GPIOIntEnable(uint32_t ui32Port, uint32_t ui8Pins);
+uint32_t GPIOIntStatus(uint32_t ui32Port, bool bMasked);
+void GPIOIntRegister(uint32_t ui32Port, kesme_fonksiyonu);
+void GPIOIntClear(uint32_t ui32Port, uint32_t ui32IntFlags);
+int32_t GPIOPinRead(uint32_t ui32Port, uint8_t ui8Pins);
+void GPIOPinWrite(uint32_t ui32Port, uint8_t ui8Pins, uint8_t ui8Val);
+void GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins);
+void GPIOPinTypeGPIOOutput(uint32_t ui32Port, uint8_t ui8Pins);
+double pow(double x, double y);   // üst alma, lazım olursa
+void IntEnable(uint32_t ui32Interrupt);
+IntMasterEnable();
+
+GPIO_PIN_0   GPIO_FALLING_EDGE   GPIO_RISING_EDGE
+GPIO_STRENGTH_8MA   GPIO_PIN_TYPE_STD_WPU
+GPIO_PORTF_BASE 0x40025000   GPIO_PORTD_BASE 0x40007000
+SYSCTL_PERIPH_GPIOF   SYSCTL_PERIPH_GPIOA   SYSCTL_PERIPH_GPIOB   SYSCTL_PERIPH_TIMER0
+INT_GPIOF   // ui32Interrupt örneği`;
+
+const G2021 = `GPIOPinWrite(unsigned long ulPort, unsigned char ucPins, unsigned char ucVal);
+GPIOPinRead(unsigned long ulPort, unsigned char ucPins);
+GPIOPadConfigSet(unsigned long ulPort, unsigned char ucPins, unsigned long ulStrength, unsigned long ulPadType);
+GPIOPinTypeGPIOInput(unsigned long ulPort, unsigned char ucPins);
+GPIOPinTypeGPIOOutput(unsigned long ulPort, unsigned char ucPins);
+TimerEnable(unsigned long ulBase, unsigned long ulTimer);
+TimerIntEnable(unsigned long ulBase, unsigned long ulIntFlags);
+TimerDisable(unsigned long ulBase, unsigned long ulTimer);
+TimerConfigure(unsigned long ulBase, unsigned long ulConfig);
+TimerLoadSet(unsigned long ulBase, unsigned long ulTimer, unsigned long ulValue);
+TimerIntRegister(unsigned long ulBase, unsigned long ulTimer, void (*pfnHandler)(void));
+TimerIntClear(unsigned long ulBase, unsigned long ulIntFlags);
+IntMasterEnable();
+
+SYSCTL_PERIPH_GPIOF   SYSCTL_PERIPH_GPIOA   SYSCTL_PERIPH_GPIOD
+GPIO_STRENGTH_4MA   GPIO_PIN_TYPE_STD_WPU
+TIMER0_BASE   TIMER_CFG_32_BIT_PER   TIMER_A
+INT_TIMER0A   TIMER_TIMA_TIMEOUT`;
+
+// 2024 devresi: btn1 → PA0, btn2 → PA1, PB0–PB7 → LED (şemadaki etiketlerden)
+const SVG2024 = `<svg viewBox="0 0 520 250" role="img" aria-label="btn1 PA0'a, btn2 PA1'e bağlı; PB0–PB7 pinlerine birer LED bağlı" font-family="IBM Plex Mono, monospace" font-size="13">
+  <rect x="190" y="14" width="140" height="222" rx="8" fill="var(--surface)" stroke="var(--muted)"/>
+  <text x="260" y="34" text-anchor="middle" fill="var(--ink)" font-weight="600">TM4C123</text>
+  <g stroke="var(--muted)" fill="none" stroke-width="1.5">
+    <path d="M190 80 H120"/><path d="M190 140 H120"/>
+    <path d="M120 80 l-22 -10"/><path d="M96 80 H56 V104"/>
+    <path d="M120 140 l-22 -10"/><path d="M96 140 H56 V164"/>
+    <path d="M44 104 H68 M48 109 H64 M52 114 H60"/><path d="M44 164 H68 M48 169 H64 M52 174 H60"/>
+  </g>
+  <text x="198" y="84" fill="var(--ink)">PA0</text><text x="198" y="144" fill="var(--ink)">PA1</text>
+  <text x="110" y="62" text-anchor="middle" fill="var(--accent)" font-weight="600">btn1</text>
+  <text x="110" y="122" text-anchor="middle" fill="var(--accent)" font-weight="600">btn2</text>
+  ${[0,1,2,3,4,5,6,7].map(i => {
+    const y = 54 + i * 24;
+    return `<text x="322" y="${y + 4}" text-anchor="end" fill="var(--ink)">PB${i}</text>
+    <path d="M330 ${y} H392" stroke="var(--muted)" stroke-width="1.5"/>
+    <path d="M392 ${y - 7} L406 ${y} L392 ${y + 7} Z" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <path d="M406 ${y - 7} V${y + 7} M406 ${y} H452" stroke="var(--accent)" stroke-width="1.5"/>`;
+  }).join("")}
+  <path d="M452 54 V230" stroke="var(--muted)" stroke-width="1.5"/>
+  <path d="M440 230 H464 M444 235 H460 M448 240 H456" stroke="var(--muted)" stroke-width="1.5"/>
+  <text x="470" y="150" fill="var(--muted)" font-size="11.5">LD0–LD7</text>
+</svg>`;
+
+// Sözlük: bir satırda geçen her ad için info kutusunda gösterilir. Görevin vars alanı aynı adı ezer.
+const GL = {
+  SysCtlClockSet: "Sistem saatini ayarlar. Bu derste hep aynı satır: 16 MHz kristal PLL ile 400 MHz'e çıkar, 2'ye bölünür (200 MHz), SYSDIV_5 ile 5'e bölünür: <b>40 MHz</b>.",
+  SYSCTL_SYSDIV_5: "Saat bölücü: 200 MHz / 5 = 40 MHz.",
+  SYSCTL_USE_PLL: "Saat PLL üzerinden üretilsin.",
+  SYSCTL_XTAL_16MHZ: "Kart üzerindeki kristal 16 MHz.",
+  SYSCTL_OSC_MAIN: "Kaynak ana osilatör, yani dıştaki kristal.",
+  SysCtlPeripheralEnable: "Bir çevre biriminin (port, timer, UART) saatini açar. Saati kapalı birimin register'larına yazılamaz; bu yüzden ayarlardan önce gelir.",
+  SYSCTL_PERIPH_TIMER0: "Timer0'ın saati.",
+  SYSCTL_PERIPH_UART0: "UART0 biriminin saati.",
+  SysCtlClockGet: "O anki sistem saatini Hz olarak döndürür: burada 40 000 000.",
+  SysCtlDelay: "Verilen sayı kadar tur dönen bekleme döngüsü; her tur 3 saat çevrimi sürer. 40 MHz'de 1 saniye için <code>SysCtlClockGet()/3</code>.",
+  GPIOPinTypeGPIOOutput: "Pinleri çıkış yapar: yön register'ında (DIR) bitleri 1'ler, dijital işlevi (DEN) açar. (port, pin maskesi).",
+  GPIOPinTypeGPIOInput: "Pinleri giriş yapar: DIR'de bitleri 0'lar, DEN'i açar. Pull-up ayrıca GPIOPadConfigSet ile verilir.",
+  GPIOPadConfigSet: "Pinlerin akım gücünü ve pad tipini ayarlar: (port, pinler, akım, tip). Butonlarda tip pull-up olur.",
+  GPIO_STRENGTH_8MA: "Çıkış akımı sınırı 8 mA. Giriş pinlerinde etkisi yok; kâğıtta verildiği için yazılır.",
+  GPIO_STRENGTH_4MA: "Çıkış akımı sınırı 4 mA. Giriş pinlerinde etkisi yok.",
+  GPIO_STRENGTH_2MA: "Çıkış akımı sınırı 2 mA. Giriş pinlerinde etkisi yok.",
+  GPIO_PIN_TYPE_STD_WPU: "Standart pin + zayıf iç pull-up direnci. Toprağa bağlı buton bırakılınca 1, basılınca 0 okunur.",
+  GPIOPinRead: "Seçilen pinlerin değerini <b>yerinde</b> döndürür, diğer bitler 0. PA1 yüksekse sonuç 1 değil 2'dir; bu yüzden <code>== 0</code> ile bakmak güvenli.",
+  GPIOPinWrite: "(port, maske, değer): yalnızca maskede 1 olan pinlere değerdeki karşılık gelen biti yazar, diğer pinler korunur. Değer de bit konumunda: PF1'i yakmak için 1 değil 2.",
+  GPIOIntStatus: "Portta hangi pinlerin kesme bayrağının kalktığını döndürür. <code>true</code>: yalnızca kesmesi açık (maskeli) pinler.",
+  GPIOIntClear: "Verilen kesme bayraklarını temizler. Temizlenmeyen bayrak rutini hemen yeniden çağırır.",
+  GPIOIntTypeSet: "Kesmenin hangi olayda oluşacağını seçer: düşen kenar, yükselen kenar, iki kenar ya da seviye.",
+  GPIO_RISING_EDGE: "Yükselen kenar, 0 → 1. Pull-up'lı buton bırakılırken (çekilirken) oluşur.",
+  GPIO_FALLING_EDGE: "Düşen kenar, 1 → 0. Pull-up'lı butona basılırken oluşur.",
+  GPIOIntRegister: "Port kesmesi gelince çağrılacak fonksiyonu kaydeder. Fonksiyon adı parantezsiz yazılır: çağrılmaz, adresi verilir. NVIC iznini de içeride açar.",
+  GPIOIntEnable: "Seçilen pinlerin kesmesine pin düzeyinde izin verir.",
+  IntEnable: "Kesme denetleyicisinde (NVIC) bir kesme kaynağına izin verir.",
+  INT_GPIOA: "A portunun kesme numarası.",
+  INT_GPIOF: "F portunun kesme numarası.",
+  INT_TIMER0A: "Timer0 A kesmesinin numarası.",
+  IntMasterEnable: "İşlemcinin genel kesme anahtarı. Kapalıyken hiçbir kesme işlemciye ulaşmaz; en sona yazılır.",
+  HWREG: "Verilen adresteki 32 bitlik register'a doğrudan okur ya da yazar: <code>(*((volatile uint32_t *)(adres)))</code>.",
+  TimerConfigure: "Timer'ın çalışma modunu seçer.",
+  TIMER0_BASE: "Timer0'ın register'larının başladığı adres.",
+  TIMER_CFG_32_BIT_PER: "Timer A ve B birleşip 32 bitlik periyodik sayıcı olur: 0'a inince kendini yeniden yükler. (Stellaris'teki adı; TivaWare'de TIMER_CFG_PERIODIC.)",
+  TimerLoadSet: "Sayıcının başlangıç değerini yükler. Timer her saat çevriminde 1 azalır: 40 MHz'de 40 000 000 çevrim = 1 saniye.",
+  TIMER_A: "Timer'ın A yarısı. 32 bit modda tek sayıcı A adıyla kullanılır.",
+  TimerIntRegister: "Timer kesmesinde çağrılacak fonksiyonu kaydeder.",
+  TimerIntEnable: "Timer'ın hangi olayda kesme üreteceğini açar.",
+  TIMER_TIMA_TIMEOUT: "Timer A'nın 0'a inmesi (zaman aşımı) olayı.",
+  TimerIntClear: "Timer kesme bayrağını temizler; rutinin ilk satırı olur.",
+  TimerEnable: "Timer'ı çalıştırır. Ayarlar bitmeden kesme gelmesin diye en son yazılır.",
+  SYSCTL_RCGCGPIO_R: "GPIO saat açma register'ı: bit0 = A, bit1 = B … bit5 = F. SysCtlPeripheralEnable'ın register karşılığı.",
+  GPIO_PORTF_LOCK_R: "Kilit register'ı. 0x4C4F434B (ASCII 'LOCK') yazılınca kilitli pinlerin ayarı açılır. PF0 varsayılan olarak kilitli.",
+  GPIO_PORTF_CR_R: "Commit register'ı: kilitli pinlerden hangisinin ayarının değiştirilebileceğini belirler. 0x01 → PF0.",
+  GPIO_PORTF_DIR_R: "Yön register'ı: 1 = çıkış, 0 = giriş.",
+  GPIO_PORTF_AFSEL_R: "Alternatif fonksiyon seçimi. 0: pinler UART, PWM gibi işlevlerde değil, sade GPIO.",
+  GPIO_PORTF_DEN_R: "Dijital etkinleştirme. 1 yazılmayan pin dijital olarak çalışmaz.",
+  GPIO_PORTF_PUR_R: "Pull-up register'ı: 1 olan pinlere iç pull-up direnci bağlanır.",
+  GPIO_PORTF_DATA_R: "F portunun veri register'ı (bütün bitlerin açık olduğu maskeli adres 0x400253FC). Okununca pin seviyeleri gelir, yazılınca çıkışlar değişir.",
+  GPIOPinConfigure: "Pinin hangi alternatif işlevde kullanılacağını seçer (pin mux).",
+  GPIO_PA0_U0RX: "PA0 = UART0 alıcı (RX) ucu.",
+  GPIO_PA1_U0TX: "PA1 = UART0 verici (TX) ucu.",
+  GPIOPinTypeUART: "Pinleri UART'a devreder: alternatif fonksiyon açılır.",
+  UARTConfigSetExpClk: "(UART, saat, baud, çerçeve): haberleşme hızını ve veri çerçevesini ayarlar.",
+  UART0_BASE: "UART0'ın adresi. Kartta USB üzerinden bilgisayara sanal COM port olarak bağlı.",
+  UART_CONFIG_WLEN_8: "8 veri biti.",
+  UART_CONFIG_STOP_ONE: "1 stop biti.",
+  UART_CONFIG_PAR_NONE: "Parite yok.",
+  UARTEnable: "UART'ı çalıştırır.",
+  UARTCharsAvail: "Alıcı tamponunda okunmamış karakter varsa true döner; beklemez.",
+  UARTCharGet: "Bir karakter okur; karakter gelene kadar bekler.",
+  UARTCharPut: "Bir karakter gönderir; gönderme tamponu doluysa yer açılana kadar bekler.",
+  pow: "Üs alma: <code>pow(2, i)</code> = 2<sup>i</sup>. Kâğıtta 'lazım olursa' diye verilmiş.",
+  volatile: "Derleyiciye 'bu değişken beklenmedik anda değişebilir' der; her kullanımda bellekten yeniden okunur. Kesmede değişen değişkenler volatile olmalı.",
+  uint32_t: "İşaretsiz 32 bitlik tam sayı (stdint.h).",
+  true: "bool doğru değeri (stdbool.h), yani 1.",
+  main: "Programın giriş noktası: kart açılınca çalışma buradan başlar.",
+  while: "<code>while (koşul)</code>: koşul doğru olduğu sürece tekrar eder. <code>while(1)</code> hiç bitmeyen ana döngü; mikrodenetleyici programı kapanmaz.",
+  else: "<code>if</code>'in koşulu yanlışsa çalışan kısım.",
+  define: "<code>#define</code>: önişlemci sabiti. Derlemeden önce ad, yazılan değerle değiştirilir; bellekte yer tutmaz."
+};
+const PORTS = { A: "0x40004000", B: "0x40005000", C: "0x40006000", D: "0x40007000", E: "0x40024000", F: "0x40025000" };
+for (const p in PORTS) {
+  GL["SYSCTL_PERIPH_GPIO" + p] = `${p} portunun saati.`;
+  GL["GPIO_PORT" + p + "_BASE"] = `${p} portunun register'larının başladığı adres: <code>${PORTS[p]}</code>. Fonksiyonlar hangi portla çalışacağını bu adresten anlar.`;
+}
+for (let n = 0; n < 8; n++) {
+  GL["GPIO_PIN_" + n] = `${n}. pin = <code>1&lt;&lt;${n}</code> = 0x${(1 << n).toString(16).toUpperCase().padStart(2, "0")} (${(1 << n).toString(2).padStart(8, "0").replace(/(\d{4})(\d{4})/, "$1 $2")}).`;
+}
+
+// Görevler. L satırları: [kod, not?, kabul edilen başka yazımlar?]
+// "//" sonrası yorum ipucu olarak görünür, yazılmaz. Yalnızca { } ya da yorum olan satırlar hazır gösterilir.
+const TASKS = [
+{id:"t1", title:"GPIO ayarları", src:"2024 Vize S1",
+ text:`<blockquote>Soru 1: Verilen devre için gerekli olan gpio ayarlarını yazınız.</blockquote><p>Devre: btn1 → PA0, btn2 → PA1, LD0–LD7 → PB0–PB7. Butonlar toprağa bağlı varsayılıyor (kâğıtta <code>GPIO_PIN_TYPE_STD_WPU</code> verilmiş).</p>`,
+ circuit:SVG2024, given:G2024,
+ L:[
+  ["int main(void)", "Programın giriş noktası. Sınav şablonunda hazır veriliyor."],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40Mhz", "Şablonda hazır veriliyor ama her programın ilk satırı; ezbere bilmek iyi olur."],
+  [""],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);        // butonların portu", "Butonlar A portunda."],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);        // LED'lerin portu", "LED'ler B portunda. Kâğıtta SYSCTL_PERIPH_GPIOB verilmesi de bu yüzden. İki satırın sırası önemsiz."],
+  [""],
+  ["    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);      // btn1, btn2", "PA0 ve PA1: <code>GPIO_PIN_0|GPIO_PIN_1</code> = 0x03."],
+  ["    GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);", "Butonlar toprağa bağlı. Pull-up olmazsa bırakılan buton boşta kalır ve okunan değer belirsiz olur."],
+  [""],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, 0xFF);       // LD0–LD7", "Sekiz LED, sekiz pin: 1111 1111 = 0xFF. <code>GPIO_PIN_0|…|GPIO_PIN_7</code> da aynı sayı.", ["GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);"]],
+  [""],
+  ["    while(1)", "Sonsuz döngü: mikrodenetleyici programı hiç bitmez, ana iş burada döner."],
+  ["    {"],
+  ["        //kodlar"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t2", title:"Basılıp çekilme (polling)", src:"2024 Vize S2",
+ text:`<blockquote>Soru 2: btn1’e basılıp çekildikten sonra PORTB’ye bağlı çift numaralı ledlerin hepsini, btn2’e basılıp çekildikten sonra PORTB’ye bağlı tek numaralı ledlerin hepsini birden yakınız. Kesme rutini kullanmayınız.</blockquote><p>Soru 1'deki ayarlar yapılmış kabul ediliyor. Butonlar pull-up'lı: basılıyken 0 okunur.</p>`,
+ circuit:SVG2024, given:G2024,
+ L:[
+  ["    while(1)", "Kesme kullanılmadığı için butonlara sonsuz döngüde sürekli bakılır (polling)."],
+  ["    {"],
+  ["        if (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) == 0)          // btn1 basıldı mı?", "Pull-up'lı buton basılıyken pin toprağa çekilir: 0 okunur."],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) == 0);  // çekilmesini bekle", "Sondaki <code>;</code> döngünün gövdesi boş demek: buton basılı kaldıkça burada beklenir. Çekilince pin 1 olur ve geçilir. 'Basılıp çekildikten sonra' şartı bu satırla sağlanır. code3'teki <code>while(!GPIOPinRead(...))</code> aynı fikir."],
+  ["            GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0x55);              // çift numaralılar", "PB0, PB2, PB4, PB6 = 0101 0101 = <b>0x55</b>. Maske 0xFF olduğu için tek numaralılar söner."],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) == 0)          // btn2 basıldı mı?", "btn2 = PA1. Bırakılınca GPIOPinRead 1 değil 2 döndürür; bu yüzden <code>== 1</code> değil <code>== 0</code> ile bakılır."],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) == 0);", "Yine çekilmesini bekle."],
+  ["            GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0xAA);              // tek numaralılar", "PB1, PB3, PB5, PB7 = 1010 1010 = <b>0xAA</b>. Maske 0xAA yazılırsa önceki çift LED'ler yanık kalır; o da kabul edilebilir.", ["GPIOPinWrite(GPIO_PORTB_BASE,0xAA,0xAA);"]],
+  ["        }"],
+  ["    }"]
+ ],
+ note:`<p><b>Gerçek kartta:</b> mekanik buton basılıp bırakılırken birkaç ms boyunca titreşir (ark). Bu soruda LED'i yakmak tekrar etse de sonuç değişmediği için sorun olmaz; sayma yapan sorularda <code>SysCtlDelay</code> ile kısa bir bekleme eklemek iyi olur.</p>`},
+
+{id:"t3", title:"Aynı soru kesmeyle", src:"2024 Vize S3",
+ text:`<blockquote>Soru 3: Bir önceki soruyu kesme rutininde yapınız.</blockquote><p>Sınav şablonunda kesme fonksiyonunun adı <code>GPIOKesmesi</code> ve değişkenlerin en üstte tanımlanması isteniyor.</p>`,
+ circuit:SVG2024, given:G2024,
+ vars:{ durum:"Kesmeye hangi pinlerin neden olduğunu tutan değişken. Kesmede değiştiği için volatile.", GPIOKesmesi:"Şablondaki kesme fonksiyonu. Port A'da kesme olunca donanım bu fonksiyonu çağırır." },
+ L:[
+  ["// DEĞİŞKENLENİZİN HEPSİNİ BURADA TANIMLAYIN."],
+  ["volatile uint32_t durum;", "Şablon değişkenlerin en üstte tanımlanmasını istiyor."],
+  [""],
+  ["void GPIOKesmesi(void)", "Kesme fonksiyonu parametre almaz, değer döndürmez."],
+  ["{"],
+  ["    durum = GPIOIntStatus(GPIO_PORTA_BASE, true);", "Kesmeye hangi butonun neden olduğu bu değerden anlaşılır.", ["durum=GPIOIntStatus(GPIO_PORTA_BASE,1);"]],
+  ["    GPIOIntClear(GPIO_PORTA_BASE, durum);", "Rutinin ilk işi bayrağı temizlemek. Temizlenmezse rutin bitince hemen yeniden çağrılır ve ana program ilerleyemez."],
+  [""],
+  ["    if (durum & GPIO_PIN_0)                             // btn1", "VE işlemi: durum'un 0. biti 1 ise kesmeyi btn1 oluşturmuş."],
+  ["        GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0x55);", "Çift numaralılar."],
+  ["    if (durum & GPIO_PIN_1)                             // btn2", "1. bit 1 ise kesmeyi btn2 oluşturmuş. İkisi aynı anda da gelebilir; bu yüzden else değil iki ayrı if."],
+  ["        GPIOPinWrite(GPIO_PORTB_BASE, 0xFF, 0xAA);", "Tek numaralılar."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40Mhz"],
+  ["    // Soru 1'deki GPIO ayarları"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);"],
+  ["    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);"],
+  ["    GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);"],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, 0xFF);"],
+  [""],
+  ["    // kesme ayarları"],
+  ["    GPIOIntTypeSet(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1, GPIO_RISING_EDGE);", "Basınca 1→0 (düşen kenar), <b>çekince 0→1 (yükselen kenar)</b>. Soru 'basılıp çekildikten sonra' dediği için RISING. FALLING yazılırsa LED basma anında yanar."],
+  ["    GPIOIntRegister(GPIO_PORTA_BASE, GPIOKesmesi);", "Fonksiyon adı parantezsiz yazılır: fonksiyon çağrılmaz, adresi verilir."],
+  ["    GPIOIntEnable(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);", "Yalnızca iki butonun pininde kesme açılır."],
+  ["    IntEnable(INT_GPIOA);", "Kâğıtta örnek olarak <code>INT_GPIOF</code> verilmiş ama butonlar A portunda: <code>INT_GPIOA</code>. (GPIOIntRegister bu izni zaten verir; yazmak zarar vermez.)"],
+  ["    IntMasterEnable();", "Genel izin en son: önce her şey ayarlanır, sonra kesmeler açılır."],
+  [""],
+  ["    while(1)", "Ana döngü boş kalır; iş kesmede yapılıyor."],
+  ["    {"],
+  ["        // boş: iş kesmede yapılıyor"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t4", title:"PORTD ilk 4 pin adresi", src:"2024 Vize S4",
+ text:`<blockquote>Soru 4: PORTD’nin ilk 4 pinine ait register adresini hesaplayınız. (Bu register adresi sadece ilk 4 pine ait olması gereklidir)</blockquote><p>Kâğıtta verilen: <code>GPIO_PORTD_BASE 0x40007000</code>. Hesap adım adım kod olarak yazılıyor; sınavda yalnızca sonuç adresi istenir.</p>`,
+ given:G2024,
+ vars:{ maske:"Hangi pinlere erişileceği: 1 olan bitler.", ofset:"Maskenin adres içindeki karşılığı.", adres:"Taban adres + ofset: yalnızca maskedeki pinlere erişen veri adresi." },
+ L:[
+  ["uint32_t maske = 0x0F;                  // PD0–PD3 hangi bitler?", "PD0–PD3 = 0000 1111 = 0x0F.", ["uint32_tmaske=0b00001111;", "uint32_tmaske=15;"]],
+  ["uint32_t ofset = maske << 2;            // maske adreste 2 bit kayık", "Veri register'ında adresin 9..2 bitleri maske olarak kullanılır; bu yüzden maske 2 sola kaydırılır: 0000 1111 → 0011 1100 = 0x3C (onluk 60).", ["uint32_tofset=0x3C;"]],
+  ["uint32_t adres = 0x40007000 + ofset;    // taban + ofset", "0x40007000 + 0x3C = <b>0x4000703C</b>. Maske kaydırılmadan eklenirse 0x4000700F çıkar; bu yanlış.", ["uint32_tadres=GPIO_PORTD_BASE+ofset;", "uint32_tadres=0x4000703C;"]],
+  [""],
+  ["HWREG(adres) = 0x0F;                    // PD0–PD3'ün hepsini 1 yap", "Bu adresten yalnızca PD0–PD3 yazılabilir, PD4–PD7 etkilenmez. 0xFF yazmak da aynı sonucu verir. Maskeli adresin faydası tam olarak bu.", ["HWREG(0x4000703C)=0x0F;"]],
+  ["HWREG(adres) = 0x05;                    // yalnızca PD0 ve PD2 yansın", "0000 0101: PD0 ve PD2 1, PD1 ve PD3 0. PD4–PD7 yine etkilenmez.", ["HWREG(0x4000703C)=0x05;"]]
+ ]},
+
+{id:"t5", title:"PORTD'de sıralı LED", src:"2021 Vize S1",
+ text:`<blockquote>1. Stellaris kitinin kullanıldığı 5 ledli bir devrede birer saniye aralıklarla, (PORTD-5-4-3-2-1 pinlerine bağlı) ledlerin verilen sırada yanmasını sağlayacak kodu api fonksiyonlari ile yazınız.</blockquote><p>Sıra: PD5 → PD4 → PD3 → PD2 → PD1, her seferinde tek LED yanık.</p>`,
+ given:G2021,
+ vars:{ i:"Döngü sayacı: o an yanacak LED'in pin numarası." },
+ L:[
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);", "LED'ler D portunda."],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, 0x3E);          // PD1–PD5", "0011 1110 = <b>0x3E</b>. PD0 kullanılmıyor.", ["GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);"]],
+  [""],
+  ["    int i;"],
+  ["    while(1)"],
+  ["    {"],
+  ["        for (i = 5; i >= 1; i--)", "5'ten 1'e geri sayar: PD5 → PD4 → … → PD1, sorudaki sıra."],
+  ["        {"],
+  ["            GPIOPinWrite(GPIO_PORTD_BASE, 0x3E, 1 << i);     // yalnızca PDi yansın", "<code>1 &lt;&lt; i</code>: yalnızca i. biti 1 olan sayı. i = 5 → 0x20 (PD5), i = 4 → 0x10 (PD4) … Maske 0x3E olduğu için diğer dördü söner. Kâğıttaki <code>pow(2, i)</code> da aynı işi yapar.", ["GPIOPinWrite(GPIO_PORTD_BASE,0x3E,(1<<i));", "GPIOPinWrite(GPIO_PORTD_BASE,0x3E,pow(2,i));"]],
+  ["            SysCtlDelay(SysCtlClockGet() / 3);               // 1 saniye", "40 MHz'de 1 saniye = 40 000 000 çevrim; her tur 3 çevrim → <code>SysCtlClockGet()/3</code> ≈ 13 333 333 tur.", ["SysCtlDelay(13333333);"]],
+  ["        }"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t6", title:"Aynı soru Timer0 ile", src:"2021 Vize · timer listesi",
+ text:`<p>2021 kâğıdında timer fonksiyonları da verilmiş. 1. sorunun bekleme kısmını Timer0 kesmesiyle yap: kesme her saniye bir sonraki LED'i yaksın.</p>`,
+ given:G2021,
+ vars:{ sira:"Sıradaki LED'in pin numarası (5 → 1). Kesmede değiştiği için volatile.", Timer0Kesmesi:"Timer0 her 0'a indiğinde (her saniye) çağrılan kesme fonksiyonu." },
+ L:[
+  ["volatile int sira = 5;", "PD5'ten başlanır."],
+  [""],
+  ["void Timer0Kesmesi(void)"],
+  ["{"],
+  ["    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);", "Bayrak temizlenmezse rutin bitince hemen yeniden çağrılır."],
+  ["    GPIOPinWrite(GPIO_PORTD_BASE, 0x3E, 1 << sira);", "Yalnızca sıradaki LED yanar.", ["GPIOPinWrite(GPIO_PORTD_BASE,0x3E,(1<<sira));"]],
+  ["    sira--;", "Bir sonraki saniyede bir alttaki pin."],
+  ["    if (sira < 1) sira = 5;", "PD1'den sonra başa, PD5'e dönülür."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);"],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);", "GPIO gibi timer da bir çevre birimi; saati açılmadan ayarlanamaz."],
+  ["    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, 0x3E);"],
+  [""],
+  ["    TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);", "32 bit, periyodik: her saniye kendiliğinden yeniden başlar."],
+  ["    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() - 1);", "1 saniye = 40 000 000 çevrim. 0 da sayıldığı için tam değer −1; <code>SysCtlClockGet()</code> da olur. /3 yalnızca SysCtlDelay içindir.", ["TimerLoadSet(TIMER0_BASE,TIMER_A,SysCtlClockGet());", "TimerLoadSet(TIMER0_BASE,TIMER_A,39999999);", "TimerLoadSet(TIMER0_BASE,TIMER_A,40000000);"]],
+  ["    TimerIntRegister(TIMER0_BASE, TIMER_A, Timer0Kesmesi);", "Fonksiyon adı parantezsiz."],
+  ["    IntEnable(INT_TIMER0A);", "NVIC'te Timer0A kesmesinin izni."],
+  ["    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);", "Timer 0'a inince kesme üretsin."],
+  ["    IntMasterEnable();"],
+  ["    TimerEnable(TIMER0_BASE, TIMER_A);", "Timer en son çalıştırılır. Kâğıttaki fonksiyon kutusunda da sıra bu."],
+  [""],
+  ["    while(1)", "Boş döngü: bekleme işini timer yapıyor."],
+  ["    {"],
+  ["    }"],
+  ["}"]
+ ],
+ note:`<p><b>Fark:</b> SysCtlDelay ile beklerken işlemci başka iş yapamaz. Timer kesmesinde <code>while(1)</code> boş kalır; buton okumak gibi işler aynı anda yapılabilir.</p>`},
+
+{id:"t7", title:"Register ile PF ayarı", src:"code7.txt",
+ text:`<p>Derste yazdırılan <code>GpioInitSettings</code>: API kullanmadan, <code>inc/tm4c123gh6pm.h</code>'deki register adlarıyla F portunu ayarla. PF1–PF3 çıkış (LED), PF0 ve PF4 pull-up'lı giriş (SW2, SW1).</p><p>Ardından SW2'ye basılınca yeşil LED yansın, SW1'e basılınca sönsün; diğer LED'ler etkilenmesin.</p>`,
+ vars:{ GpioInitSettings:"Derste yazılan ayar fonksiyonu: API'deki SysCtlPeripheralEnable ve GPIOPinType… çağrılarının register karşılığı." },
+ L:[
+  ["void GpioInitSettings(){"],
+  ["    SYSCTL_RCGCGPIO_R = SYSCTL_RCGCGPIO_R | 0x20;   // Portf Aktif", "0010 0000 = 0x20 = <code>(1&lt;&lt;5)</code>: bit5 = F portu. VEYA ile diğer portların saati korunur.", ["SYSCTL_RCGCGPIO_R|=0x20;", "SYSCTL_RCGCGPIO_R=SYSCTL_RCGCGPIO_R|(1<<5);", "SYSCTL_RCGCGPIO_R|=(1<<5);"]],
+  ["    GPIO_PORTF_LOCK_R = 0x4C4F434B;", "0x4C 0x4F 0x43 0x4B = ASCII 'L' 'O' 'C' 'K'. PF0 kilitli olduğu için önce kilit açılır."],
+  ["    GPIO_PORTF_CR_R = 0x01;", "PF0'ın ayarının değiştirilmesine izin verilir."],
+  ["    GPIO_PORTF_DIR_R |= 0x0E;                       // 1-2-3 output", "0000 1110: PF1, PF2, PF3 çıkış. PF0 ve PF4 0 kalır: giriş."],
+  ["    GPIO_PORTF_AFSEL_R = 0x00;", "Alternatif fonksiyon yok, sade GPIO."],
+  ["    GPIO_PORTF_DEN_R = 0x1F;", "0001 1111: kullanılan beş pinin (PF0–PF4) hepsi dijital. DEN yazılmazsa pinler çalışmaz."],
+  ["    GPIO_PORTF_PUR_R |= 0x11;", "0001 0001: pull-up yalnızca butonlara, PF0 ve PF4."],
+  ["}"],
+  [""],
+  ["int main(void)"],
+  ["{"],
+  ["    GpioInitSettings();"],
+  ["    while(1){"],
+  ["      if ((GPIO_PORTF_DATA_R & 0x01) == 0){            // SW2 (PF0) basılı", "VE ile yalnızca 0. bit bırakılır; basılıyken 0."],
+  ["          GPIO_PORTF_DATA_R |= 0x08;                   // yeşili yak", "PF3 = 0000 1000. VEYA ile yalnızca bu bit 1 olur, diğerleri korunur. code7'de buraya <code>|= ~0b1000</code> yazılmıştı: o, yeşil dışındaki bütün bitleri 1 yapar.", ["GPIO_PORTF_DATA_R|=0b1000;", "GPIO_PORTF_DATA_R|=GPIO_PIN_3;"]],
+  ["      }"],
+  ["      else if ((GPIO_PORTF_DATA_R & 0x10) == 0){      // SW1 (PF4) basılı", "0x10 = 0001 0000 = PF4."],
+  ["          GPIO_PORTF_DATA_R &= ~0x08;                  // yeşili söndür", "<code>~0x08</code> = …1111 0111. VE ile yalnızca PF3 söner, kırmızı ve mavi korunur. 0xF7 de aynı. code7'de buraya <code>~0b0111</code> yazılmıştı: o, yeşili değil kırmızı ve maviyi söndürür.", ["GPIO_PORTF_DATA_R&=0xF7;", "GPIO_PORTF_DATA_R&=~0b1000;"]],
+  ["      }"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t8", title:"Ödev: Bekle_ve_Dinle", src:"code8.txt",
+ text:`<p>Derste verilen ödev şablonu: kırmızı LED <code>sure_ms</code> aralıkla yanıp sönsün. SW1'e her basışta süre 100 ms artsın, SW2'ye her basışta 100 ms azalsın (100–2000 ms arası). Beklerken her 10 ms'de butonlara bakılsın.</p><p><code>main</code> şablondaki gibi; PF0 kilidi açılmış, SW1 ve SW2 pull-up'lı giriş. Burada iki TODO fonksiyonu tamamlanıyor.</p>`,
+ vars:{
+  KIRMIZI_LED:"Kırmızı LED = PF1.", SW1:"SW1 butonu = PF4.", SW2:"SW2 butonu = PF0 (kilitli pin).",
+  ADIM_MS:"Her basışta eklenen/çıkarılan süre: 100 ms.", MIN_MS:"Alt sınır: 100 ms.", MAX_MS:"Üst sınır: 2000 ms.",
+  sure_ms:"LED'in yanık ve sönük kalma süresi. Butonlarla değişir.",
+  sw1_basili:"SW1'in bir önceki kontrolde basılı olup olmadığı. Basılı tutulan butonun tekrar tekrar sayılmasını önler.",
+  sw2_basili:"SW2 için aynı bayrak.",
+  bekle_ms:"ms kadar bekler: <code>SysCtlClockGet()/3000</code> = 1 ms'lik tur sayısı (≈ 13 333), ms ile çarpılır.",
+  Butonlari_Kontrol_Et:"Butonlara bir kez bakıp süreyi güncelleyen fonksiyon.",
+  Bekle_ve_Dinle:"ms kadar beklerken her 10 ms'de butonlara bakan fonksiyon.",
+  ms:"Beklenecek süre (milisaniye).", i:"Kaçıncı 10 ms'lik dilimde olunduğu."
+ },
+ L:[
+  ["#define KIRMIZI_LED GPIO_PIN_1"],
+  ["#define SW1 GPIO_PIN_4"],
+  ["#define SW2 GPIO_PIN_0"],
+  ["#define ADIM_MS 100"],
+  ["#define MIN_MS 100"],
+  ["#define MAX_MS 2000"],
+  ["volatile uint32_t sure_ms = 500;", "Başlangıç süresi 500 ms."],
+  ["uint32_t sw1_basili = 0, sw2_basili = 0;", "İki buton bayrağı aynı satırda tanımlanıyor."],
+  ["void bekle_ms(uint32_t ms) { SysCtlDelay((SysCtlClockGet() / 3000) * ms); }", "Şablonda hazır veriliyor. code4'te de aynı fonksiyon var: 'SysCtlDelay ASSEMBLY SEVİYESİNDE YAZILMIŞTIR'."],
+  [""],
+  ["void Butonlari_Kontrol_Et(void)     // SW1: +ADIM_MS, SW2: -ADIM_MS", "Şablonda <code>{</code> yorumun içinde kaldığı için derlenmiyordu; burada ayrı satırda."],
+  ["{"],
+  ["    if (GPIOPinRead(GPIO_PORTF_BASE, SW1) == 0) {", "Basılı = 0. Şablondaki <code>(GPIO_PORTF_BASE &amp; SW1) == SW1</code> pini değil adres sabitini okuyordu; doğrusu GPIOPinRead."],
+  ["        if (!sw1_basili && sure_ms + ADIM_MS <= MAX_MS) sure_ms += ADIM_MS;", "Yalnızca basışın ilk anında (bayrak 0 iken) ve süre 2000'i geçmeyecekse artırılır."],
+  ["        sw1_basili = 1;", "Buton hâlâ basılıysa sonraki kontrollerde tekrar artırılmaz."],
+  ["    } else {"],
+  ["        sw1_basili = 0;", "Bırakılınca bayrak sıfırlanır; bir sonraki basış yeniden sayılır."],
+  ["    }"],
+  [""],
+  ["    if (GPIOPinRead(GPIO_PORTF_BASE, SW2) == 0) {", "SW2 = PF0."],
+  ["        if (!sw2_basili && sure_ms - ADIM_MS >= MIN_MS) sure_ms -= ADIM_MS;", "Süre 100'ün altına inmesin."],
+  ["        sw2_basili = 1;"],
+  ["    } else {"],
+  ["        sw2_basili = 0;"],
+  ["    }"],
+  ["}"],
+  [""],
+  ["void Bekle_ve_Dinle(uint32_t ms)    // beklerken her 10 ms'de butonlara bak"],
+  ["{"],
+  ["    uint32_t i;"],
+  ["    for (i = 0; i < ms / 10; i++) {", "500 ms bekleme = 50 tane 10 ms'lik dilim."],
+  ["        bekle_ms(10);"],
+  ["        Butonlari_Kontrol_Et();", "Her dilimden sonra butonlara bakılır. Tek parça <code>bekle_ms(sure_ms)</code> ile beklense o sırada yapılan basışlar kaçardı."],
+  ["    }"],
+  ["}"]
+ ],
+ note:`<p>code5 ve code9 aynı fikri doğrudan register'larla, 20 ve 10 ms adımlarla uyguluyor.</p>`},
+
+{id:"t9", title:"UART yankı", src:"code.txt · code2.txt",
+ text:`<p>Derste yazdırılan UART örneği: bilgisayardan gelen karakterin bir fazlasını geri gönder ('A' gelirse 'B'). Haberleşme 9600 baud, 8 veri biti, 1 stop biti, paritesiz. Bilgisayar tarafı code2'deki C# programı.</p>`,
+ L:[
+  ["void main(){"],
+  ["    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //40"],
+  [""],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);", "UART0'ın pinleri PA0 ve PA1."],
+  ["    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);", "Haberleşme biriminin kendisi."],
+  [""],
+  ["    GPIOPinConfigure(GPIO_PA0_U0RX);"],
+  ["    GPIOPinConfigure(GPIO_PA1_U0TX);"],
+  ["    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0|GPIO_PIN_1);"],
+  [""],
+  ["    UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 9600,", "9600 baud. C# tarafında da 9600 seçilmeli; hızlar farklıysa anlamsız karakterler gelir. Satır bir sonrakinde devam ediyor."],
+  ["                        UART_CONFIG_WLEN_8|UART_CONFIG_STOP_ONE|UART_CONFIG_PAR_NONE);", "Çerçeve: 8 veri biti, 1 stop biti, parite yok (8N1). Üç ayar VEYA ile birleşir."],
+  ["    UARTEnable(UART0_BASE);"],
+  [""],
+  ["    while(1){"],
+  ["        if (UARTCharsAvail(UART0_BASE)){", "UARTCharGet veri yoksa bekler; önce veri olup olmadığına bakmak döngünün takılmasını önler."],
+  ["            UARTCharPut(UART0_BASE, UARTCharGet(UART0_BASE)+1);", "Okunan karakterin ASCII kodu + 1 geri gönderilir: 'A' (65) → 'B' (66)."],
+  ["        }"],
+  ["    }"],
+  ["}"]
+ ]},
+
+{id:"t10", title:"Sayı girişi, faktöriyel, toplam", src:"2021 Vize S3",
+ text:`<p>2021'in büyük sorusu (özet):</p><ul><li>Başta bütün LED'ler sönük, SAYI1 = SAYI2 = 0.</li><li>PF4 (Sayı Girişi) ilk basılıp çekildiğinde SAYI1, ikinci kez basılıp çekildiğinde SAYI2 PD2–PD6'dan okunur; üçüncü basışta yine SAYI1 okunur.</li><li>PF3 (FAKTÖRİYEL) basılıp çekilince SAYI2'nin faktöriyeli alınır; sonuç 1000'den büyükse PF6'daki taşma LED'i yanar.</li><li>PF1 (TOPLA) basılıp çekilince SAYI1 ile SAYI2 arasındaki sayılar toplanır. Sonuç LD0–LD7'de (PC0–PC7) gösterilir.</li></ul><p>GPIO ayarları yapılmış kabul ediliyor; butonlar pull-up'lı.</p>`,
+ given:G2021,
+ vars:{
+  sayi1:"SAYI1: ilk girilen sayı.", sayi2:"SAYI2: ikinci girilen sayı.",
+  adim:"Sıradaki girişin hangi sayıya gideceği: 0 → SAYI1, 1 → SAYI2.",
+  gelen:"PD2–PD6'dan okunan 5 bitlik sayı (0–31).",
+  f:"Faktöriyel sonucu.", t:"Toplam.", k:"Döngü sayacı."
+ },
+ L:[
+  ["volatile int sayi1 = 0, sayi2 = 0, adim = 0;", "Soruda başlangıçta SAYI1 = SAYI2 = 0 isteniyor."],
+  [""],
+  ["    while(1)"],
+  ["    {"],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0)              // Sayı Girişi", "PF4 basılı mı?"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);", "Çekilmesini bekle (sorudaki 1-0-1)."],
+  ["            int gelen = GPIOPinRead(GPIO_PORTD_BASE, 0x7C) >> 2;          // PD2–PD6 → 0..31", "0x7C = 0111 1100 = PD2–PD6. GPIOPinRead bitleri yerinde döndürür; PD2 en düşük bit olsun diye 2 sağa kaydırılır.", ["intgelen=GPIOPinRead(GPIO_PORTD_BASE,GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6)>>2;"]],
+  ["            if (adim == 0) { sayi1 = gelen; adim = 1; }", "İlk basış SAYI1'e."],
+  ["            else           { sayi2 = gelen; adim = 0; }", "İkinci basış SAYI2'ye; sonra başa dönülür."],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) == 0)              // FAKTÖRİYEL"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) == 0);"],
+  ["            int f = 1, k;"],
+  ["            for (k = 2; k <= sayi2; k++) f = f * k;", "2'den SAYI2'ye kadar çarpılır. SAYI2 13 veya büyükse sonuç int'e sığmaz; f > 1000 olunca <code>break</code> ile durmak taşmayı önler."],
+  ["            if (f > 1000) GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_6, GPIO_PIN_6);   // taşma ledi", "Kâğıttaki gibi PF6. Gerçek kartta F portunda yalnızca PF0–PF4 var; sınavda şemaya göre yazılır.", ["if(f>1000)GPIOPinWrite(GPIO_PORTF_BASE,0x40,0x40);"]],
+  ["        }"],
+  [""],
+  ["        if (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) == 0)              // TOPLA"],
+  ["        {"],
+  ["            while (GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) == 0);"],
+  ["            int t = 0, k;"],
+  ["            for (k = sayi1; k <= sayi2; k++) t = t + k;", "'Arasındaki sayılar' uçları da kapsıyor mu belirsiz; burada dahil. SAYI1 &gt; SAYI2 ise döngü hiç çalışmaz."],
+  ["            GPIOPinWrite(GPIO_PORTC_BASE, 0xFF, t);                       // LD0–LD7", "Toplam 255'i geçerse yalnızca alt 8 bit görünür."],
+  ["        }"],
+  ["    }"]
+ ],
+ note:`<p>PD2–PD6 anahtarları da toprağa bağlı ve pull-up'lıysa kapalı anahtar 0 okunur. Bu durumda okunan değerin tersi alınabilir: <code>(~GPIOPinRead(...) &amp; 0x7C) &gt;&gt; 2</code>.</p>`}
+];
+
+const KEY = "mikro-satir-v1";
+const TOL = 3;   // bu kadar karakter yanlış yazılınca satır kırmızı olur
+let store = { cur: "t1", inp: {}, peek: {} };
+try { store = Object.assign(store, JSON.parse(localStorage.getItem(KEY) || "{}") || {}); } catch (e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+function esc(s){ return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+const norm = s => String(s).replace(/\s+/g, "");
+
+function rowsOf(t){
+  return t.L.map(([raw, note, alts]) => {
+    const k = raw.indexOf("//");
+    const code = (k < 0 ? raw : raw.slice(0, k)).replace(/\s+$/, "");
+    const cmt = k < 0 ? "" : raw.slice(k);
+    const fixed = !code.trim() || /^[\s{};]*$/.test(code);
+    return { code, cmt, note, fixed, ind: code.length - code.trimStart().length, targets: [norm(code), ...(alts || []).map(norm)] };
+  });
+}
+
+// "" boş · "y" doğru gidiyor · "r" TOL+ karakter yanlış · "g" tamam
+function state(row, val){
+  const v = norm(val);
+  if (!v) return "";
+  let wrong = Infinity;
+  for (const t of row.targets) {
+    if (v === t) return "g";
+    let p = 0;
+    while (p < v.length && p < t.length && v[p] === t[p]) p++;
+    wrong = Math.min(wrong, v.length - p);
+  }
+  return wrong < TOL ? "y" : "r";
+}
+
+function numInfo(s){
+  const v = /^0b/i.test(s) ? parseInt(s.slice(2), 2) : parseInt(s.slice(2), 16);
+  if (v <= 0xFF) {
+    const b = v.toString(2).padStart(8, "0");
+    const bits = [0,1,2,3,4,5,6,7].filter(k => (v >> k) & 1);
+    return `onluk ${v} · ikilik ${b.slice(0, 4)} ${b.slice(4)} · 1 olan bitler: ${bits.length ? bits.join(", ") : "yok"}`;
+  }
+  return `onluk ${v.toLocaleString("tr-TR")}`;
+}
+
+function infoHtml(t, row){
+  const out = [];
+  if (row.note) out.push(`<p>${row.note}</p>`);
+  const seen = new Set();
+  for (const id of row.code.replace(/0[xb][0-9a-f]+/gi, " ").match(/[A-Za-z_]\w*/g) || []) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const d = (t.vars && t.vars[id]) || GL[id];
+    if (d) out.push(`<div class="gl"><code>${esc(id)}</code><span>${d}</span></div>`);
+  }
+  for (const n of new Set(row.code.match(/\b0[xb][0-9a-f]+\b/gi) || [])) {
+    out.push(`<div class="gl"><code>${esc(n)}</code><span>${numInfo(n)}</span></div>`);
+  }
+  return out.join("") || "<p>Bu satırda açıklanacak ek bir şey yok.</p>";
+}
+
+const tasksEl = document.getElementById("tasks"), card = document.getElementById("task");
+
+function taskProgress(t){
+  const rows = rowsOf(t), vals = store.inp[t.id] || {};
+  const typ = rows.map((r, i) => i).filter(i => !rows[i].fixed);
+  return { total: typ.length, done: typ.filter(i => state(rows[i], vals[i] || "") === "g").length };
+}
+
+function drawNav(){
+  tasksEl.innerHTML = "";
+  TASKS.forEach((t, i) => {
+    const p = taskProgress(t);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "task-btn" + (p.done === p.total ? " done" : "");
+    b.setAttribute("aria-current", String(store.cur === t.id));
+    b.innerHTML = `<span class="no">${i + 1}</span><b>${esc(t.title)}</b><small>${esc(t.src)} · ${p.done}/${p.total}</small>`;
+    b.addEventListener("click", () => go(t.id));
+    tasksEl.appendChild(b);
+  });
+}
+function go(id){ store.cur = id; save(); drawNav(); drawTask(); card.scrollIntoView({ block: "start", behavior: "smooth" }); history.replaceState(null, "", "#" + id); }
+
+function drawTask(){
+  const idx = Math.max(0, TASKS.findIndex(t => t.id === store.cur));
+  const t = TASKS[idx];
+  const rows = rowsOf(t);
+  const vals = store.inp[t.id] = store.inp[t.id] || {};
+  const peek = store.peek[t.id] = store.peek[t.id] || {};
+  let n = 0;
+
+  const linesHtml = rows.map((r, i) => {
+    n++;
+    const pad = `style="--ind:${r.ind}"`;
+    if (r.fixed) {
+      return `<div class="row fixed"><span></span><span class="no">${n}</span>
+        <div class="cell" ${pad}><div class="line"><span class="fx">${esc(r.code.trim())}</span>${r.cmt ? `<span class="cmt">${esc(r.cmt)}</span>` : ""}</div></div>
+        <span></span></div>`;
+    }
+    return `<div class="row" data-i="${i}"><button type="button" class="peek" data-act="peek" aria-pressed="false">göster</button><span class="no">${n}</span>
+      <div class="cell" ${pad}><div class="line"><input class="in" data-i="${i}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Satır ${n}">${r.cmt ? `<span class="cmt">${esc(r.cmt)}</span>` : ""}</div>
+      <div class="rev" hidden>${esc(r.code.trim())}</div></div>
+      <button type="button" class="info" data-act="info" aria-expanded="false" aria-label="Satır ${n} bilgisi">i</button></div>
+      <div class="ibox" data-ibox="${i}" hidden>${infoHtml(t, r)}</div>`;
+  }).join("");
+
+  card.innerHTML = `
+    <div class="thead"><span class="src">${esc(t.src)}</span><h2>${idx + 1}. ${esc(t.title)}</h2></div>
+    <div class="qtext">${t.text}</div>
+    ${t.circuit ? `<div class="circuit">${t.circuit}</div>` : ""}
+    ${t.given ? `<details><summary>Sınav kâğıdında verilen fonksiyonlar ve sabitler</summary><pre>${esc(t.given)}</pre></details>` : ""}
+    <div class="bar">
+      <button type="button" class="btn primary" data-a="all">Tümünü göster</button>
+      <button type="button" class="btn" data-a="redo">Bakılanları tekrar yaz</button>
+      <button type="button" class="btn" data-a="reset">Sıfırla</button>
+      <span class="prog" id="prog"></span>
+    </div>
+    <div class="lines" id="lines">${linesHtml}</div>
+    <div class="finish" id="finish" hidden></div>
+    ${t.note ? `<div class="note">${t.note}</div>` : ""}
+    <div class="pager">
+      <button type="button" class="btn" data-a="prev" ${idx === 0 ? "disabled" : ""}>← Önceki</button>
+      <button type="button" class="btn" data-a="next" ${idx === TASKS.length - 1 ? "disabled" : ""}>Sonraki →</button>
+    </div>`;
+
+  const inputs = [...card.querySelectorAll("input.in")];
+  const allBtn = card.querySelector('[data-a="all"]');
+  const rowEl = i => card.querySelector(`.row[data-i="${i}"]`);
+
+  function paint(inp){
+    const i = +inp.dataset.i, st = state(rows[i], inp.value);
+    inp.classList.remove("y", "r", "g");
+    if (st) inp.classList.add(st);
+    inp.readOnly = st === "g";
+    rowEl(i).classList.toggle("pk", st === "g" && !!peek[i]);
+    return st;
+  }
+  function setPeek(i, on){
+    const el = rowEl(i);
+    el.querySelector(".rev").hidden = !on;
+    const b = el.querySelector(".peek");
+    b.setAttribute("aria-pressed", String(on));
+    b.textContent = on ? "gizle" : "göster";
+  }
+  function refresh(){
+    const p = taskProgress(t);
+    card.querySelector("#prog").textContent = `${p.done} / ${p.total} satır`;
+    const anyHidden = inputs.some(inp => rowEl(inp.dataset.i).querySelector(".rev").hidden);
+    allBtn.textContent = anyHidden ? "Tümünü göster" : "Tümünü gizle";
+    const peeked = inputs.filter(inp => peek[inp.dataset.i]).length;
+    card.querySelector('[data-a="redo"]').disabled = peeked === 0;
+    const fin = card.querySelector("#finish");
+    fin.hidden = p.done !== p.total;
+    if (!fin.hidden) {
+      fin.innerHTML = peeked
+        ? `<span><b>Görev tamam.</b> ${p.total} satırın ${peeked} tanesine bakarak yazdın. Bunları bir de gizli hâlde dene.</span><button type="button" class="btn" data-a="redo">Bakılanları tekrar yaz</button>`
+        : `<span><b>Görev tamam.</b> ${p.total} satırın hepsini bakmadan yazdın.</span>${idx < TASKS.length - 1 ? `<button type="button" class="btn primary" data-a="next">Sonraki görev →</button>` : ""}`;
+    }
+    drawNav();
+  }
+  function focusFrom(i, dir){
+    const pos = inputs.findIndex(x => +x.dataset.i === i);
+    for (let k = pos + dir; k >= 0 && k < inputs.length; k += dir) {
+      if (dir > 0 && inputs[k].classList.contains("g")) continue;
+      inputs[k].focus();
+      return;
+    }
+  }
+
+  inputs.forEach(inp => {
+    const i = +inp.dataset.i;
+    if (vals[i]) inp.value = vals[i];
+    paint(inp);
+    inp.addEventListener("input", () => {
+      vals[i] = inp.value; save();
+      if (paint(inp) === "g") { refresh(); focusFrom(i, 1); }
+      else { const p = taskProgress(t); card.querySelector("#prog").textContent = `${p.done} / ${p.total} satır`; }
+    });
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); focusFrom(i, 1); }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const pos = inputs.indexOf(inp);
+        if (pos > 0) inputs[pos - 1].focus();
+      }
+    });
+  });
+
+  card.querySelector("#lines").addEventListener("click", e => {
+    const b = e.target.closest("button[data-act]");
+    if (!b) return;
+    const i = +b.closest(".row").dataset.i;
+    if (b.dataset.act === "peek") {
+      const on = b.getAttribute("aria-pressed") !== "true";
+      setPeek(i, on);
+      const inp = rowEl(i).querySelector("input");
+      if (on && !inp.classList.contains("g")) { peek[i] = 1; save(); }
+      refresh();
+    }
+    if (b.dataset.act === "info") {
+      const box = card.querySelector(`[data-ibox="${i}"]`);
+      box.hidden = !box.hidden;
+      b.setAttribute("aria-expanded", String(!box.hidden));
+    }
+  });
+
+  card.onclick = e => {
+    const a = e.target.closest("button[data-a]")?.dataset.a;
+    if (!a) return;
+    if (a === "all") {
+      const show = allBtn.textContent === "Tümünü göster";
+      inputs.forEach(inp => {
+        const i = +inp.dataset.i;
+        setPeek(i, show);
+        if (show && !inp.classList.contains("g")) peek[i] = 1;
+      });
+      save(); refresh();
+    }
+    if (a === "redo") {
+      inputs.forEach(inp => {
+        const i = +inp.dataset.i;
+        if (!peek[i]) return;
+        delete peek[i]; delete vals[i];
+        inp.value = ""; paint(inp); setPeek(i, false);
+      });
+      save(); refresh();
+      const first = inputs.find(x => !x.classList.contains("g"));
+      if (first) first.focus();
+    }
+    if (a === "reset") {
+      if (!confirm("Bu görevdeki bütün satırlar silinsin mi?")) return;
+      store.inp[t.id] = {}; store.peek[t.id] = {}; save(); drawTask();
+      return;
+    }
+    if (a === "prev" && idx > 0) go(TASKS[idx - 1].id);
+    if (a === "next" && idx < TASKS.length - 1) go(TASKS[idx + 1].id);
+  };
+
+  refresh();
+}
+
+const fromHash = location.hash.slice(1);
+if (TASKS.some(t => t.id === fromHash)) store.cur = fromHash;
+drawNav();
+drawTask();
+</script>
+
+</body>
+</html>
